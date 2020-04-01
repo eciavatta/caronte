@@ -1,0 +1,10 @@
+# IntelliJ stuff
+.idea/
+
+# Pcaps
+*.pcap
+*.pcapng
+
+# Build file
+caronte
+

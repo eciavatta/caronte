@@ -1,0 +1,27 @@
+version: "3.7"
+services:
+
+  mongo:
+    image: mongo:4
+    networks:
+      - caronte-net
+    restart: always
+
+  caronte:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: caronte
+    ports:
+      - "6666:6666"
+    depends_on:
+      - mongo
+    networks:
+      - caronte-net
+    command: "./caronte"
+    environment:
+      MONGO_HOST: mongo
+      MONGO_PORT: 27017
+
+networks:
+  caronte-net:
