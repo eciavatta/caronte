@@ -7,4 +7,3 @@ WORKDIR /caronte
 RUN go mod download && go build
 
 CMD ./caronte
-

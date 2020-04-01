@@ -1,0 +1,16 @@
+language: bash
+
+sudo: required
+services:
+  - docker
+
+before_script:
+  - docker pull eciavatta/caronte-env
+  - docker-compose -f docker-compose.testing.yml up -d --build
+
+script:
+  - docker logs -f caronte_caronte_1 | grep "travis" | (read status; if $status -eq "travis_tests_fails"; then exit 1; fi)
+
+after_script:
+  - docker logs caronte_caronte_1
+  - docker-compose down

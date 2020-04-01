@@ -94,16 +94,24 @@ func testFindOne(t *testing.T) {
 	}
 }
 
-
-
 func TestBasicOperations(t *testing.T) {
 	t.Run("testInsert", testInsert)
 	t.Run("testFindOne", testFindOne)
 }
 
 func TestMain(m *testing.M) {
+	mongoHost, ok := os.LookupEnv("MONGO_HOST")
+	if !ok {
+		mongoHost = "localhost"
+	}
+	mongoPort, ok := os.LookupEnv("MONGO_PORT")
+	if !ok {
+		mongoHost = "27017"
+	}
+
 	uniqueDatabaseName := sha256.Sum256([]byte(time.Now().String()))
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+
+	client, err := mongo.NewClient(options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:%v", mongoHost, mongoPort)))
 	if err != nil {
 		panic("failed to create mongo client")
 	}
