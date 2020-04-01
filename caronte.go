@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-func mainn() {
+func main() {
 	// testStorage()
 	storage := NewStorage("localhost", 27017, "testing")
 	err := storage.Connect(nil)

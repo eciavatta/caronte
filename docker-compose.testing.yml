@@ -4,7 +4,7 @@ services:
   mongo:
     image: mongo:4
     networks:
-      - caronte-net
+      - acheronet
     restart: always
 
   caronte:
@@ -17,11 +17,11 @@ services:
     depends_on:
       - mongo
     networks:
-      - caronte-net
+      - acheronet
     command: "./travis_tests.sh"
     environment:
       MONGO_HOST: mongo
       MONGO_PORT: 27017
 
 networks:
-  caronte-net:
+  acheronet:

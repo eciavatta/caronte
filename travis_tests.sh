@@ -4,7 +4,7 @@
 sleep 10
 
 # run tests
-go test -v
+go test -v -race -coverprofile=coverage.txt -covermode=atomic
 
 RET_CODE=$?
 

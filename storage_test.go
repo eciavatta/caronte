@@ -106,7 +106,7 @@ func TestMain(m *testing.M) {
 	}
 	mongoPort, ok := os.LookupEnv("MONGO_PORT")
 	if !ok {
-		mongoHost = "27017"
+		mongoPort = "27017"
 	}
 
 	uniqueDatabaseName := sha256.Sum256([]byte(time.Now().String()))

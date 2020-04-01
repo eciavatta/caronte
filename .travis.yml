@@ -6,11 +6,18 @@ services:
 
 before_script:
   - docker pull eciavatta/caronte-env
+  - docker pull mongo:4
   - docker-compose -f docker-compose.testing.yml up -d --build
 
-script:
-  - docker logs -f caronte_caronte_1 | grep "travis" | (read status; if $status -eq "travis_tests_fails"; then exit 1; fi)
+script: >-
+  docker ps -a &&
+  docker logs -f $(docker ps -a -q --filter="name=caronte_caronte") | grep "travis" |
+    (read status; if [[ $status == "travis_tests_fails" ]]; then exit 1; fi)
+
+after_success:
+  - docker cp "$(docker ps -a -q --filter='name=caronte_caronte'):/caronte/coverage.txt" coverage.txt
+  - bash <(curl -s https://codecov.io/bash)
 
 after_script:
-  - docker logs caronte_caronte_1
-  - docker-compose down
+  - docker logs $(docker ps -a -q --filter="name=caronte_caronte")
+  - docker-compose -f docker-compose.testing.yml down
