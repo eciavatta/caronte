@@ -24,7 +24,7 @@ const importedPcapsCollectionName = "imported_pcaps"
 
 
 type PcapImporter struct {
-	storage     *Storage
+	storage     Storage
 	streamPool  *tcpassembly.StreamPool
 	assemblers  []*tcpassembly.Assembler
 	sessions    map[string]context.CancelFunc
@@ -36,10 +36,11 @@ type PcapImporter struct {
 type flowCount [2]int
 
 
-func NewPcapImporter(storage *Storage, serverIp string) *PcapImporter {
+func NewPcapImporter(storage Storage, serverIp net.IP) *PcapImporter {
+	serverEndpoint := layers.NewIPEndpoint(serverIp)
 	streamFactory := &BiDirectionalStreamFactory{
 		storage: storage,
-		serverIp: serverIp,
+		serverIp: serverEndpoint,
 	}
 	streamPool := tcpassembly.NewStreamPool(streamFactory)
 
@@ -50,7 +51,7 @@ func NewPcapImporter(storage *Storage, serverIp string) *PcapImporter {
 		sessions:    make(map[string]context.CancelFunc),
 		mAssemblers: sync.Mutex{},
 		mSessions:   sync.Mutex{},
-		serverIp:    layers.NewIPEndpoint(net.ParseIP(serverIp)),
+		serverIp:    serverEndpoint,
 	}
 }
 
