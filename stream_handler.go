@@ -135,7 +135,7 @@ func (sh *StreamHandler) onMatch(id uint, from uint64, to uint64, flags uint, co
 		// new from == new match
 		sh.patternMatches[id] = append(patternSlices, PatternSlice{from, to})
 	} else {
-		patternSlices = make([]PatternSlice, InitialPatternSliceSize)
+		patternSlices = make([]PatternSlice, 1, InitialPatternSliceSize)
 		patternSlices[0] = PatternSlice{from, to}
 		sh.patternMatches[id] = patternSlices
 	}
@@ -169,7 +169,7 @@ func (sh *StreamHandler) generateDocumentKey() string {
 	endpointsHash := sh.streamKey[0].FastHash() ^ sh.streamKey[1].FastHash() ^
 		sh.streamKey[2].FastHash() ^ sh.streamKey[3].FastHash()
 	binary.BigEndian.PutUint64(hash, endpointsHash)
-	binary.BigEndian.PutUint64(hash[8:], uint64(sh.timestamps[0].UnixNano()))
+	binary.BigEndian.PutUint64(hash[8:], uint64(sh.firstPacketSeen.UnixNano()))
 	binary.BigEndian.PutUint16(hash[8:], uint16(len(sh.documentsKeys)))
 
 	return fmt.Sprintf("%x", hash)
