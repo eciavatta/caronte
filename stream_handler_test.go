@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/flier/gohs/hyperscan"
 	"github.com/google/gopacket/layers"
@@ -44,12 +43,12 @@ func TestReassemblingEmptyStream(t *testing.T) {
 	assert.Zero(t, streamHandler.streamLength)
 	assert.Len(t, streamHandler.patternMatches, 0)
 
-	expected := 0
+	completed := false
 	streamHandler.connection.(*testConnectionHandler).onComplete = func(handler *StreamHandler) {
-		expected = 42
+		completed = true
 	}
 	streamHandler.ReassemblyComplete()
-	assert.Equal(t, 42, expected)
+	assert.Equal(t, true, completed)
 
 	err = scratch.Free()
 	require.Nil(t, err, "free scratch")
@@ -339,32 +338,4 @@ func (tch *testConnectionHandler) Patterns() hyperscan.StreamDatabase {
 
 func (tch *testConnectionHandler) Complete(handler *StreamHandler) {
 	tch.onComplete(handler)
-}
-
-type testStorage struct {
-	insertFunc func(ctx context.Context, collectionName string, document interface{}) (interface{}, error)
-	updateOne func(ctx context.Context, collectionName string, filter interface{}, update interface {}, upsert bool) (interface{}, error)
-	findOne func(ctx context.Context, collectionName string, filter interface{}) (UnorderedDocument, error)
-}
-
-func (ts testStorage) InsertOne(ctx context.Context, collectionName string, document interface{}) (interface{}, error) {
-	if ts.insertFunc != nil {
-		return ts.insertFunc(ctx, collectionName, document)
-	}
-	return nil, errors.New("not implemented")
-}
-
-func (ts testStorage) UpdateOne(ctx context.Context, collectionName string, filter interface{}, update interface {},
-	upsert bool) (interface{}, error) {
-	if ts.updateOne != nil {
-		return ts.updateOne(ctx, collectionName, filter, update, upsert)
-	}
-	return nil, errors.New("not implemented")
-}
-
-func (ts testStorage) FindOne(ctx context.Context, collectionName string, filter interface{}) (UnorderedDocument, error) {
-	if ts.insertFunc != nil {
-		return ts.findOne(ctx, collectionName, filter)
-	}
-	return nil, errors.New("not implemented")
 }

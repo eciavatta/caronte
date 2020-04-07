@@ -1,26 +1,33 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"net"
+	"github.com/gin-gonic/gin"
+	"log"
 )
 
 func main() {
-	// pattern.Flags |= hyperscan.SomLeftMost
+	// test(); return
+	mongoHost := flag.String("mongo-host", "localhost", "address of MongoDB")
+	mongoPort := flag.Int("mongo-port", 27017, "port of MongoDB")
+	dbName := flag.String("db-name", "caronte", "name of database to use")
 
-	storage := NewMongoStorage("localhost", 27017, "testing")
+	bindAddress := flag.String("bind-address", "0.0.0.0", "address where server is bind")
+	bindPort := flag.Int("bind-port", 3333, "port where server is bind")
+
+	flag.Parse()
+
+	storage := NewMongoStorage(*mongoHost, *mongoPort, *dbName)
 	err := storage.Connect(nil)
 	if err != nil {
-		panic(err)
+		log.Panicln("failed to connect to MongoDB:", err)
 	}
 
-	importer := NewPcapImporter(storage, net.ParseIP("10.10.10.10"))
-
-	sessionId, err := importer.ImportPcap("capture_00459_20190627165500.pcap")
+	router := gin.Default()
+	ApplicationRoutes(router)
+	err = router.Run(fmt.Sprintf("%s:%v", *bindAddress, *bindPort))
 	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println(sessionId)
+		log.Panicln("failed to create the server:", err)
 	}
-
 }

@@ -1,4 +1,4 @@
-FROM eciavatta/caronte-env
+FROM eciavatta/caronte-env:latest
 
 COPY . /caronte
 

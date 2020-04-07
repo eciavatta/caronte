@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
 	"os"
 	"testing"
 	"time"
@@ -13,6 +14,9 @@ import (
 
 var storage Storage
 var testContext context.Context
+
+const testInsertManyFindCollection = "testFi"
+const testCollection = "characters"
 
 func TestMain(m *testing.M) {
 	mongoHost, ok := os.LookupEnv("MONGO_HOST")
@@ -31,15 +35,20 @@ func TestMain(m *testing.M) {
 		panic("failed to create mongo client")
 	}
 
-	db := client.Database(fmt.Sprintf("%x", uniqueDatabaseName[:31]))
+	dbName := fmt.Sprintf("%x", uniqueDatabaseName[:31])
+	db := client.Database(dbName)
+	log.Println("using database", dbName)
 	mongoStorage := MongoStorage{
 		client:      client,
-		collections: map[string]*mongo.Collection{testCollection: db.Collection(testCollection)},
+		collections: map[string]*mongo.Collection{
+			testInsertManyFindCollection: db.Collection(testInsertManyFindCollection),
+			testCollection: db.Collection(testCollection),
+		},
 	}
 
 	testContext, _ = context.WithTimeout(context.Background(), 10 * time.Second)
 
-	err = mongoStorage.Connect(nil)
+	err = mongoStorage.Connect(testContext)
 	if err != nil {
 		panic(err)
 	}
