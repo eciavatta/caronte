@@ -39,7 +39,7 @@ func TestReassemblingEmptyStream(t *testing.T) {
 	assert.Zero(t, streamHandler.currentIndex)
 	assert.Zero(t, streamHandler.firstPacketSeen)
 	assert.Zero(t, streamHandler.lastPacketSeen)
-	assert.Len(t, streamHandler.documentsKeys, 0)
+	assert.Len(t, streamHandler.documentsIDs, 0)
 	assert.Zero(t, streamHandler.streamLength)
 	assert.Len(t, streamHandler.patternMatches, 0)
 
@@ -125,7 +125,7 @@ func TestReassemblingSingleDocument(t *testing.T) {
 	assert.Equal(t, len(data), streamHandler.currentIndex)
 	assert.Equal(t, firstTime, streamHandler.firstPacketSeen)
 	assert.Equal(t, lastTime, streamHandler.lastPacketSeen)
-	assert.Len(t, streamHandler.documentsKeys, 1)
+	assert.Len(t, streamHandler.documentsIDs, 1)
 	assert.Equal(t, len(data), streamHandler.streamLength)
 	assert.Len(t, streamHandler.patternMatches, 0)
 
@@ -210,7 +210,7 @@ func TestReassemblingMultipleDocuments(t *testing.T) {
 	assert.Equal(t, MaxDocumentSize, streamHandler.currentIndex)
 	assert.Equal(t, firstTime, streamHandler.firstPacketSeen)
 	assert.Equal(t, lastTime, streamHandler.lastPacketSeen)
-	assert.Len(t, streamHandler.documentsKeys, 2)
+	assert.Len(t, streamHandler.documentsIDs, 2)
 	assert.Equal(t, len(data), streamHandler.streamLength)
 	assert.Len(t, streamHandler.patternMatches, 0)
 
@@ -287,7 +287,7 @@ func TestReassemblingPatternMatching(t *testing.T) {
 	assert.Equal(t, len(payload), streamHandler.currentIndex)
 	assert.Equal(t, seen, streamHandler.firstPacketSeen)
 	assert.Equal(t, seen, streamHandler.lastPacketSeen)
-	assert.Len(t, streamHandler.documentsKeys, 1)
+	assert.Len(t, streamHandler.documentsIDs, 1)
 	assert.Equal(t, len(payload), streamHandler.streamLength)
 
 	assert.Equal(t, true, completed, "completed")
@@ -310,7 +310,8 @@ func createTestStreamHandler(wrapper *TestStorageWrapper, patterns hyperscan.Str
 	srcPort := layers.NewTCPPortEndpoint(srcPort)
 	dstPort := layers.NewTCPPortEndpoint(dstPort)
 
-	return NewStreamHandler(testConnectionHandler, StreamKey{srcIp, dstIp, srcPort, dstPort}, scratch)
+	scanner := Scanner{scratch: scratch, version: ZeroRowID}
+	return NewStreamHandler(testConnectionHandler, StreamFlow{srcIp, dstIp, srcPort, dstPort}, scanner)
 }
 
 type testConnectionHandler struct {
@@ -327,7 +328,7 @@ func (tch *testConnectionHandler) Context() context.Context {
 	return tch.wrapper.Context
 }
 
-func (tch *testConnectionHandler) Patterns() hyperscan.StreamDatabase {
+func (tch *testConnectionHandler) PatternsDatabase() hyperscan.StreamDatabase {
 	return tch.patterns
 }
 

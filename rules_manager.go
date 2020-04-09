@@ -52,6 +52,11 @@ type Rule struct {
 	Version  int64     `json:"version" bson:"version"`
 }
 
+type RulesDatabase struct {
+	database hyperscan.StreamDatabase
+	version  RowID
+}
+
 type RulesManager struct {
 	storage         Storage
 	rules           map[string]Rule
@@ -59,7 +64,7 @@ type RulesManager struct {
 	ruleIndex       int
 	patterns        map[string]Pattern
 	mPatterns       sync.Mutex
-	databaseUpdated chan interface{}
+	databaseUpdated chan RulesDatabase
 }
 
 func NewRulesManager(storage Storage) RulesManager {
@@ -153,7 +158,10 @@ func (rm RulesManager) generateDatabase(version RowID) error {
 		return err
 	}
 
-	rm.databaseUpdated <- database
+	rm.databaseUpdated <- RulesDatabase{
+		database: database,
+		version:  version,
+	}
 	return nil
 }
 

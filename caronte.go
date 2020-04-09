@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"log"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -21,13 +21,13 @@ func main() {
 	storage := NewMongoStorage(*mongoHost, *mongoPort, *dbName)
 	err := storage.Connect(nil)
 	if err != nil {
-		log.Panicln("failed to connect to MongoDB:", err)
+		log.WithError(err).Fatal("failed to connect to MongoDB")
 	}
 
 	router := gin.Default()
 	ApplicationRoutes(router)
 	err = router.Run(fmt.Sprintf("%s:%v", *bindAddress, *bindPort))
 	if err != nil {
-		log.Panicln("failed to create the server:", err)
+		log.WithError(err).Fatal("failed to create the server")
 	}
 }
