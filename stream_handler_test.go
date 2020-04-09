@@ -332,6 +332,10 @@ func (tch *testConnectionHandler) PatternsDatabase() hyperscan.StreamDatabase {
 	return tch.patterns
 }
 
+func (tch *testConnectionHandler) PatternsDatabaseSize() int {
+	return 8
+}
+
 func (tch *testConnectionHandler) Complete(handler *StreamHandler) {
 	tch.onComplete(handler)
 }

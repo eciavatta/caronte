@@ -54,6 +54,7 @@ type Rule struct {
 
 type RulesDatabase struct {
 	database hyperscan.StreamDatabase
+	databaseSize int
 	version  RowID
 }
 
@@ -160,9 +161,15 @@ func (rm RulesManager) generateDatabase(version RowID) error {
 
 	rm.databaseUpdated <- RulesDatabase{
 		database: database,
+		databaseSize: len(patterns),
 		version:  version,
 	}
 	return nil
+}
+
+func (rm RulesManager) FillWithMatchedRules(connection *Connection, clientMatches map[uint][]PatternSlice,
+	serverMatches map[uint][]PatternSlice) {
+
 }
 
 func (p Pattern) BuildPattern() error {

@@ -17,4 +17,5 @@ type Connection struct {
 	ClientDocuments int       `json:"client_documents" bson:"client_documents"`
 	ServerDocuments int       `json:"server_documents" bson:"server_documents"`
 	ProcessedAt     time.Time `json:"processed_at" bson:"processed_at"`
+	MatchedRules    []RowID   `json:"matched_rules" bson:"matched_rules"`
 }

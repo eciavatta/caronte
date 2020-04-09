@@ -44,7 +44,7 @@ func NewStreamHandler(connection ConnectionHandler, streamFlow StreamFlow, scann
 		timestamps:     make([]time.Time, 0, InitialBlockCount),
 		lossBlocks:     make([]bool, 0, InitialBlockCount),
 		documentsIDs:   make([]RowID, 0, 1),               // most of the time the stream fit in one document
-		patternMatches: make(map[uint][]PatternSlice, 10), // TODO: change with exactly value
+		patternMatches: make(map[uint][]PatternSlice, connection.PatternsDatabaseSize()),
 		scanner:        scanner,
 	}
 
@@ -127,7 +127,7 @@ func (sh *StreamHandler) resetCurrentDocument() {
 	}
 }
 
-func (sh *StreamHandler) onMatch(id uint, from uint64, to uint64, flags uint, context interface{}) error {
+func (sh *StreamHandler) onMatch(id uint, from uint64, to uint64, _ uint, _ interface{}) error {
 	patternSlices, isPresent := sh.patternMatches[id]
 	if isPresent {
 		if len(patternSlices) > 0 {

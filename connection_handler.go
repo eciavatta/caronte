@@ -35,6 +35,7 @@ type ConnectionHandler interface {
 	Complete(handler *StreamHandler)
 	Storage() Storage
 	PatternsDatabase() hyperscan.StreamDatabase
+	PatternsDatabaseSize() int
 }
 
 type connectionHandlerImpl struct {
@@ -203,6 +204,8 @@ func (ch *connectionHandlerImpl) Complete(handler *StreamHandler) {
 		ServerDocuments: len(server.documentsIDs),
 		ProcessedAt:     time.Now(),
 	}
+	ch.factory.rulesManager.FillWithMatchedRules(&connection, client.patternMatches, server.patternMatches)
+
 	_, err := ch.Storage().Insert(Connections).One(connection)
 	if err != nil {
 		log.WithError(err).WithField("connection", connection).Error("failed to insert a connection")
@@ -226,6 +229,10 @@ func (ch *connectionHandlerImpl) Storage() Storage {
 
 func (ch *connectionHandlerImpl) PatternsDatabase() hyperscan.StreamDatabase {
 	return ch.factory.rulesDatabase.database
+}
+
+func (ch *connectionHandlerImpl) PatternsDatabaseSize() int {
+	return ch.factory.rulesDatabase.databaseSize
 }
 
 func (sf StreamFlow) Hash() uint64 {
