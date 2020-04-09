@@ -3,56 +3,53 @@ package main
 import (
 	"context"
 	"crypto/sha256"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/flier/gohs/hyperscan"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"sync"
 	"time"
 )
 
-
 type RegexFlags struct {
-	Caseless bool `json:"caseless"`    // Set case-insensitive matching.
-	DotAll bool `json:"dot_all"`    // Matching a `.` will not exclude newlines.
-	MultiLine bool `json:"multi_line"`  // Set multi-line anchoring.
-	SingleMatch bool `json:"single_match"`  // Set single-match only mode.
-	Utf8Mode bool `json:"utf_8_mode"`         // Enable UTF-8 mode for this expression.
-	UnicodeProperty bool `json:"unicode_property"`  // Enable Unicode property support for this expression
+	Caseless        bool `json:"caseless"`         // Set case-insensitive matching.
+	DotAll          bool `json:"dot_all"`          // Matching a `.` will not exclude newlines.
+	MultiLine       bool `json:"multi_line"`       // Set multi-line anchoring.
+	SingleMatch     bool `json:"single_match"`     // Set single-match only mode.
+	Utf8Mode        bool `json:"utf_8_mode"`       // Enable UTF-8 mode for this expression.
+	UnicodeProperty bool `json:"unicode_property"` // Enable Unicode property support for this expression
 }
 
 type Pattern struct {
-	Regex string `json:"regex"`
-	Flags RegexFlags `json:"flags"`
-	MinOccurrences int `json:"min_occurrences"`
-	MaxOccurrences int `json:"max_occurrences"`
-	internalId int
+	Regex           string     `json:"regex"`
+	Flags           RegexFlags `json:"flags"`
+	MinOccurrences  int        `json:"min_occurrences"`
+	MaxOccurrences  int        `json:"max_occurrences"`
+	internalId      int
 	compiledPattern *hyperscan.Pattern
 }
 
 type Filter struct {
-	ServicePort int
+	ServicePort   int
 	ClientAddress string
-	ClientPort int
-	MinDuration int
-	MaxDuration int
-	MinPackets int
-	MaxPackets int
-	MinSize int
-	MaxSize int
+	ClientPort    int
+	MinDuration   int
+	MaxDuration   int
+	MinPackets    int
+	MaxPackets    int
+	MinSize       int
+	MaxSize       int
 }
 
 type Rule struct {
-	Id string `json:"-" bson:"_id,omitempty"`
-	Name string `json:"name" binding:"required,min=3" bson:"name"`
-	Color string `json:"color" binding:"required,hexcolor" bson:"color"`
-	Notes string `json:"notes" bson:"notes,omitempty"`
-	Enabled bool `json:"enabled" bson:"enabled"`
+	Id       RowID     `json:"-" bson:"_id,omitempty"`
+	Name     string    `json:"name" binding:"required,min=3" bson:"name"`
+	Color    string    `json:"color" binding:"required,hexcolor" bson:"color"`
+	Notes    string    `json:"notes" bson:"notes,omitempty"`
+	Enabled  bool      `json:"enabled" bson:"enabled"`
 	Patterns []Pattern `json:"patterns" binding:"required,min=1" bson:"patterns"`
-	Filter Filter `json:"filter" bson:"filter,omitempty"`
-	Version int64 `json:"version" bson:"version"`
+	Filter   Filter    `json:"filter" bson:"filter,omitempty"`
+	Version  int64     `json:"version" bson:"version"`
 }
 
 type RulesManager struct {
@@ -67,56 +64,52 @@ type RulesManager struct {
 
 func NewRulesManager(storage Storage) RulesManager {
 	return RulesManager{
-		storage:        storage,
-		rules:          make(map[string]Rule),
-		patterns:       make(map[string]Pattern),
-		mPatterns:      sync.Mutex{},
+		storage:   storage,
+		rules:     make(map[string]Rule),
+		patterns:  make(map[string]Pattern),
+		mPatterns: sync.Mutex{},
 	}
 }
 
-
-
 func (rm RulesManager) LoadRules() error {
 	var rules []Rule
-	if err := rm.storage.Find(nil, Rules, NoFilters, &rules); err != nil {
+	if err := rm.storage.Find(Rules).Sort("_id", true).All(&rules); err != nil {
 		return err
 	}
 
-	var version int64
 	for _, rule := range rules {
 		if err := rm.validateAndAddRuleLocal(&rule); err != nil {
-			log.Printf("failed to import rule %s: %s\n", rule.Name, err)
-			continue
-		}
-		if rule.Version > version {
-			version = rule.Version
+			log.WithError(err).WithField("rule", rule).Warn("failed to import rule")
 		}
 	}
 
 	rm.ruleIndex = len(rules)
-	return rm.generateDatabase(0)
+	return rm.generateDatabase(rules[len(rules)-1].Id)
 }
 
 func (rm RulesManager) AddRule(context context.Context, rule Rule) (string, error) {
 	rm.mPatterns.Lock()
 
-	rule.Id = UniqueKey(time.Now(), uint32(rm.ruleIndex))
+	rule.Id = rm.storage.NewCustomRowID(uint64(rm.ruleIndex), time.Now())
 	rule.Enabled = true
 
 	if err := rm.validateAndAddRuleLocal(&rule); err != nil {
 		rm.mPatterns.Unlock()
 		return "", err
 	}
+
+	if err := rm.generateDatabase(rule.Id); err != nil {
+		rm.mPatterns.Unlock()
+		log.WithError(err).WithField("rule", rule).Panic("failed to generate database")
+	}
 	rm.mPatterns.Unlock()
 
-	if _, err := rm.storage.InsertOne(context, Rules, rule); err != nil {
-		return "", err
+	if _, err := rm.storage.Insert(Rules).Context(context).One(rule); err != nil {
+		log.WithError(err).WithField("rule", rule).Panic("failed to insert rule on database")
 	}
 
-	return rule.Id, rm.generateDatabase(rule.Id)
+	return rule.Id.Hex(), nil
 }
-
-
 
 func (rm RulesManager) validateAndAddRuleLocal(rule *Rule) error {
 	if _, alreadyPresent := rm.rulesByName[rule.Name]; alreadyPresent {
@@ -142,16 +135,18 @@ func (rm RulesManager) validateAndAddRuleLocal(rule *Rule) error {
 		rm.patterns[key] = value
 	}
 
-	rm.rules[rule.Id] = *rule
+	rm.rules[rule.Id.Hex()] = *rule
 	rm.rulesByName[rule.Name] = *rule
 
 	return nil
 }
 
-func (rm RulesManager) generateDatabase(version string) error {
+func (rm RulesManager) generateDatabase(version RowID) error {
 	patterns := make([]*hyperscan.Pattern, len(rm.patterns))
+	var i int
 	for _, pattern := range rm.patterns {
-		patterns = append(patterns, pattern.compiledPattern)
+		patterns[i] = pattern.compiledPattern
+		i++
 	}
 	database, err := hyperscan.NewStreamDatabase(patterns...)
 	if err != nil {
@@ -161,7 +156,6 @@ func (rm RulesManager) generateDatabase(version string) error {
 	rm.databaseUpdated <- database
 	return nil
 }
-
 
 func (p Pattern) BuildPattern() error {
 	if p.compiledPattern != nil {
@@ -209,34 +203,4 @@ func (p Pattern) Hash() string {
 	hash := sha256.New()
 	hash.Write([]byte(fmt.Sprintf("%s|%v|%v|%v", p.Regex, p.Flags, p.MinOccurrences, p.MaxOccurrences)))
 	return fmt.Sprintf("%x", hash.Sum(nil))
-}
-
-func test() {
-	user := &Pattern{Regex: "Frank"}
-	b, err := json.Marshal(user)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(string(b))
-
-	p, _ := hyperscan.ParsePattern("/a/")
-	p1, _ := hyperscan.ParsePattern("/a/")
-	fmt.Println(p1.String(), p1.Flags)
-	//p1.Id = 1
-
-	fmt.Println(*p == *p1)
-	db, _ := hyperscan.NewBlockDatabase(p, p1)
-	s, _ := hyperscan.NewScratch(db)
-	db.Scan([]byte("Ciao"), s, onMatch, nil)
-
-
-
-
-}
-
-func onMatch(id uint, from uint64, to uint64, flags uint, context interface{}) error {
-	fmt.Println(id)
-
-	return nil
 }

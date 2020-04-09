@@ -1,8 +1,6 @@
 package main
 
 import (
-	"context"
-	"errors"
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"testing"
@@ -11,102 +9,177 @@ import (
 
 type a struct {
 	Id primitive.ObjectID `bson:"_id,omitempty"`
-	A string `bson:"a,omitempty"`
-	B int `bson:"b,omitempty"`
-	C time.Time `bson:"c,omitempty"`
-	D map[string]b `bson:"d"`
-	E []b `bson:"e,omitempty"`
+	A  string             `bson:"a,omitempty"`
+	B  int                `bson:"b,omitempty"`
+	C  time.Time          `bson:"c,omitempty"`
+	D  map[string]b       `bson:"d"`
+	E  []b                `bson:"e,omitempty"`
 }
 
 type b struct {
 	A string `bson:"a,omitempty"`
-	B int `bson:"b,omitempty"`
+	B int    `bson:"b,omitempty"`
 }
 
-func testInsert(t *testing.T) {
-	// insert a document in an invalid connection
-	insertedId, err := storage.InsertOne(testContext, "invalid_collection",
-		OrderedDocument{{"key", "invalid"}})
-	if insertedId != nil || err == nil {
-		t.Fatal("inserting documents in invalid collections must fail")
-	}
+func TestOperationOnInvalidCollection(t *testing.T) {
+	wrapper := NewTestStorageWrapper(t)
 
-	// insert ordered document
-	beatriceId, err := storage.InsertOne(testContext, testCollection,
-		OrderedDocument{{"name", "Beatrice"}, {"description", "blablabla"}})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if beatriceId == nil {
-		t.Fatal("failed to insert an ordered document")
-	}
+	simpleDoc := UnorderedDocument{"key": "a", "value": 0}
+	insertOp := wrapper.Storage.Insert("invalid_collection").Context(wrapper.Context)
+	insertedId, err := insertOp.One(simpleDoc)
+	assert.Nil(t, insertedId)
+	assert.Error(t, err)
 
-	// insert unordered document
-	virgilioId, err := storage.InsertOne(testContext, testCollection,
-		UnorderedDocument{"name": "Virgilio", "description": "blablabla"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if virgilioId == nil {
-		t.Fatal("failed to insert an unordered document")
-	}
+	insertedIds, err := insertOp.Many([]interface{}{simpleDoc})
+	assert.Nil(t, insertedIds)
+	assert.Error(t, err)
 
-	// insert document with custom id
-	danteId := "000000"
-	insertedId, err = storage.InsertOne(testContext, testCollection,
-		UnorderedDocument{"_id": danteId, "name": "Dante Alighieri", "description": "blablabla"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if insertedId != danteId {
-		t.Fatal("returned id doesn't match")
-	}
+	updateOp := wrapper.Storage.Update("invalid_collection").Context(wrapper.Context)
+	isUpdated, err := updateOp.One(simpleDoc)
+	assert.False(t, isUpdated)
+	assert.Error(t, err)
 
-	// insert duplicate document
-	insertedId, err = storage.InsertOne(testContext, testCollection,
-		UnorderedDocument{"_id": danteId, "name": "Dante Alighieri", "description": "blablabla"})
-	if insertedId != nil || err == nil {
-		t.Fatal("inserting duplicate id must fail")
-	}
+	updated, err := updateOp.Many(simpleDoc)
+	assert.Zero(t, updated)
+	assert.Error(t, err)
+
+	findOp := wrapper.Storage.Find("invalid_collection").Context(wrapper.Context)
+	var result interface{}
+	err = findOp.First(&result)
+	assert.Nil(t, result)
+	assert.Error(t, err)
+
+	var results interface{}
+	err = findOp.All(&result)
+	assert.Nil(t, results)
+	assert.Error(t, err)
+
+	wrapper.Destroy(t)
 }
 
-func testFindOne(t *testing.T) {
-	// find a document in an invalid connection
-	result, err := storage.FindOne(testContext, "invalid_collection",
-		OrderedDocument{{"key", "invalid"}})
-	if result != nil || err == nil {
-		t.Fatal("find a document in an invalid collections must fail")
-	}
+func TestSimpleInsertAndFind(t *testing.T) {
+	wrapper := NewTestStorageWrapper(t)
+	collectionName := "simple_insert_find"
+	wrapper.AddCollection(collectionName)
 
-	// find an existing document
-	result, err = storage.FindOne(testContext, testCollection, OrderedDocument{{"_id", "000000"}})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if result == nil {
-		t.Fatal("FindOne cannot find the valid document")
-	}
-	name, ok := result["name"]
-	if !ok || name != "Dante Alighieri" {
-		t.Fatal("document retrieved with FindOne is invalid")
-	}
+	insertOp := wrapper.Storage.Insert(collectionName).Context(wrapper.Context)
+	simpleDocA := UnorderedDocument{"key": "a"}
+	idA, err := insertOp.One(simpleDocA)
+	assert.Len(t, idA, 12)
+	assert.Nil(t, err)
 
-	// find an existing document
-	result, err = storage.FindOne(testContext, testCollection, OrderedDocument{{"_id", "invalid_id"}})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if result != nil {
-		t.Fatal("FindOne cannot find an invalid document")
-	}
+	simpleDocB := UnorderedDocument{"_id": "idb", "key": "b"}
+	idB, err := insertOp.One(simpleDocB)
+	assert.Equal(t, "idb", idB)
+	assert.Nil(t, err)
+
+	var result UnorderedDocument
+	findOp := wrapper.Storage.Find(collectionName).Context(wrapper.Context)
+	err = findOp.Filter(OrderedDocument{{"key", "a"}}).First(&result)
+	assert.Nil(t, err)
+	assert.Equal(t, idA, result["_id"])
+	assert.Equal(t, simpleDocA["key"], result["key"])
+
+	err = findOp.Filter(OrderedDocument{{"_id", idB}}).First(&result)
+	assert.Nil(t, err)
+	assert.Equal(t, idB, result["_id"])
+	assert.Equal(t, simpleDocB["key"], result["key"])
+
+	wrapper.Destroy(t)
 }
 
-func TestBasicOperations(t *testing.T) {
-	t.Run("testInsert", testInsert)
-	t.Run("testFindOne", testFindOne)
+func TestSimpleInsertManyAndFindMany(t *testing.T) {
+	wrapper := NewTestStorageWrapper(t)
+	collectionName := "simple_insert_many_find_many"
+	wrapper.AddCollection(collectionName)
+
+	insertOp := wrapper.Storage.Insert(collectionName).Context(wrapper.Context)
+	simpleDocs := []interface{}{
+		UnorderedDocument{"key": "a"},
+		UnorderedDocument{"_id": "idb", "key": "b"},
+		UnorderedDocument{"key": "c"},
+	}
+	ids, err := insertOp.Many(simpleDocs)
+	assert.Nil(t, err)
+	assert.Len(t, ids, 3)
+	assert.Equal(t, "idb", ids[1])
+
+	var results []UnorderedDocument
+	findOp := wrapper.Storage.Find(collectionName).Context(wrapper.Context)
+	err = findOp.Sort("key", false).All(&results) // test sort ascending
+	assert.Nil(t, err)
+	assert.Len(t, results, 3)
+	assert.Equal(t, "c", results[0]["key"])
+	assert.Equal(t, "b", results[1]["key"])
+	assert.Equal(t, "a", results[2]["key"])
+
+	err = findOp.Sort("key", true).All(&results) // test sort descending
+	assert.Nil(t, err)
+	assert.Len(t, results, 3)
+	assert.Equal(t, "c", results[2]["key"])
+	assert.Equal(t, "b", results[1]["key"])
+	assert.Equal(t, "a", results[0]["key"])
+
+	err = findOp.Filter(OrderedDocument{{"key", OrderedDocument{{"$gte", "b"}}}}).
+		Sort("key", true).All(&results) // test filter
+	assert.Nil(t, err)
+	assert.Len(t, results, 2)
+	assert.Equal(t, "b", results[0]["key"])
+	assert.Equal(t, "c", results[1]["key"])
+
+	wrapper.Destroy(t)
 }
 
-func TestInsertManyFindDocuments(t *testing.T) {
+func TestSimpleUpdateOneUpdateMany(t *testing.T) {
+	wrapper := NewTestStorageWrapper(t)
+	collectionName := "simple_update_one_update_many"
+	wrapper.AddCollection(collectionName)
+
+	insertOp := wrapper.Storage.Insert(collectionName).Context(wrapper.Context)
+	simpleDocs := []interface{}{
+		UnorderedDocument{"_id": "ida", "key": "a"},
+		UnorderedDocument{"key": "b"},
+		UnorderedDocument{"key": "c"},
+	}
+	_, err := insertOp.Many(simpleDocs)
+	assert.Nil(t, err)
+
+	updateOp := wrapper.Storage.Update(collectionName).Context(wrapper.Context)
+	isUpdated, err := updateOp.Filter(OrderedDocument{{"_id", "ida"}}).
+		One(OrderedDocument{{"key", "aa"}})
+	assert.Nil(t, err)
+	assert.True(t, isUpdated)
+
+	updated, err := updateOp.Filter(OrderedDocument{{"key", OrderedDocument{{"$gte", "b"}}}}).
+		Many(OrderedDocument{{"key", "bb"}})
+	assert.Nil(t, err)
+	assert.Equal(t, int64(2), updated)
+
+	var upsertId interface{}
+	isUpdated, err = updateOp.Upsert(&upsertId).Filter(OrderedDocument{{"key", "d"}}).
+		One(OrderedDocument{{"key", "d"}})
+	assert.Nil(t, err)
+	assert.False(t, isUpdated)
+	assert.NotNil(t, upsertId)
+
+	var results []UnorderedDocument
+	findOp := wrapper.Storage.Find(collectionName).Context(wrapper.Context)
+	err = findOp.Sort("key", true).All(&results) // test sort ascending
+	assert.Nil(t, err)
+	assert.Len(t, results, 4)
+	assert.Equal(t, "aa", results[0]["key"])
+	assert.Equal(t, "bb", results[1]["key"])
+	assert.Equal(t, "bb", results[2]["key"])
+	assert.Equal(t, "d", results[3]["key"])
+
+	wrapper.Destroy(t)
+}
+
+func TestComplexInsertManyFindMany(t *testing.T) {
+	wrapper := NewTestStorageWrapper(t)
+	collectionName := "complex_insert_many_find_many"
+	wrapper.AddCollection(collectionName)
+
 	testTime := time.Now()
 	oid1, err := primitive.ObjectIDFromHex("ffffffffffffffffffffffff")
 	assert.Nil(t, err)
@@ -117,7 +190,7 @@ func TestInsertManyFindDocuments(t *testing.T) {
 			B: 0,
 			C: testTime,
 			D: map[string]b{
-				"first": {A: "0", B: 0},
+				"first":  {A: "0", B: 0},
 				"second": {A: "1", B: 1},
 			},
 			E: []b{
@@ -126,22 +199,22 @@ func TestInsertManyFindDocuments(t *testing.T) {
 		},
 		a{
 			Id: oid1,
-			A: "test1",
-			B: 1,
-			C: testTime,
-			D: map[string]b{},
-			E: []b{},
+			A:  "test1",
+			B:  1,
+			C:  testTime,
+			D:  map[string]b{},
+			E:  []b{},
 		},
 		a{},
 	}
 
-	ids, err := storage.InsertMany(testContext, testInsertManyFindCollection, docs)
+	ids, err := wrapper.Storage.Insert(collectionName).Context(wrapper.Context).Many(docs)
 	assert.Nil(t, err)
 	assert.Len(t, ids, 3)
 	assert.Equal(t, ids[1], oid1)
 
 	var results []a
-	err = storage.Find(testContext, testInsertManyFindCollection, NoFilters, &results)
+	err = wrapper.Storage.Find(collectionName).Context(wrapper.Context).All(&results)
 	assert.Nil(t, err)
 	assert.Len(t, results, 3)
 	doc0, doc1, doc2 := docs[0].(a), docs[1].(a), docs[2].(a)
@@ -163,57 +236,6 @@ func TestInsertManyFindDocuments(t *testing.T) {
 	assert.Equal(t, doc0.E, results[0].E)
 	assert.Nil(t, results[1].E)
 	assert.Nil(t, results[2].E)
-}
 
-type testStorage struct {
-	insertFunc func(ctx context.Context, collectionName string, document interface{}) (interface{}, error)
-	insertManyFunc func(ctx context.Context, collectionName string, document []interface{}) ([]interface{}, error)
-	updateOne func(ctx context.Context, collectionName string, filter interface{}, update interface {}, upsert bool) (interface{}, error)
-	updateMany func(ctx context.Context, collectionName string, filter interface{}, update interface {}, upsert bool) (interface{}, error)
-	findOne func(ctx context.Context, collectionName string, filter interface{}) (UnorderedDocument, error)
-	find func(ctx context.Context, collectionName string, filter interface{}, results interface{}) error
-}
-
-func (ts testStorage) InsertOne(ctx context.Context, collectionName string, document interface{}) (interface{}, error) {
-	if ts.insertFunc != nil {
-		return ts.insertFunc(ctx, collectionName, document)
-	}
-	return nil, errors.New("not implemented")
-}
-
-func (ts testStorage) InsertMany(ctx context.Context, collectionName string, document []interface{}) ([]interface{}, error) {
-	if ts.insertFunc != nil {
-		return ts.insertManyFunc(ctx, collectionName, document)
-	}
-	return nil, errors.New("not implemented")
-}
-
-func (ts testStorage) UpdateOne(ctx context.Context, collectionName string, filter interface{}, update interface {},
-	upsert bool) (interface{}, error) {
-	if ts.updateOne != nil {
-		return ts.updateOne(ctx, collectionName, filter, update, upsert)
-	}
-	return nil, errors.New("not implemented")
-}
-
-func (ts testStorage) UpdateMany(ctx context.Context, collectionName string, filter interface{}, update interface {},
-	upsert bool) (interface{}, error) {
-	if ts.updateOne != nil {
-		return ts.updateMany(ctx, collectionName, filter, update, upsert)
-	}
-	return nil, errors.New("not implemented")
-}
-
-func (ts testStorage) FindOne(ctx context.Context, collectionName string, filter interface{}) (UnorderedDocument, error) {
-	if ts.findOne != nil {
-		return ts.findOne(ctx, collectionName, filter)
-	}
-	return nil, errors.New("not implemented")
-}
-
-func (ts testStorage) Find(ctx context.Context, collectionName string, filter interface{}, results interface{}) error {
-	if ts.find != nil {
-		return ts.find(ctx, collectionName, filter, results)
-	}
-	return errors.New("not implemented")
+	wrapper.Destroy(t)
 }

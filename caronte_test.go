@@ -4,21 +4,21 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"log"
+	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/require"
 	"os"
+	"strconv"
 	"testing"
 	"time"
 )
 
-var storage Storage
-var testContext context.Context
+type TestStorageWrapper struct {
+	DbName  string
+	Storage *MongoStorage
+	Context context.Context
+}
 
-const testInsertManyFindCollection = "testFi"
-const testCollection = "characters"
-
-func TestMain(m *testing.M) {
+func NewTestStorageWrapper(t *testing.T) *TestStorageWrapper {
 	mongoHost, ok := os.LookupEnv("MONGO_HOST")
 	if !ok {
 		mongoHost = "localhost"
@@ -27,33 +27,31 @@ func TestMain(m *testing.M) {
 	if !ok {
 		mongoPort = "27017"
 	}
+	port, err := strconv.Atoi(mongoPort)
+	require.NoError(t, err, "invalid port")
 
 	uniqueDatabaseName := sha256.Sum256([]byte(time.Now().String()))
-
-	client, err := mongo.NewClient(options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:%v", mongoHost, mongoPort)))
-	if err != nil {
-		panic("failed to create mongo client")
-	}
-
 	dbName := fmt.Sprintf("%x", uniqueDatabaseName[:31])
-	db := client.Database(dbName)
-	log.Println("using database", dbName)
-	mongoStorage := MongoStorage{
-		client:      client,
-		collections: map[string]*mongo.Collection{
-			testInsertManyFindCollection: db.Collection(testInsertManyFindCollection),
-			testCollection: db.Collection(testCollection),
-		},
+	log.WithField("dbName", dbName).Info("creating new storage")
+
+	storage := NewMongoStorage(mongoHost, port, dbName)
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+
+	err = storage.Connect(ctx)
+	require.NoError(t, err, "failed to connect to database")
+
+	return &TestStorageWrapper{
+		DbName:  dbName,
+		Storage: storage,
+		Context: ctx,
 	}
+}
 
-	testContext, _ = context.WithTimeout(context.Background(), 10 * time.Second)
+func (tsw TestStorageWrapper) AddCollection(collectionName string) {
+	tsw.Storage.collections[collectionName] = tsw.Storage.client.Database(tsw.DbName).Collection(collectionName)
+}
 
-	err = mongoStorage.Connect(testContext)
-	if err != nil {
-		panic(err)
-	}
-	storage = &mongoStorage
-
-	exitCode := m.Run()
-	os.Exit(exitCode)
+func (tsw TestStorageWrapper) Destroy(t *testing.T) {
+	err := tsw.Storage.client.Disconnect(tsw.Context)
+	require.NoError(t, err, "failed to disconnect to database")
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 )
 
@@ -23,6 +23,7 @@ func ApplicationRoutes(engine *gin.Engine) {
 						"error": fmt.Sprintf("field '%v' does not respect the %v(%v) rule",
 							fieldErr.Field(), fieldErr.Tag(), fieldErr.Param()),
 					})
+					log.WithError(err).WithField("rule", rule).Panic("oops")
 					return // exit on first error
 				}
 			}

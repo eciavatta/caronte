@@ -64,7 +64,7 @@ func (factory *BiDirectionalStreamFactory) New(net, transport gopacket.Flow) tcp
 			initiator: initiator,
 			mComplete: sync.Mutex{},
 			context:   context.Background(),
-			patterns : factory.patterns,
+			patterns:  factory.patterns,
 		}
 		factory.connections[key] = connection
 	}
@@ -122,7 +122,7 @@ func (ch *connectionHandlerImpl) Complete(handler *StreamHandler) {
 
 	ch.generateConnectionKey(startedAt)
 
-	_, err := ch.storage.InsertOne(ch.context, "connections", OrderedDocument{
+	_, err := ch.storage.Insert("connections").Context(ch.context).One(OrderedDocument{
 		{"_id", ch.connectionKey},
 		{"ip_src", ch.initiator[0].String()},
 		{"ip_dst", ch.initiator[1].String()},
@@ -141,14 +141,14 @@ func (ch *connectionHandlerImpl) Complete(handler *StreamHandler) {
 	}
 
 	streamsIds := append(client.documentsKeys, server.documentsKeys...)
-	n, err := ch.storage.UpdateOne(ch.context, "connection_streams",
-		UnorderedDocument{"_id": UnorderedDocument{"$in": streamsIds}},
-		UnorderedDocument{"connection_id": ch.connectionKey},
-		false)
+	n, err := ch.storage.Update("connection_streams").
+		Context(ch.context).
+		Filter(OrderedDocument{{"_id", UnorderedDocument{"$in": streamsIds}}}).
+		Many(UnorderedDocument{"connection_id": ch.connectionKey})
 	if err != nil {
 		log.Println("failed to update connection streams", err)
 	}
-	if n != len(streamsIds) {
+	if int(n) != len(streamsIds) {
 		log.Println("failed to update all connections streams")
 	}
 }
