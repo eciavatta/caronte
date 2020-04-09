@@ -15,7 +15,7 @@ const initialScannersCapacity = 1024
 
 type BiDirectionalStreamFactory struct {
 	storage        Storage
-	serverIp       gopacket.Endpoint
+	serverIP       gopacket.Endpoint
 	connections    map[StreamFlow]ConnectionHandler
 	mConnections   sync.Mutex
 	rulesManager   *RulesManager
@@ -50,7 +50,7 @@ func NewBiDirectionalStreamFactory(storage Storage, serverIP gopacket.Endpoint,
 
 	factory := &BiDirectionalStreamFactory{
 		storage:        storage,
-		serverIp:       serverIP,
+		serverIP:       serverIP,
 		connections:    make(map[StreamFlow]ConnectionHandler, initialConnectionsCapacity),
 		mConnections:   sync.Mutex{},
 		rulesManager:   rulesManager,
@@ -136,7 +136,7 @@ func (factory *BiDirectionalStreamFactory) New(net, transport gopacket.Flow) tcp
 		delete(factory.connections, invertedFlow)
 	} else {
 		var connectionFlow StreamFlow
-		if net.Src() == factory.serverIp {
+		if net.Src() == factory.serverIP {
 			connectionFlow = invertedFlow
 		} else {
 			connectionFlow = flow
@@ -212,13 +212,13 @@ func (ch *connectionHandlerImpl) Complete(handler *StreamHandler) {
 		return
 	}
 
-	streamsIds := append(client.documentsIDs, server.documentsIDs...)
+	streamsIDs := append(client.documentsIDs, server.documentsIDs...)
 	n, err := ch.Storage().Update(ConnectionStreams).
-		Filter(OrderedDocument{{"_id", UnorderedDocument{"$in": streamsIds}}}).
+		Filter(OrderedDocument{{"_id", UnorderedDocument{"$in": streamsIDs}}}).
 		Many(UnorderedDocument{"connection_id": connectionID})
 	if err != nil {
 		log.WithError(err).WithField("connection", connection).Error("failed to update connection streams")
-	} else if int(n) != len(streamsIds) {
+	} else if int(n) != len(streamsIDs) {
 		log.WithError(err).WithField("connection", connection).Error("failed to update all connections streams")
 	}
 }

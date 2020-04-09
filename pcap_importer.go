@@ -17,7 +17,7 @@ import (
 
 const initialAssemblerPoolSize = 16
 const flushOlderThan = 5 * time.Minute
-const invalidSessionId = "invalid_id"
+const invalidSessionID = "invalid_id"
 const importUpdateProgressInterval = 3 * time.Second
 const initialPacketPerServicesMapSize = 16
 const importedPcapsCollectionName = "imported_pcaps"
@@ -29,16 +29,16 @@ type PcapImporter struct {
 	sessions    map[string]context.CancelFunc
 	mAssemblers sync.Mutex
 	mSessions   sync.Mutex
-	serverIp    gopacket.Endpoint
+	serverIP    gopacket.Endpoint
 }
 
 type flowCount [2]int
 
-func NewPcapImporter(storage Storage, serverIp net.IP) *PcapImporter {
-	serverEndpoint := layers.NewIPEndpoint(serverIp)
+func NewPcapImporter(storage Storage, serverIP net.IP) *PcapImporter {
+	serverEndpoint := layers.NewIPEndpoint(serverIP)
 	streamFactory := &BiDirectionalStreamFactory{
 		storage:  storage,
-		serverIp: serverEndpoint,
+		serverIP: serverEndpoint,
 	}
 	streamPool := tcpassembly.NewStreamPool(streamFactory)
 
@@ -49,7 +49,7 @@ func NewPcapImporter(storage Storage, serverIp net.IP) *PcapImporter {
 		sessions:    make(map[string]context.CancelFunc),
 		mAssemblers: sync.Mutex{},
 		mSessions:   sync.Mutex{},
-		serverIp:    serverEndpoint,
+		serverIP:    serverEndpoint,
 	}
 }
 
@@ -60,7 +60,7 @@ func NewPcapImporter(storage Storage, serverIp net.IP) *PcapImporter {
 func (pi *PcapImporter) ImportPcap(fileName string) (string, error) {
 	hash, err := Sha256Sum(fileName)
 	if err != nil {
-		return invalidSessionId, err
+		return invalidSessionID, err
 	}
 
 	pi.mSessions.Lock()
@@ -97,21 +97,21 @@ func (pi *PcapImporter) ImportPcap(fileName string) (string, error) {
 	return hash, nil
 }
 
-func (pi *PcapImporter) CancelImport(sessionId string) error {
+func (pi *PcapImporter) CancelImport(sessionID string) error {
 	pi.mSessions.Lock()
 	defer pi.mSessions.Unlock()
-	cancel, ok := pi.sessions[sessionId]
+	cancel, ok := pi.sessions[sessionID]
 	if ok {
-		delete(pi.sessions, sessionId)
+		delete(pi.sessions, sessionID)
 		cancel()
 		return nil
 	} else {
-		return errors.New("session " + sessionId + " not found")
+		return errors.New("session " + sessionID + " not found")
 	}
 }
 
 // Read the pcap and save the tcp stream flow to the database
-func (pi *PcapImporter) parsePcap(sessionId, fileName string, ctx context.Context) {
+func (pi *PcapImporter) parsePcap(sessionID, fileName string, ctx context.Context) {
 	handle, err := pcap.OpenOffline(fileName)
 	if err != nil {
 		// TODO: update db and set error
@@ -141,7 +141,7 @@ func (pi *PcapImporter) parsePcap(sessionId, fileName string, ctx context.Contex
 		}
 
 		_, _err := pi.storage.Update(importedPcapsCollectionName).
-			Filter(OrderedDocument{{"_id", sessionId}}).
+			Filter(OrderedDocument{{"_id", sessionID}}).
 			One(nil)
 		if _err != nil {
 			log.Println("can't update importing statistics : ", _err)
@@ -150,7 +150,7 @@ func (pi *PcapImporter) parsePcap(sessionId, fileName string, ctx context.Contex
 
 	deleteSession := func() {
 		pi.mSessions.Lock()
-		delete(pi.sessions, sessionId)
+		delete(pi.sessions, sessionID)
 		pi.mSessions.Unlock()
 	}
 
@@ -193,7 +193,7 @@ func (pi *PcapImporter) parsePcap(sessionId, fileName string, ctx context.Contex
 
 			tcp := packet.TransportLayer().(*layers.TCP)
 			var servicePort, index int
-			if packet.NetworkLayer().NetworkFlow().Dst() == pi.serverIp {
+			if packet.NetworkLayer().NetworkFlow().Dst() == pi.serverIP {
 				servicePort, _ = strconv.Atoi(tcp.DstPort.String())
 				index = 0
 			} else {

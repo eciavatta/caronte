@@ -25,7 +25,7 @@ type Pattern struct {
 	Flags           RegexFlags `json:"flags"`
 	MinOccurrences  int        `json:"min_occurrences"`
 	MaxOccurrences  int        `json:"max_occurrences"`
-	internalId      int
+	internalID      int
 	compiledPattern *hyperscan.Pattern
 }
 
@@ -42,7 +42,7 @@ type Filter struct {
 }
 
 type Rule struct {
-	Id       RowID     `json:"-" bson:"_id,omitempty"`
+	ID       RowID     `json:"-" bson:"_id,omitempty"`
 	Name     string    `json:"name" binding:"required,min=3" bson:"name"`
 	Color    string    `json:"color" binding:"required,hexcolor" bson:"color"`
 	Notes    string    `json:"notes" bson:"notes,omitempty"`
@@ -90,13 +90,13 @@ func (rm RulesManager) LoadRules() error {
 	}
 
 	rm.ruleIndex = len(rules)
-	return rm.generateDatabase(rules[len(rules)-1].Id)
+	return rm.generateDatabase(rules[len(rules)-1].ID)
 }
 
 func (rm RulesManager) AddRule(context context.Context, rule Rule) (string, error) {
 	rm.mPatterns.Lock()
 
-	rule.Id = rm.storage.NewCustomRowID(uint64(rm.ruleIndex), time.Now())
+	rule.ID = rm.storage.NewCustomRowID(uint64(rm.ruleIndex), time.Now())
 	rule.Enabled = true
 
 	if err := rm.validateAndAddRuleLocal(&rule); err != nil {
@@ -104,7 +104,7 @@ func (rm RulesManager) AddRule(context context.Context, rule Rule) (string, erro
 		return "", err
 	}
 
-	if err := rm.generateDatabase(rule.Id); err != nil {
+	if err := rm.generateDatabase(rule.ID); err != nil {
 		rm.mPatterns.Unlock()
 		log.WithError(err).WithField("rule", rule).Panic("failed to generate database")
 	}
@@ -114,7 +114,7 @@ func (rm RulesManager) AddRule(context context.Context, rule Rule) (string, erro
 		log.WithError(err).WithField("rule", rule).Panic("failed to insert rule on database")
 	}
 
-	return rule.Id.Hex(), nil
+	return rule.ID.Hex(), nil
 }
 
 func (rm RulesManager) validateAndAddRuleLocal(rule *Rule) error {
@@ -133,7 +133,7 @@ func (rm RulesManager) validateAndAddRuleLocal(rule *Rule) error {
 		if err != nil {
 			return err
 		}
-		pattern.internalId = len(rm.patterns) + len(newPatterns)
+		pattern.internalID = len(rm.patterns) + len(newPatterns)
 		newPatterns[hash] = pattern
 	}
 
@@ -141,7 +141,7 @@ func (rm RulesManager) validateAndAddRuleLocal(rule *Rule) error {
 		rm.patterns[key] = value
 	}
 
-	rm.rules[rule.Id.Hex()] = *rule
+	rm.rules[rule.ID.Hex()] = *rule
 	rm.rulesByName[rule.Name] = *rule
 
 	return nil

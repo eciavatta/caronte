@@ -13,8 +13,8 @@ import (
 	"time"
 )
 
-const testSrcIp = "10.10.10.100"
-const testDstIp = "10.10.10.1"
+const testSrcIP = "10.10.10.100"
+const testDstIP = "10.10.10.1"
 const srcPort = 44444
 const dstPort = 8080
 
@@ -305,13 +305,13 @@ func createTestStreamHandler(wrapper *TestStorageWrapper, patterns hyperscan.Str
 		patterns: patterns,
 	}
 
-	srcIp := layers.NewIPEndpoint(net.ParseIP(testSrcIp))
-	dstIp := layers.NewIPEndpoint(net.ParseIP(testDstIp))
+	srcIP := layers.NewIPEndpoint(net.ParseIP(testSrcIP))
+	dstIP := layers.NewIPEndpoint(net.ParseIP(testDstIP))
 	srcPort := layers.NewTCPPortEndpoint(srcPort)
 	dstPort := layers.NewTCPPortEndpoint(dstPort)
 
 	scanner := Scanner{scratch: scratch, version: ZeroRowID}
-	return NewStreamHandler(testConnectionHandler, StreamFlow{srcIp, dstIp, srcPort, dstPort}, scanner)
+	return NewStreamHandler(testConnectionHandler, StreamFlow{srcIP, dstIP, srcPort, dstPort}, scanner)
 }
 
 type testConnectionHandler struct {

@@ -8,7 +8,7 @@ import (
 )
 
 type a struct {
-	Id primitive.ObjectID `bson:"_id,omitempty"`
+	ID primitive.ObjectID `bson:"_id,omitempty"`
 	A  string             `bson:"a,omitempty"`
 	B  int                `bson:"b,omitempty"`
 	C  time.Time          `bson:"c,omitempty"`
@@ -26,12 +26,12 @@ func TestOperationOnInvalidCollection(t *testing.T) {
 
 	simpleDoc := UnorderedDocument{"key": "a", "value": 0}
 	insertOp := wrapper.Storage.Insert("invalid_collection").Context(wrapper.Context)
-	insertedId, err := insertOp.One(simpleDoc)
-	assert.Nil(t, insertedId)
+	insertedID, err := insertOp.One(simpleDoc)
+	assert.Nil(t, insertedID)
 	assert.Error(t, err)
 
-	insertedIds, err := insertOp.Many([]interface{}{simpleDoc})
-	assert.Nil(t, insertedIds)
+	insertedIDs, err := insertOp.Many([]interface{}{simpleDoc})
+	assert.Nil(t, insertedIDs)
 	assert.Error(t, err)
 
 	updateOp := wrapper.Storage.Update("invalid_collection").Context(wrapper.Context)
@@ -155,12 +155,12 @@ func TestSimpleUpdateOneUpdateMany(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, int64(2), updated)
 
-	var upsertId interface{}
-	isUpdated, err = updateOp.Upsert(&upsertId).Filter(OrderedDocument{{"key", "d"}}).
+	var upsertID interface{}
+	isUpdated, err = updateOp.Upsert(&upsertID).Filter(OrderedDocument{{"key", "d"}}).
 		One(OrderedDocument{{"key", "d"}})
 	assert.Nil(t, err)
 	assert.False(t, isUpdated)
-	assert.NotNil(t, upsertId)
+	assert.NotNil(t, upsertID)
 
 	var results []UnorderedDocument
 	findOp := wrapper.Storage.Find(collectionName).Context(wrapper.Context)
@@ -198,7 +198,7 @@ func TestComplexInsertManyFindMany(t *testing.T) {
 			},
 		},
 		a{
-			Id: oid1,
+			ID: oid1,
 			A:  "test1",
 			B:  1,
 			C:  testTime,
@@ -218,9 +218,9 @@ func TestComplexInsertManyFindMany(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Len(t, results, 3)
 	doc0, doc1, doc2 := docs[0].(a), docs[1].(a), docs[2].(a)
-	assert.Equal(t, ids[0], results[0].Id)
-	assert.Equal(t, doc1.Id, results[1].Id)
-	assert.Equal(t, ids[2], results[2].Id)
+	assert.Equal(t, ids[0], results[0].ID)
+	assert.Equal(t, doc1.ID, results[1].ID)
+	assert.Equal(t, ids[2], results[2].ID)
 	assert.Equal(t, doc0.A, results[0].A)
 	assert.Equal(t, doc1.A, results[1].A)
 	assert.Equal(t, doc2.A, results[2].A)
