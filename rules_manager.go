@@ -58,7 +58,14 @@ type RulesDatabase struct {
 	version  RowID
 }
 
-type RulesManager struct {
+type RulesManager interface {
+	LoadRules() error
+	AddRule(context context.Context, rule Rule) (string, error)
+	FillWithMatchedRules(connection *Connection, clientMatches map[uint][]PatternSlice, serverMatches map[uint][]PatternSlice)
+	DatabaseUpdateChannel() chan RulesDatabase
+}
+
+type rulesManagerImpl struct {
 	storage         Storage
 	rules           map[string]Rule
 	rulesByName     map[string]Rule
@@ -69,7 +76,7 @@ type RulesManager struct {
 }
 
 func NewRulesManager(storage Storage) RulesManager {
-	return RulesManager{
+	return &rulesManagerImpl{
 		storage:   storage,
 		rules:     make(map[string]Rule),
 		patterns:  make(map[string]Pattern),
@@ -77,7 +84,7 @@ func NewRulesManager(storage Storage) RulesManager {
 	}
 }
 
-func (rm RulesManager) LoadRules() error {
+func (rm rulesManagerImpl) LoadRules() error {
 	var rules []Rule
 	if err := rm.storage.Find(Rules).Sort("_id", true).All(&rules); err != nil {
 		return err
@@ -93,7 +100,7 @@ func (rm RulesManager) LoadRules() error {
 	return rm.generateDatabase(rules[len(rules)-1].ID)
 }
 
-func (rm RulesManager) AddRule(context context.Context, rule Rule) (string, error) {
+func (rm rulesManagerImpl) AddRule(context context.Context, rule Rule) (string, error) {
 	rm.mPatterns.Lock()
 
 	rule.ID = rm.storage.NewCustomRowID(uint64(rm.ruleIndex), time.Now())
@@ -117,7 +124,7 @@ func (rm RulesManager) AddRule(context context.Context, rule Rule) (string, erro
 	return rule.ID.Hex(), nil
 }
 
-func (rm RulesManager) validateAndAddRuleLocal(rule *Rule) error {
+func (rm rulesManagerImpl) validateAndAddRuleLocal(rule *Rule) error {
 	if _, alreadyPresent := rm.rulesByName[rule.Name]; alreadyPresent {
 		return errors.New("rule name must be unique")
 	}
@@ -147,7 +154,7 @@ func (rm RulesManager) validateAndAddRuleLocal(rule *Rule) error {
 	return nil
 }
 
-func (rm RulesManager) generateDatabase(version RowID) error {
+func (rm rulesManagerImpl) generateDatabase(version RowID) error {
 	patterns := make([]*hyperscan.Pattern, len(rm.patterns))
 	var i int
 	for _, pattern := range rm.patterns {
@@ -167,9 +174,12 @@ func (rm RulesManager) generateDatabase(version RowID) error {
 	return nil
 }
 
-func (rm RulesManager) FillWithMatchedRules(connection *Connection, clientMatches map[uint][]PatternSlice,
+func (rm rulesManagerImpl) FillWithMatchedRules(connection *Connection, clientMatches map[uint][]PatternSlice,
 	serverMatches map[uint][]PatternSlice) {
+}
 
+func (rm rulesManagerImpl) DatabaseUpdateChannel() chan RulesDatabase {
+	return rm.databaseUpdated
 }
 
 func (p Pattern) BuildPattern() error {

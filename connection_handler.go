@@ -18,7 +18,7 @@ type BiDirectionalStreamFactory struct {
 	serverIP       gopacket.Endpoint
 	connections    map[StreamFlow]ConnectionHandler
 	mConnections   sync.Mutex
-	rulesManager   *RulesManager
+	rulesManager   RulesManager
 	rulesDatabase  RulesDatabase
 	mRulesDatabase sync.Mutex
 	scanners       []Scanner
@@ -46,7 +46,7 @@ type connectionHandlerImpl struct {
 }
 
 func NewBiDirectionalStreamFactory(storage Storage, serverIP gopacket.Endpoint,
-	rulesManager *RulesManager) *BiDirectionalStreamFactory {
+	rulesManager RulesManager) *BiDirectionalStreamFactory {
 
 	factory := &BiDirectionalStreamFactory{
 		storage:        storage,
@@ -65,7 +65,7 @@ func NewBiDirectionalStreamFactory(storage Storage, serverIP gopacket.Endpoint,
 func (factory *BiDirectionalStreamFactory) updateRulesDatabaseService() {
 	for {
 		select {
-		case rulesDatabase, ok := <-factory.rulesManager.databaseUpdated:
+		case rulesDatabase, ok := <-factory.rulesManager.DatabaseUpdateChannel():
 			if !ok {
 				return
 			}
@@ -122,6 +122,7 @@ func (factory *BiDirectionalStreamFactory) releaseScanner(scanner Scanner) {
 			log.WithError(err).Error("failed to realloc an existing scanner")
 			return
 		}
+		scanner.version = factory.rulesDatabase.version
 	}
 	factory.scanners = append(factory.scanners, scanner)
 }
@@ -213,13 +214,15 @@ func (ch *connectionHandlerImpl) Complete(handler *StreamHandler) {
 	}
 
 	streamsIDs := append(client.documentsIDs, server.documentsIDs...)
-	n, err := ch.Storage().Update(ConnectionStreams).
-		Filter(OrderedDocument{{"_id", UnorderedDocument{"$in": streamsIDs}}}).
-		Many(UnorderedDocument{"connection_id": connectionID})
-	if err != nil {
-		log.WithError(err).WithField("connection", connection).Error("failed to update connection streams")
-	} else if int(n) != len(streamsIDs) {
-		log.WithError(err).WithField("connection", connection).Error("failed to update all connections streams")
+	if len(streamsIDs) > 0 {
+		n, err := ch.Storage().Update(ConnectionStreams).
+			Filter(OrderedDocument{{"_id", UnorderedDocument{"$in": streamsIDs}}}).
+			Many(UnorderedDocument{"connection_id": connectionID})
+		if err != nil {
+			log.WithError(err).WithField("connection", connection).Error("failed to update connection streams")
+		} else if int(n) != len(streamsIDs) {
+			log.WithError(err).WithField("connection", connection).Error("failed to update all connections streams")
+		}
 	}
 }
 
