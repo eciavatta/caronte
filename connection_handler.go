@@ -197,8 +197,6 @@ func (ch *connectionHandlerImpl) Complete(handler *StreamHandler) {
 		DestinationPort: binary.BigEndian.Uint16(ch.connectionFlow[3].Raw()),
 		StartedAt:       startedAt,
 		ClosedAt:        closedAt,
-		ClientPackets:   client.packetsCount,
-		ServerPackets:   client.packetsCount,
 		ClientBytes:     client.streamLength,
 		ServerBytes:     server.streamLength,
 		ClientDocuments: len(client.documentsIDs),

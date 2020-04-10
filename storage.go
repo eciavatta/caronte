@@ -64,10 +64,6 @@ func NewMongoStorage(uri string, port int, database string) *MongoStorage {
 }
 
 func (storage *MongoStorage) Connect(ctx context.Context) error {
-	if ctx == nil {
-		ctx, _ = context.WithTimeout(context.Background(), defaultConnectionTimeout)
-	}
-
 	return storage.client.Connect(ctx)
 }
 

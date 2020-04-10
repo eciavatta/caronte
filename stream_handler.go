@@ -28,7 +28,6 @@ type StreamHandler struct {
 	lastPacketSeen  time.Time
 	documentsIDs    []RowID
 	streamLength    int
-	packetsCount    int
 	patternStream   hyperscan.Stream
 	patternMatches  map[uint][]PatternSlice
 	scanner         Scanner
@@ -60,8 +59,6 @@ func NewStreamHandler(connection ConnectionHandler, streamFlow StreamFlow, scann
 // Reassembled implements tcpassembly.Stream's Reassembled function.
 func (sh *StreamHandler) Reassembled(reassembly []tcpassembly.Reassembly) {
 	for _, r := range reassembly {
-		sh.packetsCount++
-
 		skip := r.Skip
 		if r.Start {
 			skip = 0
