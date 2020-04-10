@@ -154,8 +154,14 @@ func TestConnectionFactory(t *testing.T) {
 		go testInteraction(serverClientNetFlow, serverClientTransportFlow, otherSeenChan, completed)
 	}
 
+	timeout := time.Tick(1 * time.Second)
 	for i := 0; i < n; i++ {
-		<-completed
+		select {
+		case <- completed:
+			continue
+		case <- timeout:
+			t.Fatal("timeout")
+		}
 	}
 
 	assert.Len(t, factory.connections, 0)
