@@ -18,7 +18,7 @@ import (
 func TestTakeReleaseScanners(t *testing.T) {
 	wrapper := NewTestStorageWrapper(t)
 	serverIP := layers.NewIPEndpoint(net.ParseIP(testDstIP))
-	ruleManager := TestRuleManager{
+	ruleManager := TestRulesManager{
 		databaseUpdated: make(chan RulesDatabase),
 	}
 
@@ -26,7 +26,7 @@ func TestTakeReleaseScanners(t *testing.T) {
 	require.NoError(t, err)
 
 	factory := NewBiDirectionalStreamFactory(wrapper.Storage, serverIP, &ruleManager)
-	version := wrapper.Storage.NewRowID()
+	version := NewRowID()
 	ruleManager.DatabaseUpdateChannel() <- RulesDatabase{database, 0, version}
 	time.Sleep(10 * time.Millisecond)
 
@@ -36,7 +36,7 @@ func TestTakeReleaseScanners(t *testing.T) {
 		assert.Equal(t, scanner.version, version)
 
 		if i%50 == 0 {
-			version = wrapper.Storage.NewRowID()
+			version = NewRowID()
 			ruleManager.DatabaseUpdateChannel() <- RulesDatabase{database, 0, version}
 			time.Sleep(10 * time.Millisecond)
 		}
@@ -54,7 +54,7 @@ func TestTakeReleaseScanners(t *testing.T) {
 	}
 	assert.Len(t, factory.scanners, n)
 
-	version = wrapper.Storage.NewRowID()
+	version = NewRowID()
 	ruleManager.DatabaseUpdateChannel() <- RulesDatabase{database, 0, version}
 	time.Sleep(10 * time.Millisecond)
 
@@ -73,7 +73,7 @@ func TestConnectionFactory(t *testing.T) {
 	wrapper.AddCollection(Connections)
 	wrapper.AddCollection(ConnectionStreams)
 
-	ruleManager := TestRuleManager{
+	ruleManager := TestRulesManager{
 		databaseUpdated: make(chan RulesDatabase),
 	}
 
@@ -89,7 +89,7 @@ func TestConnectionFactory(t *testing.T) {
 	require.NoError(t, err)
 
 	factory := NewBiDirectionalStreamFactory(wrapper.Storage, serverIP, &ruleManager)
-	version := wrapper.Storage.NewRowID()
+	version := NewRowID()
 	ruleManager.DatabaseUpdateChannel() <- RulesDatabase{database, 0, version}
 	time.Sleep(10 * time.Millisecond)
 
@@ -122,13 +122,13 @@ func TestConnectionFactory(t *testing.T) {
 
 		var result Connection
 		connectionFlow := StreamFlow{netFlow.Src(), netFlow.Dst(), transportFlow.Src(), transportFlow.Dst()}
-		connectionID := wrapper.Storage.NewCustomRowID(connectionFlow.Hash(), startedAt)
+		connectionID := CustomRowID(connectionFlow.Hash(), startedAt)
 		op := wrapper.Storage.Find(Connections).Context(wrapper.Context)
 		err := op.Filter(OrderedDocument{{"_id", connectionID}}).First(&result)
 		require.NoError(t, err)
 
 		assert.NotNil(t, result)
-		assert.Equal(t, wrapper.Storage.NewCustomRowID(connectionFlow.Hash(), result.StartedAt), result.ID)
+		assert.Equal(t, CustomRowID(connectionFlow.Hash(), result.StartedAt), result.ID)
 		assert.Equal(t, netFlow.Src().String(), result.SourceIP)
 		assert.Equal(t, netFlow.Dst().String(), result.DestinationIP)
 		assert.Equal(t, binary.BigEndian.Uint16(transportFlow.Src().Raw()), result.SourcePort)
@@ -170,33 +170,33 @@ func TestConnectionFactory(t *testing.T) {
 	wrapper.Destroy(t)
 }
 
-type TestRuleManager struct {
+type TestRulesManager struct {
 	databaseUpdated chan RulesDatabase
 }
 
-func (rm TestRuleManager) LoadRules() error {
+func (rm TestRulesManager) LoadRules() error {
 	return nil
 }
 
-func (rm TestRuleManager) AddRule(_ context.Context, _ Rule) (RowID, error) {
+func (rm TestRulesManager) AddRule(_ context.Context, _ Rule) (RowID, error) {
 	return RowID{}, nil
 }
 
-func (rm TestRuleManager) GetRule(_ RowID) (Rule, bool) {
+func (rm TestRulesManager) GetRule(_ RowID) (Rule, bool) {
 	return Rule{}, false
 }
 
-func (rm TestRuleManager) UpdateRule(_ context.Context, _ Rule) bool {
+func (rm TestRulesManager) UpdateRule(_ context.Context, _ RowID, _ Rule) bool {
 	return false
 }
 
-func (rm TestRuleManager) GetRules() []Rule {
+func (rm TestRulesManager) GetRules() []Rule {
 	return nil
 }
 
-func (rm TestRuleManager) FillWithMatchedRules(_ *Connection, _ map[uint][]PatternSlice, _ map[uint][]PatternSlice) {
+func (rm TestRulesManager) FillWithMatchedRules(_ *Connection, _ map[uint][]PatternSlice, _ map[uint][]PatternSlice) {
 }
 
-func (rm TestRuleManager) DatabaseUpdateChannel() chan RulesDatabase {
+func (rm TestRulesManager) DatabaseUpdateChannel() chan RulesDatabase {
 	return rm.databaseUpdated
 }

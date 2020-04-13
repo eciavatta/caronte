@@ -147,7 +147,7 @@ func (sh *StreamHandler) onMatch(id uint, from uint64, to uint64, _ uint, _ inte
 
 func (sh *StreamHandler) storageCurrentDocument() {
 	payload := sh.streamFlow.Hash()&uint64(0xffffffffffffff00) | uint64(len(sh.documentsIDs)) // LOL
-	streamID := sh.connection.Storage().NewCustomRowID(payload, sh.firstPacketSeen)
+	streamID := CustomRowID(payload, sh.firstPacketSeen)
 
 	_, err := sh.connection.Storage().Insert(ConnectionStreams).
 		One(ConnectionStream{

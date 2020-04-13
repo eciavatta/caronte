@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/binary"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	log "github.com/sirupsen/logrus"
@@ -11,7 +9,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"time"
 )
 
 // Collections names
@@ -20,16 +17,12 @@ const ConnectionStreams = "connection_streams"
 const ImportedPcaps = "imported_pcaps"
 const Rules = "rules"
 
-const defaultConnectionTimeout = 10 * time.Second
-
 var ZeroRowID [12]byte
 
 type Storage interface {
 	Insert(collectionName string) InsertOperation
 	Update(collectionName string) UpdateOperation
 	Find(collectionName string) FindOperation
-	NewCustomRowID(payload uint64, timestamp time.Time) RowID
-	NewRowID() RowID
 }
 
 type MongoStorage struct {
@@ -65,23 +58,6 @@ func NewMongoStorage(uri string, port int, database string) *MongoStorage {
 
 func (storage *MongoStorage) Connect(ctx context.Context) error {
 	return storage.client.Connect(ctx)
-}
-
-func (storage *MongoStorage) NewCustomRowID(payload uint64, timestamp time.Time) RowID {
-	var key [12]byte
-	binary.BigEndian.PutUint32(key[0:4], uint32(timestamp.Unix()))
-	binary.BigEndian.PutUint64(key[4:12], payload)
-
-	if oid, err := primitive.ObjectIDFromHex(hex.EncodeToString(key[:])); err == nil {
-		return oid
-	} else {
-		log.WithError(err).Warn("failed to create object id")
-		return primitive.NewObjectID()
-	}
-}
-
-func (storage *MongoStorage) NewRowID() RowID {
-	return primitive.NewObjectID()
 }
 
 // InsertOne and InsertMany

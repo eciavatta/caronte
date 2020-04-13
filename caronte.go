@@ -24,8 +24,9 @@ func main() {
 		log.WithError(err).Fatal("failed to connect to MongoDB")
 	}
 
+	rulesManager := NewRulesManager(storage)
 	router := gin.Default()
-	ApplicationRoutes(router)
+	ApplicationRoutes(router, rulesManager)
 	err = router.Run(fmt.Sprintf("%s:%v", *bindAddress, *bindPort))
 	if err != nil {
 		log.WithError(err).Fatal("failed to create the server")

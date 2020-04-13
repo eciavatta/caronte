@@ -188,7 +188,7 @@ func (ch *connectionHandlerImpl) Complete(handler *StreamHandler) {
 		server = handler
 	}
 
-	connectionID := ch.Storage().NewCustomRowID(ch.connectionFlow.Hash(), startedAt)
+	connectionID := CustomRowID(ch.connectionFlow.Hash(), startedAt)
 	connection := Connection{
 		ID:              connectionID,
 		SourceIP:        ch.connectionFlow[0].String(),
