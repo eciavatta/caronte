@@ -96,7 +96,7 @@ func TestConnectionFactory(t *testing.T) {
 	testInteraction := func(netFlow gopacket.Flow, transportFlow gopacket.Flow, otherSeenChan chan time.Time,
 		completed chan bool) {
 
-		time.Sleep(time.Duration(rand.Intn(3000)) * time.Millisecond)
+		time.Sleep(time.Duration(rand.Intn(1000)) * time.Millisecond)
 		stream := factory.New(netFlow, transportFlow)
 		seen := time.Now()
 		stream.Reassembled([]tcpassembly.Reassembly{{[]byte{}, 0, true, true, seen}})
@@ -106,25 +106,25 @@ func TestConnectionFactory(t *testing.T) {
 		if netFlow == serverClientNetFlow {
 			otherSeenChan <- seen
 			return
-		} else {
-			otherSeen, ok := <-otherSeenChan
-			require.True(t, ok)
+		}
 
-			if seen.Before(otherSeen) {
-				startedAt = seen
-				closedAt = otherSeen
-			} else {
-				startedAt = otherSeen
-				closedAt = seen
-			}
+		otherSeen, ok := <-otherSeenChan
+		require.True(t, ok)
+
+		if seen.Before(otherSeen) {
+			startedAt = seen
+			closedAt = otherSeen
+		} else {
+			startedAt = otherSeen
+			closedAt = seen
 		}
 		close(otherSeenChan)
 
 		var result Connection
 		connectionFlow := StreamFlow{netFlow.Src(), netFlow.Dst(), transportFlow.Src(), transportFlow.Dst()}
 		connectionID := wrapper.Storage.NewCustomRowID(connectionFlow.Hash(), startedAt)
-		err = wrapper.Storage.Find(Connections).Context(wrapper.Context).
-			Filter(OrderedDocument{{"_id", connectionID}}).First(&result)
+		op := wrapper.Storage.Find(Connections).Context(wrapper.Context)
+		err := op.Filter(OrderedDocument{{"_id", connectionID}}).First(&result)
 		require.NoError(t, err)
 
 		assert.NotNil(t, result)
@@ -140,7 +140,7 @@ func TestConnectionFactory(t *testing.T) {
 	}
 
 	completed := make(chan bool)
-	n := 3000
+	n := 1000
 
 	for port := 40000; port < 40000+n; port++ {
 		clientPort := layers.NewTCPPortEndpoint(layers.TCPPort(port))
@@ -154,7 +154,7 @@ func TestConnectionFactory(t *testing.T) {
 		go testInteraction(serverClientNetFlow, serverClientTransportFlow, otherSeenChan, completed)
 	}
 
-	timeout := time.Tick(1 * time.Second)
+	timeout := time.Tick(10 * time.Second)
 	for i := 0; i < n; i++ {
 		select {
 		case <- completed:
@@ -178,8 +178,20 @@ func (rm TestRuleManager) LoadRules() error {
 	return nil
 }
 
-func (rm TestRuleManager) AddRule(_ context.Context, _ Rule) (string, error) {
-	return "", nil
+func (rm TestRuleManager) AddRule(_ context.Context, _ Rule) (RowID, error) {
+	return RowID{}, nil
+}
+
+func (rm TestRuleManager) GetRule(_ RowID) (Rule, bool) {
+	return Rule{}, false
+}
+
+func (rm TestRuleManager) UpdateRule(_ context.Context, _ Rule) bool {
+	return false
+}
+
+func (rm TestRuleManager) GetRules() []Rule {
+	return nil
 }
 
 func (rm TestRuleManager) FillWithMatchedRules(_ *Connection, _ map[uint][]PatternSlice, _ map[uint][]PatternSlice) {
