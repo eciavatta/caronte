@@ -95,7 +95,7 @@ func badRequest(c *gin.Context, err error) {
 }
 
 func unprocessableEntity(c *gin.Context, err error) {
-	c.JSON(http.StatusOK, UnorderedDocument{"result": "error", "error": err.Error()})
+	c.JSON(http.StatusUnprocessableEntity, UnorderedDocument{"result": "error", "error": err.Error()})
 }
 
 func notFound(c *gin.Context, obj interface{}) {

@@ -194,6 +194,10 @@ func (rm TestRulesManager) GetRules() []Rule {
 	return nil
 }
 
+func (rm TestRulesManager) SetFlag(_ context.Context, _ string) error {
+	return nil
+}
+
 func (rm TestRulesManager) FillWithMatchedRules(_ *Connection, _ map[uint][]PatternSlice, _ map[uint][]PatternSlice) {
 }
 

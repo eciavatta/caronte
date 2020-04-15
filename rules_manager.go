@@ -25,17 +25,17 @@ type RegexFlags struct {
 }
 
 type Pattern struct {
-	Regex           string     `json:"regex" binding:"min=1" bson:"regex"`
+	Regex           string     `json:"regex" binding:"required,min=1" bson:"regex"`
 	Flags           RegexFlags `json:"flags" bson:"flags,omitempty"`
 	MinOccurrences  uint       `json:"min_occurrences" bson:"min_occurrences,omitempty"`
 	MaxOccurrences  uint       `json:"max_occurrences" binding:"omitempty,gtefield=MinOccurrences" bson:"max_occurrences,omitempty"`
 	Direction       uint8      `json:"direction" binding:"omitempty,max=2" bson:"direction,omitempty"`
-	internalID      int
+	internalID      uint
 }
 
 type Filter struct {
 	ServicePort   uint16 `json:"service_port" bson:"service_port,omitempty"`
-	ClientAddress string `json:"client_address" binding:"omitempty,ip_addr" bson:"client_address,omitempty"`
+	ClientAddress string `json:"client_address" binding:"omitempty,ip" bson:"client_address,omitempty"`
 	ClientPort    uint16 `json:"client_port" bson:"client_port,omitempty"`
 	MinDuration   uint   `json:"min_duration" bson:"min_duration,omitempty"`
 	MaxDuration   uint   `json:"max_duration" binding:"omitempty,gtefield=MinDuration" bson:"max_duration,omitempty"`
@@ -66,6 +66,7 @@ type RulesManager interface {
 	GetRule(id RowID) (Rule, bool)
 	UpdateRule(context context.Context, id RowID, rule Rule) (bool, error)
 	GetRules() []Rule
+	SetFlag(context context.Context, flagRegex string) error
 	FillWithMatchedRules(connection *Connection, clientMatches map[uint][]PatternSlice, serverMatches map[uint][]PatternSlice)
 	DatabaseUpdateChannel() chan RulesDatabase
 }
@@ -75,7 +76,7 @@ type rulesManagerImpl struct {
 	rules           map[RowID]Rule
 	rulesByName     map[string]Rule
 	patterns        []*hyperscan.Pattern
-	patternsIds     map[string]int
+	patternsIds     map[string]uint
 	mutex           sync.Mutex
 	databaseUpdated chan RulesDatabase
 	validate        *validator.Validate
@@ -87,7 +88,7 @@ func NewRulesManager(storage Storage) RulesManager {
 		rules:           make(map[RowID]Rule),
 		rulesByName:     make(map[string]Rule),
 		patterns:        make([]*hyperscan.Pattern, 0),
-		patternsIds:     make(map[string]int),
+		patternsIds:     make(map[string]uint),
 		mutex:           sync.Mutex{},
 		databaseUpdated: make(chan RulesDatabase, 1),
 		validate:        validator.New(),
@@ -194,6 +195,78 @@ func (rm *rulesManagerImpl) SetFlag(context context.Context, flagRegex string) e
 
 func (rm *rulesManagerImpl) FillWithMatchedRules(connection *Connection, clientMatches map[uint][]PatternSlice,
 	serverMatches map[uint][]PatternSlice) {
+	rm.mutex.Lock()
+
+	filterFunctions := []func (rule Rule)bool {
+		func(rule Rule) bool {
+			return rule.Filter.ClientAddress == "" || connection.SourceIP == rule.Filter.ClientAddress
+		},
+		func(rule Rule) bool {
+			return rule.Filter.ClientPort == 0 || connection.SourcePort == rule.Filter.ClientPort
+		},
+		func(rule Rule) bool {
+			return rule.Filter.ServicePort == 0 || connection.DestinationPort == rule.Filter.ServicePort
+		},
+		func(rule Rule) bool {
+			return rule.Filter.MinDuration == 0 || uint(connection.ClosedAt.Sub(connection.StartedAt).Milliseconds()) >=
+				rule.Filter.MinDuration
+		},
+		func(rule Rule) bool {
+			return rule.Filter.MaxDuration == 0 || uint(connection.ClosedAt.Sub(connection.StartedAt).Milliseconds()) <=
+				rule.Filter.MaxDuration
+		},
+		func(rule Rule) bool {
+			return rule.Filter.MinBytes == 0 || uint(connection.ClientBytes + connection.ServerBytes) >=
+				rule.Filter.MinBytes
+		},
+		func(rule Rule) bool {
+			return rule.Filter.MaxBytes == 0 || uint(connection.ClientBytes + connection.ServerBytes) <=
+				rule.Filter.MinBytes
+		},
+	}
+
+	connection.MatchedRules = make([]RowID, 0)
+	for _, rule := range rm.rules {
+		matching := true
+		for _, f := range filterFunctions {
+			if !f(rule) {
+				matching = false
+				break
+			}
+		}
+
+		for _, p := range rule.Patterns {
+			checkOccurrences := func(occurrences []PatternSlice) bool {
+				return (p.MinOccurrences == 0 || uint(len(occurrences)) >= p.MinOccurrences) &&
+					(p.MaxOccurrences == 0 || uint(len(occurrences)) <= p.MaxOccurrences)
+			}
+			clientOccurrences, clientPresent := clientMatches[p.internalID]
+			serverOccurrences, serverPresent := serverMatches[p.internalID]
+
+			if p.Direction == DirectionToServer {
+				if !clientPresent || !checkOccurrences(clientOccurrences) {
+					matching = false
+					break
+				}
+			} else if p.Direction == DirectionToClient {
+				if !serverPresent || !checkOccurrences(serverOccurrences) {
+					matching = false
+					break
+				}
+			} else {
+				if !(clientPresent || serverPresent) || !checkOccurrences(append(clientOccurrences, serverOccurrences...)) {
+					matching = false
+					break
+				}
+			}
+		}
+
+		if matching {
+			connection.MatchedRules = append(connection.MatchedRules, rule.ID)
+		}
+	}
+
+	rm.mutex.Unlock()
 }
 
 func (rm *rulesManagerImpl) DatabaseUpdateChannel() chan RulesDatabase {
@@ -226,7 +299,7 @@ func (rm *rulesManagerImpl) validateAndAddRuleLocal(rule *Rule) error {
 		}
 
 		id := len(rm.patternsIds) + len(newPatterns)
-		rule.Patterns[i].internalID = id
+		rule.Patterns[i].internalID = uint(id)
 		compiledPattern.Id = id
 		newPatterns = append(newPatterns, compiledPattern)
 		duplicatePatterns[regex] = true
@@ -235,7 +308,7 @@ func (rm *rulesManagerImpl) validateAndAddRuleLocal(rule *Rule) error {
 	startId := len(rm.patterns)
 	for id, pattern := range newPatterns {
 		rm.patterns = append(rm.patterns, pattern)
-		rm.patternsIds[pattern.String()] = startId + id
+		rm.patternsIds[pattern.String()] = uint(startId + id)
 	}
 
 	rm.rules[rule.ID] = *rule
