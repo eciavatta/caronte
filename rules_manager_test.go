@@ -2,11 +2,12 @@ package main
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
 )
 
-func TestAddRule(t *testing.T) {
+func TestAddAndGetAllRules(t *testing.T) {
 	wrapper := NewTestStorageWrapper(t)
 	wrapper.AddCollection(Rules)
 
@@ -16,7 +17,7 @@ func TestAddRule(t *testing.T) {
 		timeout := time.Tick(1 * time.Second)
 
 		select {
-		case database := <-rulesManager.databaseUpdated:
+		case database := <-rulesManager.DatabaseUpdateChannel():
 			assert.Equal(t, id, database.version)
 		case <-timeout:
 			t.Fatal("timeout")
@@ -26,17 +27,47 @@ func TestAddRule(t *testing.T) {
 	err := rulesManager.SetFlag(wrapper.Context, "FLAG{test}")
 	assert.NoError(t, err)
 	checkVersion(rulesManager.rulesByName["flag"].ID)
-	emptyID, err := rulesManager.AddRule(wrapper.Context, Rule{Name: "empty", Color: "#fff"})
+	emptyRule := Rule{Name: "empty", Color: "#fff", Enabled: true}
+	emptyID, err := rulesManager.AddRule(wrapper.Context, emptyRule)
 	assert.NoError(t, err)
 	assert.NotNil(t, emptyID)
 	checkVersion(emptyID)
+
+	duplicateRule, err := rulesManager.AddRule(wrapper.Context, Rule{Name: "empty", Color: "#eee"})
+	assert.Error(t, err)
+	assert.Zero(t, duplicateRule)
+
+	invalidPattern, err := rulesManager.AddRule(wrapper.Context, Rule{
+		Name:  "invalidPattern",
+		Color: "#eee",
+		Patterns: []Pattern{
+			{
+				Regex: "invalid)",
+			},
+		},
+	})
+	assert.Error(t, err)
+	assert.Zero(t, invalidPattern)
 
 	rule1 := Rule{
 		Name:  "rule1",
 		Color: "#eee",
 		Patterns: []Pattern{
-			{Regex: "nope", Flags: RegexFlags{Caseless: true}},
-		},
+			{
+				Regex: "pattern1",
+				Flags: RegexFlags{
+					Caseless:        true,
+					DotAll:          true,
+					MultiLine:       true,
+					SingleMatch:     true,
+					Utf8Mode:        true,
+					UnicodeProperty: true,
+				},
+				MinOccurrences: 1,
+				MaxOccurrences: 3,
+				Direction:      DirectionBoth,
+			}},
+		Enabled: true,
 	}
 	rule1ID, err := rulesManager.AddRule(wrapper.Context, rule1)
 	assert.NoError(t, err)
@@ -47,31 +78,124 @@ func TestAddRule(t *testing.T) {
 		Name:  "rule2",
 		Color: "#ddd",
 		Patterns: []Pattern{
-			{Regex: "nope", Flags: RegexFlags{Caseless: true}},
-			{Regex: "yep"},
+			{Regex: "pattern1"},
+			{Regex: "pattern2"},
 		},
+		Enabled: true,
 	}
 	rule2ID, err := rulesManager.AddRule(wrapper.Context, rule2)
 	assert.NoError(t, err)
 	assert.NotNil(t, rule2ID)
 	checkVersion(rule2ID)
 
-	assert.Len(t, rulesManager.rules, 4)
-	assert.Len(t, rulesManager.rulesByName, 4)
-	assert.Len(t, rulesManager.patterns, 3)
-	assert.Len(t, rulesManager.patternsIds, 3)
-	assert.Equal(t, emptyID, rulesManager.rules[emptyID].ID)
-	assert.Equal(t, emptyID, rulesManager.rulesByName["empty"].ID)
-	assert.Len(t, rulesManager.rules[emptyID].Patterns, 0)
-	assert.Equal(t, rule1ID, rulesManager.rules[rule1ID].ID)
-	assert.Equal(t, rule1ID, rulesManager.rulesByName[rule1.Name].ID)
-	assert.Len(t, rulesManager.rules[rule1ID].Patterns, 1)
-	assert.Equal(t, 1, rulesManager.rules[rule1ID].Patterns[0].internalID)
-	assert.Equal(t, rule2ID, rulesManager.rules[rule2ID].ID)
-	assert.Equal(t, rule2ID, rulesManager.rulesByName[rule2.Name].ID)
-	assert.Len(t, rulesManager.rules[rule2ID].Patterns, 2)
-	assert.Equal(t, 1, rulesManager.rules[rule2ID].Patterns[0].internalID)
-	assert.Equal(t, 2, rulesManager.rules[rule2ID].Patterns[1].internalID)
+	rule3 := Rule{
+		Name:  "rule3",
+		Color: "#ccc",
+		Patterns: []Pattern{
+			{Regex: "pattern2"},
+			{Regex: "pattern3"},
+		},
+		Enabled: true,
+	}
+	rule3ID, err := rulesManager.AddRule(wrapper.Context, rule3)
+	assert.NoError(t, err)
+	assert.NotNil(t, rule3ID)
+	checkVersion(rule3ID)
+
+	checkRule := func(expected Rule, patternIDs []int) {
+		var rule Rule
+		err := wrapper.Storage.Find(Rules).Context(wrapper.Context).
+			Filter(OrderedDocument{{"_id", expected.ID}}).First(&rule)
+		require.NoError(t, err)
+
+		for i, id := range patternIDs {
+			rule.Patterns[i].internalID = id
+		}
+		assert.Equal(t, expected, rule)
+		assert.Equal(t, expected, rulesManager.rules[expected.ID])
+		assert.Equal(t, expected, rulesManager.rulesByName[expected.Name])
+	}
+
+	assert.Len(t, rulesManager.rules, 5)
+	assert.Len(t, rulesManager.rulesByName, 5)
+	assert.Len(t, rulesManager.patterns, 5)
+	assert.Len(t, rulesManager.patternsIds, 5)
+
+	emptyRule.ID = emptyID
+	rule1.ID = rule1ID
+	rule2.ID = rule2ID
+	rule3.ID = rule3ID
+
+	checkRule(emptyRule, []int{})
+	checkRule(rule1, []int{1})
+	checkRule(rule2, []int{2, 3})
+	checkRule(rule3, []int{3, 4})
+
+	assert.Len(t, rulesManager.GetRules(), 5)
+	assert.ElementsMatch(t, []Rule{rulesManager.rulesByName["flag"], emptyRule, rule1, rule2, rule3}, rulesManager.GetRules())
+
+	wrapper.Destroy(t)
+}
+
+func TestLoadAndUpdateRules(t *testing.T) {
+	wrapper := NewTestStorageWrapper(t)
+	wrapper.AddCollection(Rules)
+
+	expectedIds := []RowID{NewRowID(), NewRowID(), NewRowID(), NewRowID()}
+	rules := []interface{}{
+		Rule{ID: expectedIds[0], Name: "rule1", Color: "#fff", Patterns: []Pattern{
+			{Regex: "pattern1", Flags: RegexFlags{Caseless: true}, Direction: DirectionToClient, internalID: 0},
+		}},
+		Rule{ID: expectedIds[1], Name: "rule2", Color: "#eee", Patterns: []Pattern{
+			{Regex: "pattern2", MinOccurrences: 1, MaxOccurrences: 3, Direction: DirectionToServer, internalID: 1},
+		}},
+		Rule{ID: expectedIds[2], Name: "rule3", Color: "#ddd", Patterns: []Pattern{
+			{Regex: "pattern2", Direction: DirectionBoth, internalID: 1},
+			{Regex: "pattern3", Flags: RegexFlags{MultiLine: true}, internalID: 2},
+		}},
+		Rule{ID: expectedIds[3], Name: "rule4", Color: "#ccc", Patterns: []Pattern{
+			{Regex: "pattern3", internalID: 3},
+		}},
+	}
+	ids, err := wrapper.Storage.Insert(Rules).Context(wrapper.Context).Many(rules)
+	require.NoError(t, err)
+	assert.ElementsMatch(t, expectedIds, ids)
+
+	rulesManager := NewRulesManager(wrapper.Storage).(*rulesManagerImpl)
+	err = rulesManager.LoadRules()
+	require.NoError(t, err)
+
+	rule, isPresent := rulesManager.GetRule(NewRowID())
+	assert.Zero(t, rule)
+	assert.False(t, isPresent)
+
+	for _, objRule := range rules {
+		expected := objRule.(Rule)
+		rule, isPresent := rulesManager.GetRule(expected.ID)
+		assert.True(t, isPresent)
+		assert.Equal(t, expected, rule)
+	}
+
+	updated, err := rulesManager.UpdateRule(wrapper.Context, NewRowID(), Rule{})
+	assert.False(t, updated)
+	assert.NoError(t, err)
+
+	updated, err = rulesManager.UpdateRule(wrapper.Context, expectedIds[0], Rule{Name: "rule2", Color: "#fff"})
+	assert.False(t, updated)
+	assert.Error(t, err)
+
+	for _, objRule := range rules {
+		expected := objRule.(Rule)
+		expected.Name = expected.ID.Hex()
+		expected.Color = "#000"
+		updated, err := rulesManager.UpdateRule(wrapper.Context, expected.ID, expected)
+		assert.True(t, updated)
+		assert.NoError(t, err)
+
+		rule, isPresent := rulesManager.GetRule(expected.ID)
+		assert.True(t, isPresent)
+		assert.Equal(t, expected, rule)
+	}
 
 	wrapper.Destroy(t)
 }

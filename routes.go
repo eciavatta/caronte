@@ -57,8 +57,10 @@ func ApplicationRoutes(engine *gin.Engine, rulesManager RulesManager) {
 				return
 			}
 
-			updated := rulesManager.UpdateRule(c, id, rule)
-			if !updated {
+			updated, err := rulesManager.UpdateRule(c, id, rule)
+			if err != nil {
+				badRequest(c, err)
+			} else if !updated {
 				notFound(c, UnorderedDocument{"id": id})
 			} else {
 				success(c, rule)

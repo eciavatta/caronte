@@ -186,8 +186,8 @@ func (rm TestRulesManager) GetRule(_ RowID) (Rule, bool) {
 	return Rule{}, false
 }
 
-func (rm TestRulesManager) UpdateRule(_ context.Context, _ RowID, _ Rule) bool {
-	return false
+func (rm TestRulesManager) UpdateRule(_ context.Context, _ RowID, _ Rule) (bool, error) {
+	return false, nil
 }
 
 func (rm TestRulesManager) GetRules() []Rule {

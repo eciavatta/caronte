@@ -64,7 +64,7 @@ type RulesManager interface {
 	LoadRules() error
 	AddRule(context context.Context, rule Rule) (RowID, error)
 	GetRule(id RowID) (Rule, bool)
-	UpdateRule(context context.Context, id RowID, rule Rule) bool
+	UpdateRule(context context.Context, id RowID, rule Rule) (bool, error)
 	GetRules() []Rule
 	FillWithMatchedRules(connection *Connection, clientMatches map[uint][]PatternSlice, serverMatches map[uint][]PatternSlice)
 	DatabaseUpdateChannel() chan RulesDatabase
@@ -138,10 +138,15 @@ func (rm *rulesManagerImpl) GetRule(id RowID) (Rule, bool) {
 	return rule, isPresent
 }
 
-func (rm *rulesManagerImpl) UpdateRule(context context.Context, id RowID, rule Rule) bool {
+func (rm *rulesManagerImpl) UpdateRule(context context.Context, id RowID, rule Rule) (bool, error) {
 	newRule, isPresent := rm.rules[id]
 	if !isPresent {
-		return false
+		return false, nil
+	}
+
+	sameName, isPresent := rm.rulesByName[rule.Name]
+	if isPresent && sameName.ID != id {
+		return false, errors.New("already exists another rule with the same name")
 	}
 
 	updated, err := rm.storage.Update(Rules).Context(context).Filter(OrderedDocument{{"_id", id}}).
@@ -161,7 +166,7 @@ func (rm *rulesManagerImpl) UpdateRule(context context.Context, id RowID, rule R
 		rm.mutex.Unlock()
 	}
 
-	return updated
+	return updated, nil
 }
 
 func (rm *rulesManagerImpl) GetRules() []Rule {
@@ -201,6 +206,7 @@ func (rm *rulesManagerImpl) validateAndAddRuleLocal(rule *Rule) error {
 	}
 
 	newPatterns := make([]*hyperscan.Pattern, 0, len(rule.Patterns))
+	duplicatePatterns := make(map[string]bool)
 	for i, pattern := range rule.Patterns {
 		if err := rm.validate.Struct(pattern); err != nil {
 			return err
@@ -210,7 +216,11 @@ func (rm *rulesManagerImpl) validateAndAddRuleLocal(rule *Rule) error {
 		if err != nil {
 			return err
 		}
-		if existingPattern, isPresent := rm.patternsIds[compiledPattern.String()]; isPresent {
+		regex := compiledPattern.String()
+		if _, isPresent := duplicatePatterns[regex]; isPresent {
+			return errors.New("duplicate pattern")
+		}
+		if existingPattern, isPresent := rm.patternsIds[regex]; isPresent {
 			rule.Patterns[i].internalID = existingPattern
 			continue
 		}
@@ -219,6 +229,7 @@ func (rm *rulesManagerImpl) validateAndAddRuleLocal(rule *Rule) error {
 		rule.Patterns[i].internalID = id
 		compiledPattern.Id = id
 		newPatterns = append(newPatterns, compiledPattern)
+		duplicatePatterns[regex] = true
 	}
 
 	startId := len(rm.patterns)
