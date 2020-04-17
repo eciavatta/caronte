@@ -8,7 +8,6 @@ import (
 )
 
 func main() {
-	// test(); return
 	mongoHost := flag.String("mongo-host", "localhost", "address of MongoDB")
 	mongoPort := flag.Int("mongo-port", 27017, "port of MongoDB")
 	dbName := flag.String("db-name", "caronte", "name of database to use")
