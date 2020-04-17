@@ -6,14 +6,12 @@ import (
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/tcpassembly"
 	"github.com/google/gopacket/tcpassembly/tcpreader"
-	// log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/atomic"
 	"net"
 	"sync"
 	"testing"
-	"time"
 )
 
 func TestImportPcap(t *testing.T) {
@@ -44,13 +42,13 @@ func TestImportPcap(t *testing.T) {
 	_, isPresent := pcapImporter.GetSession("invalid")
 	assert.False(t, isPresent)
 
-	var session ImportingSession
+	session, isPresent := pcapImporter.GetSession(sessionID)
+	require.True(t, isPresent)
+	err, _ = <- session.completed
+
 	session, isPresent = pcapImporter.GetSession(sessionID)
 	require.True(t, isPresent)
-	for session.CompletedAt.IsZero() && session.ImportingError == nil {
-		time.Sleep(importUpdateProgressInterval)
-		session, isPresent = pcapImporter.GetSession(sessionID)
-	}
+	assert.NoError(t, err)
 	assert.Equal(t, sessionID, session.ID)
 	assert.Equal(t, 15008, session.ProcessedPackets)
 	assert.Equal(t, 0, session.InvalidPackets)

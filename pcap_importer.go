@@ -35,6 +35,7 @@ type ImportingSession struct {
 	PacketsPerService map[uint16]flowCount `json:"packets_per_service" bson:"packets_per_service"`
 	ImportingError    error                `json:"importing_error" bson:"importing_error,omitempty"`
 	cancelFunc        context.CancelFunc
+	completed         chan error
 }
 
 type flowCount [2]int
@@ -76,6 +77,7 @@ func (pi *PcapImporter) ImportPcap(fileName string) (string, error) {
 		ID:                hash,
 		PacketsPerService: make(map[uint16]flowCount),
 		cancelFunc:        cancelFunc,
+		completed:         make(chan error),
 	}
 
 	if result, err := pi.storage.Insert(ImportingSessions).Context(ctx).One(session); err != nil {
@@ -129,15 +131,20 @@ func (pi *PcapImporter) parsePcap(session ImportingSession, fileName string, ctx
 		pi.sessions[session.ID] = dupSession
 		pi.mSessions.Unlock()
 
-		if _, err = pi.storage.Update(ImportingSessions).
-			Filter(OrderedDocument{{"_id", session.ID}}).One(session); err != nil {
-			log.WithError(err).WithField("session", session).Error("failed to update importing stats")
+		if completed || err != nil {
+			if _, err = pi.storage.Update(ImportingSessions).
+				Filter(OrderedDocument{{"_id", session.ID}}).One(session); err != nil {
+				log.WithError(err).WithField("session", session).Error("failed to update importing stats")
+			}
+			session.completed <- err
 		}
 	}
 
 	handle, err := pcap.OpenOffline(fileName)
 	if err != nil {
 		progressUpdate(false, errors.New("failed to process pcap"))
+		log.WithError(err).WithFields(log.Fields{"session": session, "fileName": fileName}).
+			Error("failed to open pcap")
 		return
 	}
 
@@ -148,15 +155,11 @@ func (pi *PcapImporter) parsePcap(session ImportingSession, fileName string, ctx
 	firstPacketTime := time.Time{}
 	updateProgressInterval := time.Tick(importUpdateProgressInterval)
 
-	terminate := func() {
-		handle.Close()
-		pi.releaseAssembler(assembler)
-	}
-
 	for {
 		select {
 		case <-ctx.Done():
-			terminate()
+			handle.Close()
+			pi.releaseAssembler(assembler)
 			progressUpdate(false, errors.New("import process cancelled"))
 			return
 		default:
@@ -168,7 +171,8 @@ func (pi *PcapImporter) parsePcap(session ImportingSession, fileName string, ctx
 				if !firstPacketTime.IsZero() {
 					assembler.FlushOlderThan(firstPacketTime.Add(-flushOlderThan))
 				}
-				terminate()
+				handle.Close()
+				pi.releaseAssembler(assembler)
 				progressUpdate(true, nil)
 				return
 			}
