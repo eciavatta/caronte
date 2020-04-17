@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"io"
@@ -11,26 +12,24 @@ import (
 	"time"
 )
 
-const invalidHashString = "invalid"
-
 func Sha256Sum(fileName string) (string, error) {
 	f, err := os.Open(fileName)
 	if err != nil {
-		return invalidHashString, err
+		return "", err
 	}
 	defer func() {
 		err = f.Close()
 		if err != nil {
-			log.Println("Cannot close file " + fileName)
+			log.WithError(err).WithField("filename", fileName).Error("failed to close file")
 		}
 	}()
 
 	h := sha256.New()
 	if _, err := io.Copy(h, f); err != nil {
-		return invalidHashString, err
+		return "", err
 	}
 
-	return string(h.Sum(nil)), nil
+	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
 func CustomRowID(payload uint64, timestamp time.Time) RowID {

@@ -13,6 +13,7 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.4.0
 	go.mongodb.org/mongo-driver v1.3.1
-	golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3
+	go.uber.org/atomic v1.6.0
+	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
 	golang.org/x/sys v0.0.0-20200406155108-e3b113bbe6a4 // indirect
 )

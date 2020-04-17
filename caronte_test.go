@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/sha256"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
@@ -30,8 +29,7 @@ func NewTestStorageWrapper(t *testing.T) *TestStorageWrapper {
 	port, err := strconv.Atoi(mongoPort)
 	require.NoError(t, err, "invalid port")
 
-	uniqueDatabaseName := sha256.Sum256([]byte(time.Now().String()))
-	dbName := fmt.Sprintf("%x", uniqueDatabaseName[:31])
+	dbName := fmt.Sprintf("%x", time.Now().UnixNano())
 	log.WithField("dbName", dbName).Info("creating new storage")
 
 	storage := NewMongoStorage(mongoHost, port, dbName)

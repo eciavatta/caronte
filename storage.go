@@ -14,7 +14,7 @@ import (
 // Collections names
 const Connections = "connections"
 const ConnectionStreams = "connection_streams"
-const ImportedPcaps = "imported_pcaps"
+const ImportingSessions = "importing_sessions"
 const Rules = "rules"
 
 var ZeroRowID [12]byte
@@ -44,15 +44,16 @@ func NewMongoStorage(uri string, port int, database string) *MongoStorage {
 	}
 
 	db := client.Database(database)
-	colls := map[string]*mongo.Collection{
-		Connections:   db.Collection(Connections),
-		ImportedPcaps: db.Collection(ImportedPcaps),
-		Rules:         db.Collection(Rules),
+	collections := map[string]*mongo.Collection{
+		Connections:       db.Collection(Connections),
+		ConnectionStreams: db.Collection(ConnectionStreams),
+		ImportingSessions: db.Collection(ImportingSessions),
+		Rules:             db.Collection(Rules),
 	}
 
 	return &MongoStorage{
 		client:      client,
-		collections: colls,
+		collections: collections,
 	}
 }
 
