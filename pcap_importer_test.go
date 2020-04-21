@@ -53,6 +53,7 @@ func TestCancelImportSession(t *testing.T) {
 
 	session := waitSessionCompletion(t, pcapImporter, sessionID)
 	assert.Zero(t, session.CompletedAt)
+	assert.Equal(t, 1270696, session.Size)
 	assert.Equal(t, 0, session.ProcessedPackets)
 	assert.Equal(t, 0, session.InvalidPackets)
 	assert.Equal(t, map[uint16]flowCount{}, session.PacketsPerService)
@@ -71,6 +72,7 @@ func TestImportNoTcpPackets(t *testing.T) {
 	require.NoError(t, err)
 
 	session := waitSessionCompletion(t, pcapImporter, sessionID)
+	assert.Equal(t, 228024, session.Size)
 	assert.Equal(t, 2000, session.ProcessedPackets)
 	assert.Equal(t, 2000, session.InvalidPackets)
 	assert.Equal(t, map[uint16]flowCount{}, session.PacketsPerService)
@@ -114,7 +116,10 @@ func checkSessionEquals(t *testing.T, wrapper *TestStorageWrapper, session Impor
 	var result ImportingSession
 	assert.NoError(t, wrapper.Storage.Find(ImportingSessions).Filter(OrderedDocument{{"_id", session.ID}}).
 		Context(wrapper.Context).First(&result))
+	assert.Equal(t, session.StartedAt.Unix(), result.StartedAt.Unix())
 	assert.Equal(t, session.CompletedAt.Unix(), result.CompletedAt.Unix())
+	session.StartedAt = time.Time{}
+	result.StartedAt = time.Time{}
 	session.CompletedAt = time.Time{}
 	result.CompletedAt = time.Time{}
 	session.cancelFunc = nil

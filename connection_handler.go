@@ -6,6 +6,7 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/tcpassembly"
 	log "github.com/sirupsen/logrus"
+	"hash/fnv"
 	"sync"
 	"time"
 )
@@ -237,5 +238,10 @@ func (ch *connectionHandlerImpl) PatternsDatabaseSize() int {
 }
 
 func (sf StreamFlow) Hash() uint64 {
-	return sf[0].FastHash() ^ sf[1].FastHash() ^ sf[2].FastHash() ^ sf[3].FastHash()
+	hash := fnv.New64a()
+	_, _ = hash.Write(sf[0].Raw())
+	_, _ = hash.Write(sf[1].Raw())
+	_, _ = hash.Write(sf[2].Raw())
+	_, _ = hash.Write(sf[3].Raw())
+	return hash.Sum64()
 }

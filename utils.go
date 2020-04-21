@@ -57,3 +57,19 @@ func RowIDFromHex(hex string) (RowID, error) {
 	rowID, err := primitive.ObjectIDFromHex(hex)
 	return rowID, err
 }
+
+func FileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
+}
+
+func FileSize(filename string) int64 {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return -1
+	}
+	return info.Size()
+}

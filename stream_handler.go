@@ -149,7 +149,7 @@ func (sh *StreamHandler) storageCurrentDocument() {
 	payload := sh.streamFlow.Hash()&uint64(0xffffffffffffff00) | uint64(len(sh.documentsIDs)) // LOL
 	streamID := CustomRowID(payload, sh.firstPacketSeen)
 
-	_, err := sh.connection.Storage().Insert(ConnectionStreams).
+	if _, err := sh.connection.Storage().Insert(ConnectionStreams).
 		One(ConnectionStream{
 			ID:               streamID,
 			ConnectionID:     ZeroRowID,
@@ -159,9 +159,7 @@ func (sh *StreamHandler) storageCurrentDocument() {
 			BlocksTimestamps: sh.timestamps,
 			BlocksLoss:       sh.lossBlocks,
 			PatternMatches:   sh.patternMatches,
-		})
-
-	if err != nil {
+		}); err != nil {
 		log.WithError(err).Error("failed to insert connection stream")
 	} else {
 		sh.documentsIDs = append(sh.documentsIDs, streamID)

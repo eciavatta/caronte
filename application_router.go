@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -13,9 +14,14 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 	// engine.Static("/", "./frontend/build")
 
 	router.POST("/setup", func(c *gin.Context) {
+		if applicationContext.IsConfigured {
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+
 		var settings struct {
-			Config   Config       `json:"config"`
-			Accounts gin.Accounts `json:"accounts"`
+			Config   Config       `json:"config" binding:"required"`
+			Accounts gin.Accounts `json:"accounts" binding:"required"`
 		}
 
 		if err := c.ShouldBindJSON(&settings); err != nil {
@@ -87,6 +93,28 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 				notFound(c, UnorderedDocument{"id": id})
 			} else {
 				success(c, rule)
+			}
+		})
+
+		api.POST("/pcap/file", func(c *gin.Context) {
+			var body struct {
+				Path string
+			}
+
+			if err := c.ShouldBindJSON(&body); err != nil {
+				badRequest(c, err)
+				return
+			}
+
+			if !FileExists(body.Path) {
+				unprocessableEntity(c, errors.New("invalid path"))
+				return
+			}
+
+			if sessionID, err := applicationContext.PcapImporter.ImportPcap(body.Path); err != nil {
+				unprocessableEntity(c, err)
+			} else {
+				c.JSON(http.StatusAccepted, gin.H{"session": sessionID})
 			}
 		})
 	}

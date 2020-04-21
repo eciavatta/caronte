@@ -29,6 +29,8 @@ type PcapImporter struct {
 
 type ImportingSession struct {
 	ID                string               `json:"id" bson:"_id"`
+	StartedAt         time.Time            `json:"started_at" bson:"started_at"`
+	Size              int64                `json:"size" bson:"size"`
 	CompletedAt       time.Time            `json:"completed_at" bson:"completed_at,omitempty"`
 	ProcessedPackets  int                  `json:"processed_packets" bson:"processed_packets"`
 	InvalidPackets    int                  `json:"invalid_packets" bson:"invalid_packets"`
@@ -75,6 +77,8 @@ func (pi *PcapImporter) ImportPcap(fileName string) (string, error) {
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	session := ImportingSession{
 		ID:                hash,
+		StartedAt:         time.Now(),
+		Size:              FileSize(fileName),
 		PacketsPerService: make(map[uint16]flowCount),
 		cancelFunc:        cancelFunc,
 		completed:         make(chan string),
