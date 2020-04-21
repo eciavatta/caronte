@@ -194,19 +194,6 @@ func (rm *rulesManagerImpl) GetRules() []Rule {
 	return rules
 }
 
-func (rm *rulesManagerImpl) SetFlag(context context.Context, flagRegex string) error {
-	_, err := rm.AddRule(context, Rule{
-		Name:  "flag",
-		Color: "#ff0000",
-		Notes: "Mark connections where the flag is stolen",
-		Patterns: []Pattern{
-			{Regex: flagRegex, Direction: DirectionToClient},
-		},
-	})
-
-	return err
-}
-
 func (rm *rulesManagerImpl) FillWithMatchedRules(connection *Connection, clientMatches map[uint][]PatternSlice,
 	serverMatches map[uint][]PatternSlice) {
 	rm.mutex.Lock()

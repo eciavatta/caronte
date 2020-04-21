@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
-	log "github.com/sirupsen/logrus"
 )
 
 func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine {
@@ -97,7 +96,6 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 
 func SetupRequiredMiddleware(applicationContext *ApplicationContext) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		log.Error("aaaaaaaaaaaaaa")
 		if !applicationContext.IsConfigured {
 			c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{
 				"error": "setup required",

@@ -23,28 +23,28 @@ type ApplicationContext struct {
 
 func CreateApplicationContext(storage Storage) (*ApplicationContext, error) {
 	var configWrapper struct {
-		config Config
+		Config Config
 	}
 	if err := storage.Find(Settings).Filter(OrderedDocument{{"_id", "config"}}).
 		First(&configWrapper); err != nil {
 		return nil, err
 	}
 	var accountsWrapper struct {
-		accounts gin.Accounts
+		Accounts gin.Accounts
 	}
 
 	if err := storage.Find(Settings).Filter(OrderedDocument{{"_id", "accounts"}}).
 		First(&accountsWrapper); err != nil {
 		return nil, err
 	}
-	if accountsWrapper.accounts == nil {
-		accountsWrapper.accounts = make(gin.Accounts)
+	if accountsWrapper.Accounts == nil {
+		accountsWrapper.Accounts = make(gin.Accounts)
 	}
 
 	applicationContext := &ApplicationContext{
 		Storage:  storage,
-		Config:   configWrapper.config,
-		Accounts: accountsWrapper.accounts,
+		Config:   configWrapper.Config,
+		Accounts: accountsWrapper.Accounts,
 	}
 
 	applicationContext.configure()
