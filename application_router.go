@@ -86,10 +86,10 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 				return
 			}
 
-			updated, err := applicationContext.RulesManager.UpdateRule(c, id, rule)
+			isPresent, err := applicationContext.RulesManager.UpdateRule(c, id, rule)
 			if err != nil {
 				badRequest(c, err)
-			} else if !updated {
+			} else if !isPresent {
 				notFound(c, UnorderedDocument{"id": id})
 			} else {
 				success(c, rule)

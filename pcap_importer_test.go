@@ -53,7 +53,7 @@ func TestCancelImportSession(t *testing.T) {
 
 	session := waitSessionCompletion(t, pcapImporter, sessionID)
 	assert.Zero(t, session.CompletedAt)
-	assert.Equal(t, 1270696, session.Size)
+	assert.Equal(t, int64(1270696), session.Size)
 	assert.Equal(t, 0, session.ProcessedPackets)
 	assert.Equal(t, 0, session.InvalidPackets)
 	assert.Equal(t, map[uint16]flowCount{}, session.PacketsPerService)
@@ -72,7 +72,7 @@ func TestImportNoTcpPackets(t *testing.T) {
 	require.NoError(t, err)
 
 	session := waitSessionCompletion(t, pcapImporter, sessionID)
-	assert.Equal(t, 228024, session.Size)
+	assert.Equal(t, int64(228024), session.Size)
 	assert.Equal(t, 2000, session.ProcessedPackets)
 	assert.Equal(t, 2000, session.InvalidPackets)
 	assert.Equal(t, map[uint16]flowCount{}, session.PacketsPerService)

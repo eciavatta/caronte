@@ -40,6 +40,79 @@ func TestAuthRequired(t *testing.T) {
 	toolkit.wrapper.Destroy(t)
 }
 
+func TestRulesApi(t *testing.T) {
+	toolkit := NewRouterTestToolkit(t, true)
+
+	// AddRule
+	assert.Equal(t, http.StatusBadRequest, toolkit.MakeRequest("POST", "/api/rules", Rule{}).Code)
+	assert.Equal(t, http.StatusBadRequest, toolkit.MakeRequest("POST", "/api/rules",
+		Rule{Name: "testRule"}).Code)
+	assert.Equal(t, http.StatusBadRequest, toolkit.MakeRequest("POST", "/api/rules",
+		Rule{Name: "testRule", Color: "invalidColor"}).Code)
+	w := toolkit.MakeRequest("POST", "/api/rules", Rule{Name: "testRule", Color: "#fff"})
+	var testRuleID struct {ID string}
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &testRuleID))
+	assert.Equal(t, http.StatusUnprocessableEntity, toolkit.MakeRequest("POST", "/api/rules",
+		Rule{Name: "testRule", Color: "#fff"}).Code) // same name
+
+	// UpdateRule
+	assert.Equal(t, http.StatusBadRequest, toolkit.MakeRequest("PUT", "/api/rules/invalidID",
+		Rule{Name: "invalidRule", Color: "#000"}).Code)
+	assert.Equal(t, http.StatusNotFound, toolkit.MakeRequest("PUT", "/api/rules/000000000000000000000000",
+		Rule{Name: "invalidRule", Color: "#000"}).Code)
+	assert.Equal(t, http.StatusBadRequest, toolkit.MakeRequest("PUT", "/api/rules/" + testRuleID.ID, Rule{}).Code)
+	assert.Equal(t, http.StatusBadRequest, toolkit.MakeRequest("PUT", "/api/rules/" + testRuleID.ID,
+		Rule{Name: "invalidRule", Color: "invalidColor"}).Code)
+	w = toolkit.MakeRequest("POST", "/api/rules", Rule{Name: "testRule2", Color: "#eee"})
+	var testRule2ID struct {ID string}
+	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &testRule2ID))
+	assert.Equal(t, http.StatusBadRequest, toolkit.MakeRequest("PUT", "/api/rules/" + testRule2ID.ID,
+		Rule{Name: "testRule", Color: "#fff"}).Code) // duplicate
+	w = toolkit.MakeRequest("PUT", "/api/rules/" + testRuleID.ID, Rule{Name: "newRule1", Color: "#ddd"})
+	var testRule Rule
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &testRule))
+	assert.Equal(t, "newRule1", testRule.Name)
+	assert.Equal(t, "#ddd", testRule.Color)
+
+	// GetRule
+	assert.Equal(t, http.StatusBadRequest, toolkit.MakeRequest("GET", "/api/rules/invalidID", nil).Code)
+	assert.Equal(t, http.StatusNotFound, toolkit.MakeRequest("GET", "/api/rules/000000000000000000000000", nil).Code)
+	w = toolkit.MakeRequest("GET", "/api/rules/" + testRuleID.ID, nil)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &testRule))
+	assert.Equal(t, testRuleID.ID, testRule.ID.Hex())
+	assert.Equal(t, "newRule1", testRule.Name)
+	assert.Equal(t, "#ddd", testRule.Color)
+
+	// GetRules
+	w = toolkit.MakeRequest("GET", "/api/rules", nil)
+	var rules []Rule
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &rules))
+	assert.Len(t, rules, 3)
+
+	toolkit.wrapper.Destroy(t)
+}
+
+func TestPcapImporterApi(t *testing.T) {
+	toolkit := NewRouterTestToolkit(t, true)
+
+	assert.Equal(t, http.StatusBadRequest, toolkit.MakeRequest("POST", "/api/pcap/file", nil).Code)
+	assert.Equal(t, http.StatusUnprocessableEntity, toolkit.MakeRequest("POST", "/api/pcap/file",
+		gin.H{"path": "invalidPath"}).Code)
+	w := toolkit.MakeRequest("POST", "/api/pcap/file", gin.H{"path": "test_data/ping_pong_10000.pcap"})
+	var sessionID struct {Session string}
+	assert.Equal(t, http.StatusAccepted, w.Code)
+	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &sessionID))
+	assert.Equal(t, "369ef4b6abb6214b4ee2e0c81ecb93c49e275c26c85e30493b37727d408cf280", sessionID.Session)
+	assert.Equal(t, http.StatusUnprocessableEntity, toolkit.MakeRequest("POST", "/api/pcap/file",
+		gin.H{"path": "test_data/ping_pong_10000.pcap"}).Code) // duplicate
+
+	toolkit.wrapper.Destroy(t)
+}
+
 type RouterTestToolkit struct {
 	appContext *ApplicationContext
 	wrapper    *TestStorageWrapper

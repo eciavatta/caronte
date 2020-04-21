@@ -176,8 +176,8 @@ func (rm *rulesManagerImpl) UpdateRule(context context.Context, id RowID, rule R
 		newRule.Color = rule.Color
 
 		delete(rm.rulesByName, newRule.Name)
-		rm.rulesByName[rule.Name] = newRule
-		rm.rules[rule.ID] = newRule
+		rm.rulesByName[newRule.Name] = newRule
+		rm.rules[id] = newRule
 		rm.mutex.Unlock()
 	}
 
