@@ -3,15 +3,39 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
+	log "github.com/sirupsen/logrus"
 )
 
-func ApplicationRoutes(engine *gin.Engine, rulesManager RulesManager) {
+func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine {
+	router := gin.New()
+	router.Use(gin.Logger())
+	router.Use(gin.Recovery())
+
 	// engine.Static("/", "./frontend/build")
 
-	api := engine.Group("/api")
+	router.POST("/setup", func(c *gin.Context) {
+		var settings struct {
+			Config   Config       `json:"config"`
+			Accounts gin.Accounts `json:"accounts"`
+		}
+
+		if err := c.ShouldBindJSON(&settings); err != nil {
+			badRequest(c, err)
+			return
+		}
+
+		applicationContext.SetConfig(settings.Config)
+		applicationContext.SetAccounts(settings.Accounts)
+
+		c.JSON(http.StatusAccepted, gin.H{})
+	})
+
+	api := router.Group("/api")
+	api.Use(SetupRequiredMiddleware(applicationContext))
+	api.Use(AuthRequiredMiddleware(applicationContext))
 	{
 		api.GET("/rules", func(c *gin.Context) {
-			success(c, rulesManager.GetRules())
+			success(c, applicationContext.RulesManager.GetRules())
 		})
 
 		api.POST("/rules", func(c *gin.Context) {
@@ -22,7 +46,7 @@ func ApplicationRoutes(engine *gin.Engine, rulesManager RulesManager) {
 				return
 			}
 
-			if id, err := rulesManager.AddRule(c, rule); err != nil {
+			if id, err := applicationContext.RulesManager.AddRule(c, rule); err != nil {
 				unprocessableEntity(c, err)
 			} else {
 				success(c, UnorderedDocument{"id": id})
@@ -36,7 +60,7 @@ func ApplicationRoutes(engine *gin.Engine, rulesManager RulesManager) {
 				badRequest(c, err)
 				return
 			}
-			rule, found := rulesManager.GetRule(id)
+			rule, found := applicationContext.RulesManager.GetRule(id)
 			if !found {
 				notFound(c, UnorderedDocument{"id": id})
 			} else {
@@ -57,7 +81,7 @@ func ApplicationRoutes(engine *gin.Engine, rulesManager RulesManager) {
 				return
 			}
 
-			updated, err := rulesManager.UpdateRule(c, id, rule)
+			updated, err := applicationContext.RulesManager.UpdateRule(c, id, rule)
 			if err != nil {
 				badRequest(c, err)
 			} else if !updated {
@@ -66,6 +90,33 @@ func ApplicationRoutes(engine *gin.Engine, rulesManager RulesManager) {
 				success(c, rule)
 			}
 		})
+	}
+
+	return router
+}
+
+func SetupRequiredMiddleware(applicationContext *ApplicationContext) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		log.Error("aaaaaaaaaaaaaa")
+		if !applicationContext.IsConfigured {
+			c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{
+				"error": "setup required",
+				"url":   c.Request.Host + "/setup",
+			})
+		} else {
+			c.Next()
+		}
+	}
+}
+
+func AuthRequiredMiddleware(applicationContext *ApplicationContext) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if !applicationContext.Config.AuthRequired {
+			c.Next()
+			return
+		}
+
+		gin.BasicAuth(applicationContext.Accounts)(c)
 	}
 }
 

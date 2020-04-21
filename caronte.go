@@ -1,9 +1,9 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -17,17 +17,19 @@ func main() {
 
 	flag.Parse()
 
+	logFields := log.Fields{"host": *mongoHost, "port": *mongoPort, "dbName": *dbName}
 	storage := NewMongoStorage(*mongoHost, *mongoPort, *dbName)
-	err := storage.Connect(nil)
-	if err != nil {
-		log.WithError(err).Fatal("failed to connect to MongoDB")
+	if err := storage.Connect(context.Background()); err != nil {
+		log.WithError(err).WithFields(logFields).Fatal("failed to connect to MongoDB")
 	}
 
-	rulesManager := NewRulesManager(storage)
-	router := gin.Default()
-	ApplicationRoutes(router, rulesManager)
-	err = router.Run(fmt.Sprintf("%s:%v", *bindAddress, *bindPort))
+	applicationContext, err := CreateApplicationContext(storage)
 	if err != nil {
-		log.WithError(err).Fatal("failed to create the server")
+		log.WithError(err).WithFields(logFields).Fatal("failed to create application context")
+	}
+
+	applicationRouter := CreateApplicationRouter(applicationContext)
+	if applicationRouter.Run(fmt.Sprintf("%s:%v", *bindAddress, *bindPort)) != nil {
+		log.WithError(err).WithFields(logFields).Fatal("failed to create the server")
 	}
 }

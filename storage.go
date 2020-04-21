@@ -16,6 +16,7 @@ const Connections = "connections"
 const ConnectionStreams = "connection_streams"
 const ImportingSessions = "importing_sessions"
 const Rules = "rules"
+const Settings = "settings"
 
 var ZeroRowID [12]byte
 
@@ -49,6 +50,7 @@ func NewMongoStorage(uri string, port int, database string) *MongoStorage {
 		ConnectionStreams: db.Collection(ConnectionStreams),
 		ImportingSessions: db.Collection(ImportingSessions),
 		Rules:             db.Collection(Rules),
+		Settings:          db.Collection(Settings),
 	}
 
 	return &MongoStorage{

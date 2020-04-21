@@ -11,11 +11,10 @@ func TestAddAndGetAllRules(t *testing.T) {
 	wrapper := NewTestStorageWrapper(t)
 	wrapper.AddCollection(Rules)
 
-	rulesManager := NewRulesManager(wrapper.Storage).(*rulesManagerImpl)
-
-	err := rulesManager.SetFlag(wrapper.Context, "FLAG{test}")
-	assert.NoError(t, err)
-	checkVersion(t, rulesManager, rulesManager.rulesByName["flag"].ID)
+	rulesManager, err := LoadRulesManager(wrapper.Storage, "FLAG{test}")
+	require.NoError(t, err)
+	impl := rulesManager.(*rulesManagerImpl)
+	checkVersion(t, rulesManager, impl.rulesByName["flag"].ID)
 	emptyRule := Rule{Name: "empty", Color: "#fff", Enabled: true}
 	emptyID, err := rulesManager.AddRule(wrapper.Context, emptyRule)
 	assert.NoError(t, err)
@@ -101,14 +100,14 @@ func TestAddAndGetAllRules(t *testing.T) {
 			rule.Patterns[i].internalID = uint(id)
 		}
 		assert.Equal(t, expected, rule)
-		assert.Equal(t, expected, rulesManager.rules[expected.ID])
-		assert.Equal(t, expected, rulesManager.rulesByName[expected.Name])
+		assert.Equal(t, expected, impl.rules[expected.ID])
+		assert.Equal(t, expected, impl.rulesByName[expected.Name])
 	}
 
-	assert.Len(t, rulesManager.rules, 5)
-	assert.Len(t, rulesManager.rulesByName, 5)
-	assert.Len(t, rulesManager.patterns, 5)
-	assert.Len(t, rulesManager.patternsIds, 5)
+	assert.Len(t, impl.rules, 5)
+	assert.Len(t, impl.rulesByName, 5)
+	assert.Len(t, impl.patterns, 5)
+	assert.Len(t, impl.patternsIds, 5)
 
 	emptyRule.ID = emptyID
 	rule1.ID = rule1ID
@@ -121,7 +120,7 @@ func TestAddAndGetAllRules(t *testing.T) {
 	checkRule(rule3, []int{3, 4})
 
 	assert.Len(t, rulesManager.GetRules(), 5)
-	assert.ElementsMatch(t, []Rule{rulesManager.rulesByName["flag"], emptyRule, rule1, rule2, rule3}, rulesManager.GetRules())
+	assert.ElementsMatch(t, []Rule{impl.rulesByName["flag"], emptyRule, rule1, rule2, rule3}, rulesManager.GetRules())
 
 	wrapper.Destroy(t)
 }
@@ -150,8 +149,7 @@ func TestLoadAndUpdateRules(t *testing.T) {
 	require.NoError(t, err)
 	assert.ElementsMatch(t, expectedIds, ids)
 
-	rulesManager := NewRulesManager(wrapper.Storage).(*rulesManagerImpl)
-	err = rulesManager.LoadRules()
+	rulesManager, err := LoadRulesManager(wrapper.Storage, "FLAG{nope}")
 	require.NoError(t, err)
 
 	rule, isPresent := rulesManager.GetRule(NewRowID())
@@ -193,10 +191,10 @@ func TestFillWithMatchedRules(t *testing.T) {
 	wrapper := NewTestStorageWrapper(t)
 	wrapper.AddCollection(Rules)
 
-	rulesManager := NewRulesManager(wrapper.Storage).(*rulesManagerImpl)
-	err := rulesManager.SetFlag(wrapper.Context, "flag")
+	rulesManager, err := LoadRulesManager(wrapper.Storage, "FLAG{test}")
 	require.NoError(t, err)
-	checkVersion(t, rulesManager, rulesManager.rulesByName["flag"].ID)
+	impl := rulesManager.(*rulesManagerImpl)
+	checkVersion(t, rulesManager, impl.rulesByName["flag"].ID)
 
 	emptyRule, err := rulesManager.AddRule(wrapper.Context, Rule{Name: "empty", Color: "#fff"})
 	require.NoError(t, err)
