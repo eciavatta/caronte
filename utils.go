@@ -73,3 +73,7 @@ func FileSize(filename string) int64 {
 	}
 	return info.Size()
 }
+
+func byID(id RowID) OrderedDocument {
+	return OrderedDocument{{"_id", id}}
+}

@@ -48,8 +48,8 @@ func TestCancelImportSession(t *testing.T) {
 	sessionID, err := pcapImporter.ImportPcap("test_data/ping_pong_10000.pcap")
 	require.NoError(t, err)
 
-	assert.Error(t, pcapImporter.CancelSession("invalid"))
-	assert.NoError(t, pcapImporter.CancelSession(sessionID))
+	assert.False(t, pcapImporter.CancelSession("invalid"))
+	assert.True(t, pcapImporter.CancelSession(sessionID))
 
 	session := waitSessionCompletion(t, pcapImporter, sessionID)
 	assert.Zero(t, session.CompletedAt)

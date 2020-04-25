@@ -3,6 +3,7 @@ module github.com/eciavatta/caronte
 go 1.14
 
 require (
+	github.com/apex/log v1.1.4
 	github.com/flier/gohs v1.0.0
 	github.com/gin-gonic/gin v1.6.2
 	github.com/go-playground/validator/v10 v10.2.0

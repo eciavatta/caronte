@@ -92,6 +92,16 @@ func (pi *PcapImporter) ImportPcap(fileName string) (string, error) {
 	return hash, nil
 }
 
+func (pi *PcapImporter) GetSessions() []ImportingSession {
+	pi.mSessions.Lock()
+	sessions := make([]ImportingSession, 0, len(pi.sessions))
+	for _, session := range pi.sessions {
+		sessions = append(sessions, session)
+	}
+	pi.mSessions.Unlock()
+	return sessions
+}
+
 func (pi *PcapImporter) GetSession(sessionID string) (ImportingSession, bool) {
 	pi.mSessions.Lock()
 	defer pi.mSessions.Unlock()
@@ -99,15 +109,14 @@ func (pi *PcapImporter) GetSession(sessionID string) (ImportingSession, bool) {
 	return session, isPresent
 }
 
-func (pi *PcapImporter) CancelSession(sessionID string) error {
+func (pi *PcapImporter) CancelSession(sessionID string) bool {
 	pi.mSessions.Lock()
-	defer pi.mSessions.Unlock()
-	if session, isPresent := pi.sessions[sessionID]; !isPresent {
-		return errors.New("session " + sessionID + " not found")
-	} else {
+	session, isPresent := pi.sessions[sessionID]
+	if isPresent {
 		session.cancelFunc()
-		return nil
 	}
+	pi.mSessions.Unlock()
+	return isPresent
 }
 
 // Read the pcap and save the tcp stream flow to the database
@@ -211,7 +220,7 @@ func (pi *PcapImporter) progressUpdate(session ImportingSession, completed bool,
 		if _, _err := pi.storage.Insert(ImportingSessions).One(session); _err != nil {
 			log.WithError(_err).WithField("session", session).Error("failed to insert importing stats")
 		}
-		session.completed <- session.ImportingError
+		close(session.completed)
 	}
 }
 

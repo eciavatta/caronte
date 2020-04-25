@@ -13,12 +13,14 @@ type Config struct {
 }
 
 type ApplicationContext struct {
-	Storage      Storage
-	Config       Config
-	Accounts     gin.Accounts
-	RulesManager RulesManager
-	PcapImporter *PcapImporter
-	IsConfigured bool
+	Storage               Storage
+	Config                Config
+	Accounts              gin.Accounts
+	RulesManager          RulesManager
+	PcapImporter          *PcapImporter
+	ConnectionsController ConnectionsController
+	ServicesController    *ServicesController
+	IsConfigured          bool
 }
 
 func CreateApplicationContext(storage Storage) (*ApplicationContext, error) {
@@ -88,5 +90,8 @@ func (sm *ApplicationContext) configure() {
 	}
 	sm.RulesManager = rulesManager
 	sm.PcapImporter = NewPcapImporter(sm.Storage, serverIP, sm.RulesManager)
+	sm.ServicesController = NewServicesController(sm.Storage)
+	sm.ConnectionsController = NewConnectionsController(sm.Storage, sm.ServicesController)
 	sm.IsConfigured = true
+
 }

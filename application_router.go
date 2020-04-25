@@ -117,6 +117,105 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 				c.JSON(http.StatusAccepted, gin.H{"session": sessionID})
 			}
 		})
+
+		api.GET("/pcap/sessions", func(c *gin.Context) {
+			success(c, applicationContext.PcapImporter.GetSessions())
+		})
+
+		api.GET("/pcap/sessions/:id", func(c *gin.Context) {
+			sessionID := c.Param("id")
+			if session, isPresent := applicationContext.PcapImporter.GetSession(sessionID); isPresent {
+				success(c, session)
+			} else {
+				notFound(c, gin.H{"session": sessionID})
+			}
+		})
+
+		api.DELETE("/pcap/sessions/:id", func(c *gin.Context) {
+			sessionID := c.Param("id")
+			session := gin.H{"session": sessionID}
+			if cancelled := applicationContext.PcapImporter.CancelSession(sessionID); cancelled {
+				c.JSON(http.StatusAccepted, session)
+			} else {
+				notFound(c, session)
+			}
+		})
+
+		api.GET("/connections", func(c *gin.Context) {
+			var filter ConnectionsFilter
+			if err := c.ShouldBindQuery(&filter); err != nil {
+				badRequest(c, err)
+				return
+			}
+			success(c, applicationContext.ConnectionsController.GetConnections(c, filter))
+		})
+
+		api.GET("/connections/:id", func(c *gin.Context) {
+			if id, err := RowIDFromHex(c.Param("id")); err != nil {
+				badRequest(c, err)
+			} else {
+				if connection, isPresent := applicationContext.ConnectionsController.GetConnection(c, id); isPresent {
+					success(c, connection)
+				} else {
+					notFound(c, gin.H{"connection": id})
+				}
+			}
+		})
+
+		api.POST("/connections/:id/:action", func(c *gin.Context) {
+			id, err := RowIDFromHex(c.Param("id"))
+			if err != nil {
+				badRequest(c, err)
+				return
+			}
+
+			var result bool
+			switch action := c.Param("action"); action {
+			case "hide":
+				result = applicationContext.ConnectionsController.SetHidden(c, id, true)
+			case "show":
+				result = applicationContext.ConnectionsController.SetHidden(c, id, false)
+			case "mark":
+				result = applicationContext.ConnectionsController.SetMarked(c, id, true)
+			case "unmark":
+				result = applicationContext.ConnectionsController.SetMarked(c, id, false)
+			case "comment":
+				var comment struct {
+					Comment string `json:"comment" binding:"required"`
+				}
+				if err := c.ShouldBindJSON(&comment); err != nil {
+					badRequest(c, err)
+					return
+				}
+				result = applicationContext.ConnectionsController.SetComment(c, id, comment.Comment)
+			default:
+				badRequest(c, errors.New("invalid action"))
+				return
+			}
+
+			if result {
+				c.Status(http.StatusAccepted)
+			} else {
+				notFound(c, gin.H{"connection": id})
+			}
+		})
+
+		api.GET("/services", func(c *gin.Context) {
+			success(c, applicationContext.ServicesController.GetServices())
+		})
+
+		api.PUT("/services", func(c *gin.Context) {
+			var service Service
+			if err := c.ShouldBindJSON(&service); err != nil {
+				badRequest(c, err)
+				return
+			}
+			if err := applicationContext.ServicesController.SetService(c, service); err == nil {
+				success(c, service)
+			} else {
+				unprocessableEntity(c, err)
+			}
+		})
 	}
 
 	return router

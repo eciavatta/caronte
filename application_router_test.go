@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 func TestSetupApplication(t *testing.T) {
@@ -50,7 +51,7 @@ func TestRulesApi(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, toolkit.MakeRequest("POST", "/api/rules",
 		Rule{Name: "testRule", Color: "invalidColor"}).Code)
 	w := toolkit.MakeRequest("POST", "/api/rules", Rule{Name: "testRule", Color: "#fff"})
-	var testRuleID struct {ID string}
+	var testRuleID struct{ ID string }
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &testRuleID))
 	assert.Equal(t, http.StatusUnprocessableEntity, toolkit.MakeRequest("POST", "/api/rules",
@@ -61,15 +62,15 @@ func TestRulesApi(t *testing.T) {
 		Rule{Name: "invalidRule", Color: "#000"}).Code)
 	assert.Equal(t, http.StatusNotFound, toolkit.MakeRequest("PUT", "/api/rules/000000000000000000000000",
 		Rule{Name: "invalidRule", Color: "#000"}).Code)
-	assert.Equal(t, http.StatusBadRequest, toolkit.MakeRequest("PUT", "/api/rules/" + testRuleID.ID, Rule{}).Code)
-	assert.Equal(t, http.StatusBadRequest, toolkit.MakeRequest("PUT", "/api/rules/" + testRuleID.ID,
+	assert.Equal(t, http.StatusBadRequest, toolkit.MakeRequest("PUT", "/api/rules/"+testRuleID.ID, Rule{}).Code)
+	assert.Equal(t, http.StatusBadRequest, toolkit.MakeRequest("PUT", "/api/rules/"+testRuleID.ID,
 		Rule{Name: "invalidRule", Color: "invalidColor"}).Code)
 	w = toolkit.MakeRequest("POST", "/api/rules", Rule{Name: "testRule2", Color: "#eee"})
-	var testRule2ID struct {ID string}
+	var testRule2ID struct{ ID string }
 	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &testRule2ID))
-	assert.Equal(t, http.StatusBadRequest, toolkit.MakeRequest("PUT", "/api/rules/" + testRule2ID.ID,
+	assert.Equal(t, http.StatusBadRequest, toolkit.MakeRequest("PUT", "/api/rules/"+testRule2ID.ID,
 		Rule{Name: "testRule", Color: "#fff"}).Code) // duplicate
-	w = toolkit.MakeRequest("PUT", "/api/rules/" + testRuleID.ID, Rule{Name: "newRule1", Color: "#ddd"})
+	w = toolkit.MakeRequest("PUT", "/api/rules/"+testRuleID.ID, Rule{Name: "newRule1", Color: "#ddd"})
 	var testRule Rule
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &testRule))
@@ -79,7 +80,7 @@ func TestRulesApi(t *testing.T) {
 	// GetRule
 	assert.Equal(t, http.StatusBadRequest, toolkit.MakeRequest("GET", "/api/rules/invalidID", nil).Code)
 	assert.Equal(t, http.StatusNotFound, toolkit.MakeRequest("GET", "/api/rules/000000000000000000000000", nil).Code)
-	w = toolkit.MakeRequest("GET", "/api/rules/" + testRuleID.ID, nil)
+	w = toolkit.MakeRequest("GET", "/api/rules/"+testRuleID.ID, nil)
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &testRule))
 	assert.Equal(t, testRuleID.ID, testRule.ID.Hex())
@@ -99,16 +100,39 @@ func TestRulesApi(t *testing.T) {
 func TestPcapImporterApi(t *testing.T) {
 	toolkit := NewRouterTestToolkit(t, true)
 
+	// Import pcap
 	assert.Equal(t, http.StatusBadRequest, toolkit.MakeRequest("POST", "/api/pcap/file", nil).Code)
 	assert.Equal(t, http.StatusUnprocessableEntity, toolkit.MakeRequest("POST", "/api/pcap/file",
 		gin.H{"path": "invalidPath"}).Code)
 	w := toolkit.MakeRequest("POST", "/api/pcap/file", gin.H{"path": "test_data/ping_pong_10000.pcap"})
-	var sessionID struct {Session string}
+	var sessionID struct{ Session string }
 	assert.Equal(t, http.StatusAccepted, w.Code)
 	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &sessionID))
 	assert.Equal(t, "369ef4b6abb6214b4ee2e0c81ecb93c49e275c26c85e30493b37727d408cf280", sessionID.Session)
 	assert.Equal(t, http.StatusUnprocessableEntity, toolkit.MakeRequest("POST", "/api/pcap/file",
 		gin.H{"path": "test_data/ping_pong_10000.pcap"}).Code) // duplicate
+
+	// Get sessions
+	var sessions []ImportingSession
+	w = toolkit.MakeRequest("GET", "/api/pcap/sessions", nil)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &sessions))
+	assert.Len(t, sessions, 1)
+	assert.Equal(t, sessionID.Session, sessions[0].ID)
+
+	// Get session
+	var session ImportingSession
+	w = toolkit.MakeRequest("GET", "/api/pcap/sessions/"+sessionID.Session, nil)
+	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &session))
+	assert.Equal(t, sessionID.Session, session.ID)
+
+	// Cancel session
+	assert.Equal(t, http.StatusNotFound, toolkit.MakeRequest("DELETE", "/api/pcap/sessions/invalidSession",
+		nil).Code)
+	assert.Equal(t, http.StatusAccepted, toolkit.MakeRequest("DELETE", "/api/pcap/sessions/"+sessionID.Session,
+		nil).Code)
+
+	time.Sleep(1*time.Second) // wait for termination
 
 	toolkit.wrapper.Destroy(t)
 }

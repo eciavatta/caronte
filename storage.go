@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -17,6 +16,7 @@ const ConnectionStreams = "connection_streams"
 const ImportingSessions = "importing_sessions"
 const Rules = "rules"
 const Settings = "settings"
+const Services = "services"
 
 var ZeroRowID [12]byte
 
@@ -27,7 +27,6 @@ type Storage interface {
 }
 
 type MongoStorage struct {
-	client      *mongo.Client
 	collections map[string]*mongo.Collection
 }
 
@@ -36,12 +35,17 @@ type UnorderedDocument = bson.M
 type Entry = bson.E
 type RowID = primitive.ObjectID
 
-func NewMongoStorage(uri string, port int, database string) *MongoStorage {
+func NewMongoStorage(uri string, port int, database string) (*MongoStorage, error) {
+	ctx := context.Background()
 	opt := options.Client()
 	opt.ApplyURI(fmt.Sprintf("mongodb://%s:%v", uri, port))
 	client, err := mongo.NewClient(opt)
 	if err != nil {
-		log.WithError(err).Panic("failed to create mongo client")
+		return nil, err
+	}
+
+	if err := client.Connect(ctx); err != nil {
+		return nil, err
 	}
 
 	db := client.Database(database)
@@ -51,16 +55,19 @@ func NewMongoStorage(uri string, port int, database string) *MongoStorage {
 		ImportingSessions: db.Collection(ImportingSessions),
 		Rules:             db.Collection(Rules),
 		Settings:          db.Collection(Settings),
+		Services:          db.Collection(Services),
+	}
+
+	if _, err := collections[Services].Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{"name", 1}},
+		Options: options.Index().SetUnique(true),
+	}); err != nil {
+		return nil, err
 	}
 
 	return &MongoStorage{
-		client:      client,
 		collections: collections,
-	}
-}
-
-func (storage *MongoStorage) Connect(ctx context.Context) error {
-	return storage.client.Connect(ctx)
+	}, nil
 }
 
 // InsertOne and InsertMany
@@ -153,7 +160,9 @@ func (fo MongoUpdateOperation) Context(ctx context.Context) UpdateOperation {
 }
 
 func (fo MongoUpdateOperation) Filter(filter OrderedDocument) UpdateOperation {
-	fo.filter = filter
+	for _, elem := range filter {
+		fo.filter = append(fo.filter, primitive.E{Key: elem.Key, Value: elem.Value})
+	}
 	return fo
 }
 
@@ -242,7 +251,9 @@ func (fo MongoFindOperation) Context(ctx context.Context) FindOperation {
 }
 
 func (fo MongoFindOperation) Filter(filter OrderedDocument) FindOperation {
-	fo.filter = filter
+	for _, elem := range filter {
+		fo.filter = append(fo.filter, primitive.E{Key: elem.Key, Value: elem.Value})
+	}
 	return fo
 }
 
