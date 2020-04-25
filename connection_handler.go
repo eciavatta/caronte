@@ -152,7 +152,7 @@ func (factory *BiDirectionalStreamFactory) New(net, transport gopacket.Flow) tcp
 	}
 	factory.mConnections.Unlock()
 
-	streamHandler := NewStreamHandler(connection, flow, factory.takeScanner())
+	streamHandler := NewStreamHandler(connection, flow, factory.takeScanner(), net.Src() != factory.serverIP)
 
 	return &streamHandler
 }

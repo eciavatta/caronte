@@ -2,6 +2,8 @@ package main
 
 import (
 	"crypto/sha256"
+	"encoding/base32"
+	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
@@ -76,4 +78,31 @@ func FileSize(filename string) int64 {
 
 func byID(id RowID) OrderedDocument {
 	return OrderedDocument{{"_id", id}}
+}
+
+func DecodeBytes(buffer []byte, format string) string {
+	switch format {
+	case "hex":
+		return hex.EncodeToString(buffer)
+	case "hexdump":
+		return hex.Dump(buffer)
+	case "base32":
+		return base32.StdEncoding.EncodeToString(buffer)
+	case "base64":
+		return base64.StdEncoding.EncodeToString(buffer)
+	case "ascii":
+		str := fmt.Sprintf("%+q", buffer)
+		return str[1 : len(str)-1]
+	case "binary":
+		str := fmt.Sprintf("%b", buffer)
+		return str[1 : len(str)-1]
+	case "decimal":
+		str := fmt.Sprintf("%d", buffer)
+		return str[1 : len(str)-1]
+	case "octal":
+		str := fmt.Sprintf("%o", buffer)
+		return str[1 : len(str)-1]
+	default:
+		return string(buffer)
+	}
 }

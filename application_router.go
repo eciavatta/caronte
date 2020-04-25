@@ -200,6 +200,20 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 			}
 		})
 
+		api.GET("/streams/:id", func(c *gin.Context) {
+			id, err := RowIDFromHex(c.Param("id"))
+			if err != nil {
+				badRequest(c, err)
+				return
+			}
+			var format QueryFormat
+			if err := c.ShouldBindQuery(&format); err != nil {
+				badRequest(c, err)
+				return
+			}
+			success(c, applicationContext.ConnectionStreamsController.GetConnectionPayload(c, id, format))
+		})
+
 		api.GET("/services", func(c *gin.Context) {
 			success(c, applicationContext.ServicesController.GetServices())
 		})

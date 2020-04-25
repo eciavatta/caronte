@@ -31,10 +31,11 @@ type StreamHandler struct {
 	patternStream   hyperscan.Stream
 	patternMatches  map[uint][]PatternSlice
 	scanner         Scanner
+	isClient        bool
 }
 
 // NewReaderStream returns a new StreamHandler object.
-func NewStreamHandler(connection ConnectionHandler, streamFlow StreamFlow, scanner Scanner) StreamHandler {
+func NewStreamHandler(connection ConnectionHandler, streamFlow StreamFlow, scanner Scanner, isClient bool) StreamHandler {
 	handler := StreamHandler{
 		connection:     connection,
 		streamFlow:     streamFlow,
@@ -45,6 +46,7 @@ func NewStreamHandler(connection ConnectionHandler, streamFlow StreamFlow, scann
 		documentsIDs:   make([]RowID, 0, 1),               // most of the time the stream fit in one document
 		patternMatches: make(map[uint][]PatternSlice, connection.PatternsDatabaseSize()),
 		scanner:        scanner,
+		isClient:       isClient,
 	}
 
 	stream, err := connection.PatternsDatabase().Open(0, scanner.scratch, handler.onMatch, nil)
@@ -159,6 +161,7 @@ func (sh *StreamHandler) storageCurrentDocument() {
 			BlocksTimestamps: sh.timestamps,
 			BlocksLoss:       sh.lossBlocks,
 			PatternMatches:   sh.patternMatches,
+			FromClient:       sh.isClient,
 		}); err != nil {
 		log.WithError(err).Error("failed to insert connection stream")
 	} else {
