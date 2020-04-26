@@ -3,7 +3,6 @@ module github.com/eciavatta/caronte
 go 1.14
 
 require (
-	github.com/apex/log v1.1.4
 	github.com/flier/gohs v1.0.0
 	github.com/gin-gonic/gin v1.6.2
 	github.com/go-playground/validator/v10 v10.2.0
@@ -12,9 +11,9 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/sirupsen/logrus v1.4.2
+	github.com/smartystreets/assertions v1.0.0 // indirect
 	github.com/stretchr/testify v1.4.0
 	go.mongodb.org/mongo-driver v1.3.1
-	go.uber.org/atomic v1.6.0
-	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
+	golang.org/x/net v0.0.0-20190620200207-3b0461eec859 // indirect
 	golang.org/x/sys v0.0.0-20200406155108-e3b113bbe6a4 // indirect
 )
