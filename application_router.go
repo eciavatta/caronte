@@ -2,14 +2,20 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 	"net/http"
+	"os"
+	"path/filepath"
+	"time"
 )
 
 func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine {
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
+	router.MaxMultipartMemory = 8 << 30
 
 	// engine.Static("/", "./frontend/build")
 
@@ -96,22 +102,49 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 			}
 		})
 
-		api.POST("/pcap/file", func(c *gin.Context) {
-			var body struct {
-				Path string
-			}
-
-			if err := c.ShouldBindJSON(&body); err != nil {
+		api.POST("/pcap/upload", func(c *gin.Context) {
+			fileHeader, err := c.FormFile("file")
+			if err != nil {
 				badRequest(c, err)
 				return
 			}
+			fileName := fmt.Sprintf("%v-%s", time.Now().UnixNano(), fileHeader.Filename)
+			if err := c.SaveUploadedFile(fileHeader, ProcessingPcapsBasePath + fileName); err != nil {
+				log.WithError(err).Panic("failed to save uploaded file")
+			}
 
-			if !FileExists(body.Path) {
-				unprocessableEntity(c, errors.New("invalid path"))
+			if sessionID, err := applicationContext.PcapImporter.ImportPcap(fileName); err != nil {
+				unprocessableEntity(c, err)
+			} else {
+				c.JSON(http.StatusAccepted, gin.H{"session": sessionID})
+			}
+		})
+
+		api.POST("/pcap/file", func(c *gin.Context) {
+			var request struct {
+				File               string `json:"file"`
+				DeleteOriginalFile bool   `json:"delete_original_file"`
+			}
+
+			if err := c.ShouldBindJSON(&request); err != nil {
+				badRequest(c, err)
+				return
+			}
+			if !FileExists(request.File) {
+				badRequest(c, errors.New("file not exists"))
 				return
 			}
 
-			if sessionID, err := applicationContext.PcapImporter.ImportPcap(body.Path); err != nil {
+			fileName := fmt.Sprintf("%v-%s", time.Now().UnixNano(), filepath.Base(request.File))
+			if err := CopyFile(ProcessingPcapsBasePath + fileName, request.File); err != nil {
+				log.WithError(err).Panic("failed to copy pcap file")
+			}
+			if sessionID, err := applicationContext.PcapImporter.ImportPcap(fileName); err != nil {
+				if request.DeleteOriginalFile {
+					if err := os.Remove(request.File); err != nil {
+						log.WithError(err).Panic("failed to remove processed file")
+					}
+				}
 				unprocessableEntity(c, err)
 			} else {
 				c.JSON(http.StatusAccepted, gin.H{"session": sessionID})
@@ -126,6 +159,21 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 			sessionID := c.Param("id")
 			if session, isPresent := applicationContext.PcapImporter.GetSession(sessionID); isPresent {
 				success(c, session)
+			} else {
+				notFound(c, gin.H{"session": sessionID})
+			}
+		})
+
+		api.GET("/pcap/sessions/:id/download", func(c *gin.Context) {
+			sessionID := c.Param("id")
+			if _, isPresent := applicationContext.PcapImporter.GetSession(sessionID); isPresent {
+				if FileExists(PcapsBasePath + sessionID + ".pcap") {
+					c.FileAttachment(PcapsBasePath + sessionID + ".pcap", sessionID[:16] + ".pcap")
+				} else if FileExists(PcapsBasePath + sessionID + ".pcapng") {
+					c.FileAttachment(PcapsBasePath + sessionID + ".pcapng", sessionID[:16] + ".pcapng")
+				} else {
+					log.WithField("sessionID", sessionID).Panic("pcap file not exists")
+				}
 			} else {
 				notFound(c, gin.H{"session": sessionID})
 			}

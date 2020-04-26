@@ -27,6 +27,7 @@ type Storage interface {
 }
 
 type MongoStorage struct {
+	client      *mongo.Client
 	collections map[string]*mongo.Collection
 }
 
@@ -66,6 +67,7 @@ func NewMongoStorage(uri string, port int, database string) (*MongoStorage, erro
 	}
 
 	return &MongoStorage{
+		client:      client,
 		collections: collections,
 	}, nil
 }

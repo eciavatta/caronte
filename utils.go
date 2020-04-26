@@ -106,3 +106,24 @@ func DecodeBytes(buffer []byte, format string) string {
 		return string(buffer)
 	}
 }
+
+func CopyFile(dst, src string) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+
+	out, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+
+	if _, err = io.Copy(out, in); err != nil {
+		return err
+	}
+
+	if err := in.Close(); err != nil {
+		return err
+	}
+	return out.Close()
+}

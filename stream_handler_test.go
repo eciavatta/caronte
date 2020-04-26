@@ -311,7 +311,7 @@ func createTestStreamHandler(wrapper *TestStorageWrapper, patterns hyperscan.Str
 	dstPort := layers.NewTCPPortEndpoint(dstPort)
 
 	scanner := Scanner{scratch: scratch, version: ZeroRowID}
-	return NewStreamHandler(testConnectionHandler, StreamFlow{srcIP, dstIP, srcPort, dstPort}, scanner)
+	return NewStreamHandler(testConnectionHandler, StreamFlow{srcIP, dstIP, srcPort, dstPort}, scanner, true) // TODO: test isClient
 }
 
 type testConnectionHandler struct {

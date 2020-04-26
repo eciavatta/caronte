@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/tcpassembly"
@@ -9,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"net"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -20,12 +22,15 @@ func TestImportPcap(t *testing.T) {
 
 	pcapImporter.releaseAssembler(pcapImporter.takeAssembler())
 
-	sessionID, err := pcapImporter.ImportPcap("test_data/ping_pong_10000.pcap")
+	fileName := copyToProcessing(t, "ping_pong_10000.pcap")
+	sessionID, err := pcapImporter.ImportPcap(fileName)
 	require.NoError(t, err)
 
-	duplicateSessionID, err := pcapImporter.ImportPcap("test_data/ping_pong_10000.pcap")
+	duplicatePcapFileName := copyToProcessing(t, "ping_pong_10000.pcap")
+	duplicateSessionID, err := pcapImporter.ImportPcap(duplicatePcapFileName)
 	require.Error(t, err)
 	assert.Equal(t, sessionID, duplicateSessionID)
+	assert.Error(t, os.Remove(ProcessingPcapsBasePath + duplicatePcapFileName))
 
 	_, isPresent := pcapImporter.GetSession("invalid")
 	assert.False(t, isPresent)
@@ -38,6 +43,9 @@ func TestImportPcap(t *testing.T) {
 
 	checkSessionEquals(t, wrapper, session)
 
+	assert.Error(t, os.Remove(ProcessingPcapsBasePath + fileName))
+	assert.NoError(t, os.Remove(PcapsBasePath + session.ID + ".pcap"))
+
 	wrapper.Destroy(t)
 }
 
@@ -45,7 +53,8 @@ func TestCancelImportSession(t *testing.T) {
 	wrapper := NewTestStorageWrapper(t)
 	pcapImporter := newTestPcapImporter(wrapper, "172.17.0.3")
 
-	sessionID, err := pcapImporter.ImportPcap("test_data/ping_pong_10000.pcap")
+	fileName := copyToProcessing(t, "ping_pong_10000.pcap")
+	sessionID, err := pcapImporter.ImportPcap(fileName)
 	require.NoError(t, err)
 
 	assert.False(t, pcapImporter.CancelSession("invalid"))
@@ -61,6 +70,9 @@ func TestCancelImportSession(t *testing.T) {
 
 	checkSessionEquals(t, wrapper, session)
 
+	assert.Error(t, os.Remove(ProcessingPcapsBasePath + fileName))
+	assert.Error(t, os.Remove(PcapsBasePath + sessionID + ".pcap"))
+
 	wrapper.Destroy(t)
 }
 
@@ -68,7 +80,8 @@ func TestImportNoTcpPackets(t *testing.T) {
 	wrapper := NewTestStorageWrapper(t)
 	pcapImporter := newTestPcapImporter(wrapper, "172.17.0.4")
 
-	sessionID, err := pcapImporter.ImportPcap("test_data/icmp.pcap")
+	fileName := copyToProcessing(t, "icmp.pcap")
+	sessionID, err := pcapImporter.ImportPcap(fileName)
 	require.NoError(t, err)
 
 	session := waitSessionCompletion(t, pcapImporter, sessionID)
@@ -79,6 +92,9 @@ func TestImportNoTcpPackets(t *testing.T) {
 	assert.Zero(t, session.ImportingError)
 
 	checkSessionEquals(t, wrapper, session)
+
+	assert.Error(t, os.Remove(ProcessingPcapsBasePath + fileName))
+	assert.NoError(t, os.Remove(PcapsBasePath + sessionID + ".pcap"))
 
 	wrapper.Destroy(t)
 }
@@ -125,6 +141,12 @@ func checkSessionEquals(t *testing.T, wrapper *TestStorageWrapper, session Impor
 	session.cancelFunc = nil
 	session.completed = nil
 	assert.Equal(t, session, result)
+}
+
+func copyToProcessing(t *testing.T, fileName string) string {
+	newFile := fmt.Sprintf("test-%v-%s", time.Now().UnixNano(), fileName)
+	require.NoError(t, CopyFile(ProcessingPcapsBasePath + newFile, "test_data/" + fileName))
+	return newFile
 }
 
 type testStreamFactory struct {

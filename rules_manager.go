@@ -19,7 +19,6 @@ type RegexFlags struct {
 	Caseless        bool `json:"caseless" bson:"caseless,omitempty"`                 // Set case-insensitive matching.
 	DotAll          bool `json:"dot_all" bson:"dot_all,omitempty"`                   // Matching a `.` will not exclude newlines.
 	MultiLine       bool `json:"multi_line" bson:"multi_line,omitempty"`             // Set multi-line anchoring.
-	SingleMatch     bool `json:"single_match" bson:"single_match,omitempty"`         // Set single-match only mode.
 	Utf8Mode        bool `json:"utf_8_mode" bson:"utf_8_mode,omitempty"`             // Enable UTF-8 mode for this expression.
 	UnicodeProperty bool `json:"unicode_property" bson:"unicode_property,omitempty"` // Enable Unicode property support for this expression
 }
@@ -339,6 +338,7 @@ func (p *Pattern) BuildPattern() (*hyperscan.Pattern, error) {
 		return nil, err
 	}
 
+	hp.Flags |= hyperscan.SomLeftMost
 	if p.Flags.Caseless {
 		hp.Flags |= hyperscan.Caseless
 	}
@@ -347,9 +347,6 @@ func (p *Pattern) BuildPattern() (*hyperscan.Pattern, error) {
 	}
 	if p.Flags.MultiLine {
 		hp.Flags |= hyperscan.MultiLine
-	}
-	if p.Flags.SingleMatch {
-		hp.Flags |= hyperscan.SingleMatch
 	}
 	if p.Flags.Utf8Mode {
 		hp.Flags |= hyperscan.Utf8Mode

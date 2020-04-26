@@ -47,7 +47,6 @@ func TestAddAndGetAllRules(t *testing.T) {
 					Caseless:        true,
 					DotAll:          true,
 					MultiLine:       true,
-					SingleMatch:     true,
 					Utf8Mode:        true,
 					UnicodeProperty: true,
 				},

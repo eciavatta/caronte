@@ -32,11 +32,9 @@ func NewTestStorageWrapper(t *testing.T) *TestStorageWrapper {
 	dbName := fmt.Sprintf("%x", time.Now().UnixNano())
 	log.WithField("dbName", dbName).Info("creating new storage")
 
-	storage := NewMongoStorage(mongoHost, port, dbName)
+	storage, err := NewMongoStorage(mongoHost, port, dbName)
+	require.NoError(t, err)
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-
-	err = storage.Connect(ctx)
-	require.NoError(t, err, "failed to connect to database")
 
 	return &TestStorageWrapper{
 		DbName:  dbName,
