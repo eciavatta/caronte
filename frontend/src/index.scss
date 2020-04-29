@@ -1,0 +1,88 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap');
+@import-normalize;
+
+@import 'colors.scss';
+
+
+body {
+  margin: 0;
+  font-family: 'Fira Code', monospace;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: $color-primary-2;
+  color: $color-primary-4;
+
+  height: 100%;
+  max-height: 100%;
+}
+
+pre {
+  font-family: 'Fira Code', monospace;
+  font-size: 14px;
+}
+
+button {
+  :focus {
+    outline: none;
+    box-shadow: none;
+  }
+}
+
+.btn {
+  border-radius: 0;
+  color: $color-primary-4;
+}
+
+.btn-primary {
+  margin-left: 20px;
+  padding: 5px 12px;
+  background-color: $color-secondary-2;
+  font-weight: 500;
+  border: 0;
+  border-bottom: 5px solid $color-secondary-1;
+
+  color: $color-secondary-4;
+  outline:none;
+
+
+  :focus, :active {
+    outline: none;
+    box-shadow: none;
+  }
+
+}
+
+.btn-primary:hover {
+  background-color: $color-secondary-1;
+  border-color: $color-secondary-1;
+  outline: none;
+}
+
+a {
+  color: $color-primary-4;
+
+  &:hover {
+    color: $color-primary-4;
+    text-decoration: none;
+  }
+}
+
+/* width */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: $color-primary-0;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: $color-primary-1;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: $color-secondary-2;
+}

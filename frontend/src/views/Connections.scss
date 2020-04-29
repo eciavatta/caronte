@@ -1,0 +1,13 @@
+@import '../colors.scss';
+
+.connections {
+  background-color: $color-primary-3;
+  padding: 10px 10px 10px 10px;
+
+  height: 100%;
+  overflow: auto;
+
+  .table {
+    color: $color-primary-4;
+  }
+}

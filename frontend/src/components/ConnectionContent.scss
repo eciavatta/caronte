@@ -1,0 +1,28 @@
+@import '../colors.scss';
+
+.connection-content {
+  background-color: $color-primary-3;
+  height: 100%;
+  overflow: auto;
+
+
+  pre {
+    background-color: $color-primary-0;
+    padding: 10px 20px;
+    word-break: break-all;
+  }
+
+  .from-client {
+    color: #d4e0fc;
+  }
+
+  .from-server {
+    color: $color-secondary-4;
+
+    &:hover {
+      background-color: $color-primary-3;
+      border-top: 1px solid $color-primary-1;
+    }
+
+  }
+}

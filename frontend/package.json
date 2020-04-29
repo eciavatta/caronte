@@ -3,12 +3,21 @@
   "version": "0.1.0",
   "private": false,
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^1.2.28",
+    "@fortawesome/free-solid-svg-icons": "^5.13.0",
+    "@fortawesome/react-fontawesome": "^0.1.9",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
+    "axios": "^0.19.2",
+    "bootstrap": "^4.4.1",
+    "node-sass": "^4.14.0",
     "react": "^16.13.1",
+    "react-bootstrap": "^1.0.1",
     "react-dom": "^16.13.1",
-    "react-scripts": "3.4.1"
+    "react-router-dom": "^5.1.2",
+    "react-scripts": "3.4.1",
+    "typed.js": "^2.0.11"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -30,5 +39,6 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  }
+  },
+  "proxy": "http://localhost:3333"
 }
