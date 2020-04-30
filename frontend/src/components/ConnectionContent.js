@@ -11,8 +11,6 @@ class ConnectionContent extends Component {
     render() {
         let content = this.props.connectionPayload
 
-        console.log(content)
-
         if (content === undefined) {
             return <div>nope</div>
         }

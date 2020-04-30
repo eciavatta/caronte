@@ -2,52 +2,41 @@
 
 .connection {
   background-color: $color-primary-0;
-  margin-bottom: 5px;
+  border-top: 3px solid $color-primary-3;
+  border-bottom: 3px solid $color-primary-3;
 
+  td {
+    vertical-align: middle;
+  }
 
   &.connection-marked {
     border-right: 5px solid $color-secondary-2;
   }
 
   .connection-service {
-    padding: 0 12px 0 0;
-
     .btn {
-      font-size: 12px;
-      width: 120px;
+      width: 100%;
+    }
+
+    .btn:hover {
+      background-color: $color-primary-1 !important;
+      color: $color-primary-4;
     }
   }
 
-  .connection-separator {
-    margin: 0 10px;
-  }
-
-  .connection-duration {
-    margin-left: 15px;
-
-    //.connection-seconds {
-    //  width: 75px;
-    //  display: inline-block;
-    //  text-align: right;
-    //}
-  }
-
-  .connection-bytes {
-    margin-left: 10px;
-    margin-right: 10px;
-
-    .connection-bytes-count {
-      margin-right: 5px;
-    }
-  }
-
-  .connection-hide, .connection-mark, .connection-comment, .connection-link {
-    margin-left: 5px;
-  }
-
-
-  svg {
+  .connection-icon {
+    font-weight: 600;
+    font-size: 18px;
     margin-right: 6px;
+    cursor: pointer;
+  }
+
+  &:hover {
+    background-color: $color-primary-2;
+  }
+
+  &.connection-selected {
+    background-color: $color-primary-2;
   }
 
 }

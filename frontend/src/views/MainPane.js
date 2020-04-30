@@ -26,6 +26,16 @@ class MainPane extends Component {
     }
 
     componentDidMount() {
+        if (this.props.match.params.id !== this.state.id) {
+            const id = this.props.match.params.id;
+            this.setState({id: id});
+
+            axios.get(`/api/streams/${id}`).then(res => this.setState({connectionContent: res.data}))
+
+
+        }
+
+
     }
 
     render() {

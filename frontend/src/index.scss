@@ -21,41 +21,64 @@ pre {
   font-size: 14px;
 }
 
-button {
-  :focus {
-    outline: none;
-    box-shadow: none;
-  }
-}
 
 .btn {
   border-radius: 0;
+  background-color: $color-primary-2;
+  border: none;
+  border-bottom: 5px solid $color-primary-1;
   color: $color-primary-4;
-}
-
-.btn-primary {
-  margin-left: 20px;
+  outline: none;
   padding: 5px 12px;
-  background-color: $color-secondary-2;
   font-weight: 500;
-  border: 0;
-  border-bottom: 5px solid $color-secondary-1;
 
-  color: $color-secondary-4;
-  outline:none;
-
-
-  :focus, :active {
-    outline: none;
-    box-shadow: none;
+  &:hover, &:active {
+    background-color: $color-primary-1;
+    color: $color-primary-4;
   }
 
+  &:focus, &:active {
+    outline: none !important;
+    box-shadow: none !important;
+  }
 }
 
-.btn-primary:hover {
-  background-color: $color-secondary-1;
-  border-color: $color-secondary-1;
-  outline: none;
+.btn-sm {
+  border: none;
+  font-size: 12px;
+}
+
+.btn-red {
+  color: $color-secondary-4;
+  background-color: $color-secondary-2;
+  border-bottom: 5px solid $color-secondary-1;
+
+  &:hover, &:active {
+    color: $color-secondary-4;
+    background-color: $color-secondary-1;
+  }
+}
+
+.btn-blue {
+  color: $color-blue-light;
+  background-color: $color-blue;
+  border-bottom: 5px solid $color-blue-dark;
+
+  &:hover, &:active {
+    color: $color-blue-light;
+    background-color: $color-blue-dark;
+  }
+}
+
+.btn-green {
+  color: $color-green-light;
+  background-color: $color-green;
+  border-bottom: 5px solid $color-green-dark;
+
+  &:hover, &:active {
+    color: $color-green-light;
+    background-color: $color-green-dark;
+  }
 }
 
 a {
@@ -85,4 +108,53 @@ a {
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
   background: $color-secondary-2;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.modal-content {
+  background-color: $color-primary-0;
+
+  .modal-header {
+    background-color: $color-primary-2;
+    border: none;
+  }
+
+  .modal-footer {
+    border: none;
+  }
+}
+
+input.form-control, textarea.form-control {
+  background-color: $color-primary-2;
+  border: none;
+  color: $color-primary-4;
+
+  &:focus {
+    background-color: $color-primary-1;
+    color: $color-primary-4;
+    box-shadow: none;
+  }
+
+  &[readonly] {
+    background-color: $color-primary-2;
+    border: none;
+    color: $color-primary-4;
+  }
+
+  &[readonly]:focus {
+    background-color: $color-primary-1;
+    color: $color-primary-4;
+    box-shadow: none;
+  }
+}
+
+textarea.form-control {
+  resize: none;
+}
+
+.table {
+  color: $color-primary-4;
 }

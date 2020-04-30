@@ -1,8 +1,16 @@
 import React, {Component} from 'react';
 import Typed from 'typed.js';
 import './Header.scss';
+import {Button} from "react-bootstrap";
 
 class Header extends Component {
+
+    constructor(props) {
+        super(props);
+        this.state = {
+            servicesShow: false
+        };
+    }
 
     componentDidMount() {
         const options = {
@@ -28,15 +36,11 @@ class Header extends Component {
                     </div>
                     <div className="col">
                         <div className="header-buttons">
-                            <button className="btn-primary">
-                                ➕ pcaps
-                            </button>
-                            <button className="btn-primary">
-                                ➕ rules
-                            </button>
-                            <button className="btn-primary">
-                                ➕ services
-                            </button>
+                            <Button variant="yellow" size="sm">pcaps</Button>
+                            <Button variant="blue">rules</Button>
+                            <Button variant="red" onClick={this.props.onOpenServices}>
+                                services
+                            </Button>
                         </div>
                     </div>
                 </div>

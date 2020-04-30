@@ -1,24 +1,13 @@
 import React, {Component} from 'react';
 import './Connection.scss';
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {
-    faCloudDownloadAlt,
-    faCloudUploadAlt,
-    faComment,
-    faEyeSlash,
-    faHourglassHalf,
-    faLaptop,
-    faLink,
-    faServer,
-    faThumbtack,
-} from '@fortawesome/free-solid-svg-icons'
+import {Button, OverlayTrigger, Tooltip} from "react-bootstrap";
 
 class Connection extends Component {
     render() {
         let conn = this.props.data
-        let serviceName = "assign"
-        let serviceColor = "#fff"
-        if (conn.service != null) {
+        let serviceName = "/dev/null"
+        let serviceColor = "#0F192E"
+        if (conn.service.port !== 0) {
             serviceName = conn.service.name
             serviceColor = conn.service.color
         }
@@ -27,41 +16,40 @@ class Connection extends Component {
         let duration = ((closedAt - startedAt) / 1000).toFixed(3)
         let timeInfo = `Started at ${startedAt}\nClosed at ${closedAt}\nProcessed at ${new Date(conn.processed_at)}`
 
+        let classes = "connection"
+        if (this.props.selected) {
+            classes += " connection-selected"
+        }
+        if (conn.marked){
+            classes += " connection-marked"
+        }
 
         return (
-            <tr className={conn.marked ? "connection connection-marked" : "connection"}>
-                <div className="connection-header">
+            <tr className={classes}>
+                <td>
                     <span className="connection-service">
-                        <button className="btn" style={{
+                        <Button size="sm" style={{
                             "backgroundColor": serviceColor
-                        }}>{serviceName}</button>
+                        }}>{serviceName}</Button>
                     </span>
-                    <span className="connection-src">
-                        <FontAwesomeIcon icon={faLaptop}/>
-                        <span className="connection-ip-port">{conn.ip_src}:{conn.port_src}</span>
-                    </span>
-                    <span className="connection-separator">{"->"}</span>
-                    <span className="connection-dst">
-                        <FontAwesomeIcon icon={faServer}/>
-                        <span className="connection-ip-port">{conn.ip_dst}:{conn.port_dst}</span>
-                    </span>
-
-                    <span className="connection-duration" data-toggle="tooltip" data-placement="top" title={timeInfo}>
-                        <FontAwesomeIcon icon={faHourglassHalf}/>
-                        <span className="connection-seconds">{duration}s</span>
-                    </span>
-                    <span className="connection-bytes">
-                        <FontAwesomeIcon icon={faCloudDownloadAlt}/>
-                        <span className="connection-bytes-count">{conn.client_bytes}</span>
-                        <FontAwesomeIcon icon={faCloudUploadAlt}/>
-                        <span className="connection-bytes-count">{conn.server_bytes}</span>
-                    </span>
-                    <span className="connection-hide"><FontAwesomeIcon icon={faEyeSlash}/></span>
-                    <span className="connection-mark"><FontAwesomeIcon icon={faThumbtack}/></span>
-                    <span className="connection-comment"><FontAwesomeIcon icon={faComment}/></span>
-                    <span className="connection-link"><FontAwesomeIcon icon={faLink}/></span>
-                </div>
-
+                </td>
+                <td className="clickable" onClick={() => this.props.onSelected()}>{conn.ip_src}</td>
+                <td className="clickable" onClick={() => this.props.onSelected()}>{conn.port_src}</td>
+                <td className="clickable" onClick={() => this.props.onSelected()}>{conn.ip_dst}</td>
+                <td className="clickable" onClick={() => this.props.onSelected()}>{conn.port_dst}</td>
+                <td className="clickable" onClick={() => this.props.onSelected()}>
+                    {/*<OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-${conn.id}`}>{timeInfo}</Tooltip>}>*/}
+                        <span className="test-tooltip">{duration}s</span>
+                    {/*</OverlayTrigger>*/}
+                </td>
+                <td className="clickable" onClick={() => this.props.onSelected()}>{conn.client_bytes}</td>
+                <td className="clickable" onClick={() => this.props.onSelected()}>{conn.server_bytes}</td>
+                <td>
+                    <span className="connection-icon connection-hide">%</span>
+                    <span className="connection-icon connection-mark">!!</span>
+                    <span className="connection-icon connection-comment">@</span>
+                    <span className="connection-icon connection-link">#</span>
+                </td>
 
             </tr>
         );
