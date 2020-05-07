@@ -4,24 +4,24 @@ import {Button, OverlayTrigger, Tooltip} from "react-bootstrap";
 
 class Connection extends Component {
     render() {
-        let conn = this.props.data
-        let serviceName = "/dev/null"
-        let serviceColor = "#0F192E"
+        let conn = this.props.data;
+        let serviceName = "/dev/null";
+        let serviceColor = "#0F192E";
         if (conn.service.port !== 0) {
-            serviceName = conn.service.name
-            serviceColor = conn.service.color
+            serviceName = conn.service.name;
+            serviceColor = conn.service.color;
         }
-        let startedAt = new Date(conn.started_at)
-        let closedAt = new Date(conn.closed_at)
-        let duration = ((closedAt - startedAt) / 1000).toFixed(3)
-        let timeInfo = `Started at ${startedAt}\nClosed at ${closedAt}\nProcessed at ${new Date(conn.processed_at)}`
+        let startedAt = new Date(conn.started_at);
+        let closedAt = new Date(conn.closed_at);
+        let duration = ((closedAt - startedAt) / 1000).toFixed(3);
+        let timeInfo = `Started at ${startedAt}\nClosed at ${closedAt}\nProcessed at ${new Date(conn.processed_at)}`;
 
-        let classes = "connection"
+        let classes = "connection";
         if (this.props.selected) {
-            classes += " connection-selected"
+            classes += " connection-selected";
         }
         if (conn.marked){
-            classes += " connection-marked"
+            classes += " connection-marked";
         }
 
         return (
