@@ -1,18 +1,13 @@
 import React, {Component} from 'react';
 import './ConnectionContent.scss';
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {
-
-} from '@fortawesome/free-solid-svg-icons'
-import {useParams} from "react-router-dom";
-import { Dropdown } from 'react-bootstrap';
+import {Dropdown} from 'react-bootstrap';
 
 class ConnectionContent extends Component {
     render() {
-        let content = this.props.connectionPayload
+        let content = this.props.connectionPayload;
 
         if (content === undefined) {
-            return <div>nope</div>
+            return <div>nope</div>;
         }
 
         let payload = content.map(c =>
@@ -20,10 +15,7 @@ class ConnectionContent extends Component {
                 {c.content}
 
             </span>
-        )
-
-
-
+        );
 
         return (
             <div className="connection-content">

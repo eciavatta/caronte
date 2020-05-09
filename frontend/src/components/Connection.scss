@@ -9,10 +9,6 @@
     vertical-align: middle;
   }
 
-  &.connection-marked {
-    border-right: 5px solid $color-secondary-2;
-  }
-
   .connection-service {
     .btn {
       width: 100%;
@@ -31,6 +27,10 @@
     cursor: pointer;
   }
 
+  .connection-icon.icon-enabled {
+    color: $color-secondary-2;
+  }
+
   &:hover {
     background-color: $color-primary-2;
   }
@@ -41,3 +41,21 @@
 
 }
 
+.connection-popover {
+  background-color: $color-primary-4;
+  border: none;
+
+  .popover-body {
+    color: $color-primary-1;
+
+    textarea {
+      background-color: $color-primary-3;
+      font-size: 12px;
+      width: 200px;
+    }
+  }
+
+  .arrow::after {
+    border-right-color: $color-primary-4;
+  }
+}

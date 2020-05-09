@@ -19,9 +19,7 @@ class MainPane extends Component {
             const id = this.props.match.params.id;
             this.setState({id: id});
 
-            axios.get(`/api/streams/${id}`).then(res => this.setState({connectionContent: res.data}))
-
-
+            axios.get(`/api/streams/${id}`).then(res => this.setState({connectionContent: res.data}));
         }
     }
 
@@ -30,12 +28,8 @@ class MainPane extends Component {
             const id = this.props.match.params.id;
             this.setState({id: id});
 
-            axios.get(`/api/streams/${id}`).then(res => this.setState({connectionContent: res.data}))
-
-
+            axios.get(`/api/streams/${id}`).then(res => this.setState({connectionContent: res.data}));
         }
-
-
     }
 
     render() {

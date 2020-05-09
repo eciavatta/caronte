@@ -112,7 +112,7 @@ class Services extends Component {
         let rows = Object.values(this.state.services).map(s =>
             <tr>
                 <td><Button variant="btn-edit" size="sm"
-                            onClick={() => this.editService(s)} style={{ "backgroundColor": s.color }}>edit</Button></td>
+                            onClick={() => this.editService(s)} style={{"backgroundColor": s.color}}>edit</Button></td>
                 <td>{s.port}</td>
                 <td>{s.name}</td>
             </tr>
@@ -149,7 +149,7 @@ class Services extends Component {
                                     </tr>
                                     </thead>
                                     <tbody>
-                                        {rows}
+                                    {rows}
                                     </tbody>
                                 </Table>
                             </Col>
@@ -157,7 +157,7 @@ class Services extends Component {
                                 <Form>
                                     <Form.Group controlId="servicePort">
                                         <Form.Label>port:</Form.Label>
-                                        <Form.Control type="text" onChange={this.portChanged} value={this.state.port} />
+                                        <Form.Control type="text" onChange={this.portChanged} value={this.state.port}/>
                                     </Form.Group>
 
                                     <Form.Group controlId="serviceName">
@@ -168,16 +168,17 @@ class Services extends Component {
                                     <Form.Group controlId="serviceColor">
                                         <Form.Label>color:</Form.Label>
                                         <ButtonGroup aria-label="Basic example">
-                                            {colorButtons.slice(0,8)}
+                                            {colorButtons.slice(0, 8)}
                                         </ButtonGroup>
                                         <ButtonGroup aria-label="Basic example">
-                                            {colorButtons.slice(8,18)}
+                                            {colorButtons.slice(8, 18)}
                                         </ButtonGroup>
                                     </Form.Group>
 
                                     <Form.Group controlId="serviceNotes">
                                         <Form.Label>notes:</Form.Label>
-                                        <Form.Control as="textarea" rows={3} onChange={this.notesChanged} value={this.state.notes} />
+                                        <Form.Control as="textarea" rows={3} onChange={this.notesChanged}
+                                                      value={this.state.notes}/>
                                     </Form.Group>
                                 </Form>
 
@@ -189,7 +190,8 @@ class Services extends Component {
                         <Row>
                             <Col md={12}>
                                 <InputGroup>
-                                    <FormControl as="textarea" rows={4} className="curl-output" readOnly={true} value={output}/>
+                                    <FormControl as="textarea" rows={4} className="curl-output" readOnly={true}
+                                                 value={output}/>
                                 </InputGroup>
 
                             </Col>

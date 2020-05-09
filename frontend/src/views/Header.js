@@ -31,7 +31,9 @@ class Header extends Component {
                 <div className="row">
                     <div className="col">
                         <h1 className="header-title type-wrap">
-                            <span style={{ whiteSpace: 'pre' }} ref={(el) => { this.el = el; }} />
+                            <span style={{whiteSpace: 'pre'}} ref={(el) => {
+                                this.el = el;
+                            }}/>
                         </h1>
                     </div>
                     <div className="col">
@@ -45,7 +47,7 @@ class Header extends Component {
                     </div>
                 </div>
             </header>
-        )
+        );
     }
 }
 

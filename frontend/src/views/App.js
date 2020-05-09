@@ -3,7 +3,7 @@ import Header from "./Header";
 import './App.scss';
 import MainPane from "./MainPane";
 import Footer from "./Footer";
-import {Route, BrowserRouter as Router, Switch} from "react-router-dom";
+import {BrowserRouter as Router, Route, Switch} from "react-router-dom";
 import Services from "./Services";
 
 class App extends Component {
@@ -16,9 +16,9 @@ class App extends Component {
     }
 
     render() {
-        let modal = ""
+        let modal = "";
         if (this.state.servicesShow) {
-            modal = <Services onHide={() => this.setState({servicesShow: false})} />
+            modal = <Services onHide={() => this.setState({servicesShow: false})}/>;
         }
 
         return (
@@ -26,8 +26,8 @@ class App extends Component {
                 <Router>
                     <Header onOpenServices={() => this.setState({servicesShow: true})}/>
                     <Switch>
-                        <Route path="/connections/:id" children={<MainPane/>} />
-                        <Route path="/" children={<MainPane/>} />
+                        <Route path="/connections/:id" children={<MainPane/>}/>
+                        <Route path="/" children={<MainPane/>}/>
                     </Switch>
                     {modal}
                     <Footer/>

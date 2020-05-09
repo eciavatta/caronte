@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap');
-@import-normalize;
+
+@import-normalize ;
 
 @import 'colors.scss';
 
@@ -131,6 +132,7 @@ input.form-control, textarea.form-control {
   background-color: $color-primary-2;
   border: none;
   color: $color-primary-4;
+  font-family: 'Fira Code', monospace;
 
   &:focus {
     background-color: $color-primary-1;
