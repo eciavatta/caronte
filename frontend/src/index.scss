@@ -22,7 +22,6 @@ pre {
   font-size: 14px;
 }
 
-
 .btn {
   border-radius: 0;
   background-color: $color-primary-2;
@@ -33,12 +32,14 @@ pre {
   padding: 5px 12px;
   font-weight: 500;
 
-  &:hover, &:active {
+  &:hover,
+  &:active {
     background-color: $color-primary-1;
     color: $color-primary-4;
   }
 
-  &:focus, &:active {
+  &:focus,
+  &:active {
     outline: none !important;
     box-shadow: none !important;
   }
@@ -128,6 +129,10 @@ a {
   }
 }
 
+textarea.form-control {
+  resize: none;
+}
+
 input.form-control, textarea.form-control {
   background-color: $color-primary-2;
   border: none;
@@ -151,10 +156,6 @@ input.form-control, textarea.form-control {
     color: $color-primary-4;
     box-shadow: none;
   }
-}
-
-textarea.form-control {
-  resize: none;
 }
 
 .table {

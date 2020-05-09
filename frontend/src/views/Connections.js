@@ -25,7 +25,7 @@ class Connections extends Component {
 
         this.handleScroll = this.handleScroll.bind(this);
     }
-    
+
     componentDidMount() {
         this.loadConnections({limit: this.queryLimit, hidden: this.state.showHidden});
     }

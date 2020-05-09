@@ -4,7 +4,6 @@
   background-color: $color-primary-3;
   padding: 0 10px;
   position: relative;
-
   height: 100%;
   overflow: auto;
 
@@ -27,7 +26,6 @@
     border-top: 3px solid $color-primary-3;
     border-bottom: 3px solid $color-primary-3;
     font-size: 13.5px;
-
     position: sticky;
     top: 10px;
     padding: 5px;
@@ -36,6 +34,4 @@
   &:hover::-webkit-scrollbar-thumb {
     background: $color-secondary-2;
   }
-
-
 }
