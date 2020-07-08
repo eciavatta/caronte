@@ -3,32 +3,25 @@ import './MainPane.scss';
 import Connections from "./Connections";
 import ConnectionContent from "../components/ConnectionContent";
 import {withRouter} from "react-router-dom";
-import axios from 'axios'
+import axios from 'axios';
 
 class MainPane extends Component {
 
     constructor(props) {
         super(props);
         this.state = {
-            id: null,
+            selectedConnection: null
         };
     }
 
-    componentDidUpdate() {
-        if (this.props.match.params.id !== this.state.id) {
-            const id = this.props.match.params.id;
-            this.setState({id: id});
-
-            axios.get(`/api/streams/${id}`).then(res => this.setState({connectionContent: res.data}));
-        }
-    }
-
     componentDidMount() {
-        if (this.props.match.params.id !== this.state.id) {
+        if ('id' in this.props.match.params) {
             const id = this.props.match.params.id;
-            this.setState({id: id});
-
-            axios.get(`/api/streams/${id}`).then(res => this.setState({connectionContent: res.data}));
+            axios.get(`/api/connections/${id}`).then(res => {
+                if (res.status === 200) {
+                    this.setState({selectedConnection: res.data});
+                }
+            });
         }
     }
 
@@ -38,10 +31,10 @@ class MainPane extends Component {
                 <div className="container-fluid">
                     <div className="row">
                         <div className="col-md-6 pane">
-                            <Connections/>
+                            <Connections onSelected={(c) => this.setState({selectedConnection: c})} />
                         </div>
                         <div className="col-md-6 pl-0 pane">
-                            <ConnectionContent connectionPayload={this.state.connectionContent}/>
+                            <ConnectionContent connection={this.state.selectedConnection}/>
                         </div>
                     </div>
                 </div>

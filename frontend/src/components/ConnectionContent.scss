@@ -8,7 +8,10 @@
   pre {
     background-color: $color-primary-0;
     padding: 10px 20px;
-    word-break: break-all;
+    word-break: break-word;
+    max-width: 100%;
+    white-space: pre-wrap;
+    height: 100%;
   }
 
   .from-client {

@@ -4,7 +4,6 @@
 
 @import 'colors.scss';
 
-
 body {
   margin: 0;
   font-family: 'Fira Code', monospace;
@@ -12,7 +11,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: $color-primary-2;
   color: $color-primary-4;
-
   height: 100%;
   max-height: 100%;
 }
@@ -77,7 +75,8 @@ pre {
   background-color: $color-green;
   border-bottom: 5px solid $color-green-dark;
 
-  &:hover, &:active {
+  &:hover,
+  &:active {
     color: $color-green-light;
     background-color: $color-green-dark;
   }
@@ -133,7 +132,8 @@ textarea.form-control {
   resize: none;
 }
 
-input.form-control, textarea.form-control {
+input.form-control,
+textarea.form-control {
   background-color: $color-primary-2;
   border: none;
   color: $color-primary-4;

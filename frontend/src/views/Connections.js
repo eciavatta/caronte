@@ -4,6 +4,7 @@ import axios from 'axios'
 import Connection from "../components/Connection";
 import Table from 'react-bootstrap/Table';
 import {Redirect} from 'react-router';
+import {withRouter} from "react-router-dom";
 import {objectToQueryString} from "../utils";
 
 class Connections extends Component {
@@ -24,10 +25,16 @@ class Connections extends Component {
         this.queryLimit = 50;
 
         this.handleScroll = this.handleScroll.bind(this);
+        this.connectionSelected = this.connectionSelected.bind(this);
     }
 
     componentDidMount() {
         this.loadConnections({limit: this.queryLimit, hidden: this.state.showHidden});
+    }
+
+    connectionSelected(c) {
+        this.setState({selected: c.id});
+        this.props.onSelected(c);
     }
 
     handleScroll(e) {
@@ -91,9 +98,10 @@ class Connections extends Component {
 
 
     render() {
-        let redirect = "";
+        let redirect = null;
         if (this.state.selected) {
-            redirect = <Redirect push to={"/connections/" + this.state.selected}/>;
+            const format = this.props.match.params.format;
+            redirect = <Redirect push to={`/connections/${this.state.selected}${format !== undefined ? ("/" + format) : ""}`} />;
         }
 
         let loading = null;
@@ -123,7 +131,7 @@ class Connections extends Component {
                     <tbody>
                     {
                         this.state.connections.map(c =>
-                            <Connection key={c.id} data={c} onSelected={() => this.setState({selected: c.id})}
+                            <Connection key={c.id} data={c} onSelected={() => this.connectionSelected(c)}
                                         selected={this.state.selected === c.id} onMarked={marked => c.marked = marked}
                                         onEnabled={enabled => c.hidden = !enabled}/>
                         )
@@ -140,4 +148,4 @@ class Connections extends Component {
 }
 
 
-export default Connections;
+export default withRouter(Connections);
