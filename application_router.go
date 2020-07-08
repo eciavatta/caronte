@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -17,7 +18,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 	router.Use(gin.Recovery())
 	router.MaxMultipartMemory = 8 << 30
 
-	// engine.Static("/", "./frontend/build")
+	router.Use(static.Serve("/", static.LocalFile("./frontend/build", true)))
 
 	router.POST("/setup", func(c *gin.Context) {
 		if applicationContext.IsConfigured {
@@ -279,6 +280,8 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 			}
 		})
 	}
+
+
 
 	return router
 }
