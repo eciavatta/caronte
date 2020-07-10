@@ -93,7 +93,7 @@ class ConnectionContent extends Component {
 
                 <pre>{payload}</pre>
 
-                {redirect}
+                {/*{redirect}*/}
 
 
             </div>

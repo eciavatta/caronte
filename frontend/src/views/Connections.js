@@ -37,6 +37,8 @@ class Connections extends Component {
         this.props.onSelected(c);
     }
 
+
+
     handleScroll(e) {
         let relativeScroll = e.currentTarget.scrollTop / (e.currentTarget.scrollHeight - e.currentTarget.clientHeight);
         if (!this.state.loading && relativeScroll > this.scrollBottomThreashold) {
@@ -57,7 +59,9 @@ class Connections extends Component {
     async loadConnections(params) {
         let url = "/api/connections";
         if (params !== undefined) {
-            url += "?" + objectToQueryString(params);
+            const urlParams = new URLSearchParams(window.location.search);
+            let obj = Object.fromEntries(urlParams.entries());
+            url += "?" + objectToQueryString({...params, ...obj}); // TODO: remove this shit
         }
         this.setState({loading: true});
         let res = await axios.get(url);
@@ -140,7 +144,7 @@ class Connections extends Component {
                     </tbody>
                 </Table>
 
-                {redirect}
+                {/*{redirect}*/}
             </div>
         );
     }
