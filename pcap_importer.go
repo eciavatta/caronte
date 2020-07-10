@@ -208,7 +208,7 @@ func (pi *PcapImporter) parsePcap(session ImportingSession, fileName string, ctx
 				index = 1
 			} else {
 				session.InvalidPackets++
-				continue
+				// continue  // workaround to process packets when services have multiple ips
 			}
 			fCount, isPresent := session.PacketsPerService[servicePort]
 			if !isPresent {
