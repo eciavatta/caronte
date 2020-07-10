@@ -13,7 +13,7 @@ services:
       dockerfile: Dockerfile
     image: caronte
     ports:
-      - "80:3333"
+      - "3333:3333"
     depends_on:
       - mongo
     networks:
