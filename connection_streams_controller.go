@@ -77,8 +77,9 @@ func (csc ConnectionStreamsController) GetConnectionPayload(c context.Context, c
 
 	var payload Payload
 	for !clientStream.ID.IsZero() || !serverStream.ID.IsZero() {
-		if hasClientBlocks() && !(hasServerBlocks() && // next payload is from client
-			clientStream.BlocksTimestamps[0].UnixNano() > serverStream.BlocksTimestamps[0].UnixNano()) {
+		if hasClientBlocks() && (!hasServerBlocks() || // next payload is from client
+			clientStream.BlocksTimestamps[clientBlocksIndex].UnixNano() <=
+				serverStream.BlocksTimestamps[serverBlocksIndex].UnixNano()) {
 			start := clientStream.BlocksIndexes[clientBlocksIndex]
 			end := 0
 			if clientBlocksIndex < len(clientStream.BlocksIndexes)-1 {
