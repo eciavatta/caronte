@@ -10,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"io"
+	"net"
 	"os"
 	"time"
 )
@@ -126,4 +127,27 @@ func CopyFile(dst, src string) error {
 		return err
 	}
 	return out.Close()
+}
+
+func ParseIPNet(address string) *net.IPNet {
+	_, network, err := net.ParseCIDR(address)
+	if err != nil {
+		ip := net.ParseIP(address)
+		if ip == nil {
+			return nil
+		}
+
+		size := 0
+		if ip.To4() != nil {
+			size = 32
+		} else {
+			size = 128
+		}
+		network = &net.IPNet{
+			IP:   ip,
+			Mask: net.CIDRMask(size, size),
+		}
+	}
+
+	return network
 }

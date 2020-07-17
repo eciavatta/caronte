@@ -4,12 +4,10 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/tcpassembly"
 	"github.com/google/gopacket/tcpassembly/tcpreader"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"net"
 	"os"
 	"sync"
 	"testing"
@@ -99,10 +97,9 @@ func TestImportNoTcpPackets(t *testing.T) {
 	wrapper.Destroy(t)
 }
 
-func newTestPcapImporter(wrapper *TestStorageWrapper, serverIP string) *PcapImporter {
+func newTestPcapImporter(wrapper *TestStorageWrapper, serverAddress string) *PcapImporter {
 	wrapper.AddCollection(ImportingSessions)
 
-	serverEndpoint := layers.NewIPEndpoint(net.ParseIP(serverIP))
 	streamPool := tcpassembly.NewStreamPool(&testStreamFactory{})
 
 	return &PcapImporter{
@@ -112,7 +109,7 @@ func newTestPcapImporter(wrapper *TestStorageWrapper, serverIP string) *PcapImpo
 		sessions:    make(map[string]ImportingSession),
 		mAssemblers: sync.Mutex{},
 		mSessions:   sync.Mutex{},
-		serverIP:    serverEndpoint,
+		serverNet:   *ParseIPNet(serverAddress),
 	}
 }
 

@@ -19,7 +19,7 @@ func TestSetupApplication(t *testing.T) {
 	settings := make(map[string]interface{})
 	assert.Equal(t, http.StatusServiceUnavailable, toolkit.MakeRequest("GET", "/api/rules", nil).Code)
 	assert.Equal(t, http.StatusBadRequest, toolkit.MakeRequest("POST", "/setup", settings).Code)
-	settings["config"] = Config{ServerIP: "1.2.3.4", FlagRegex: "FLAG{test}", AuthRequired: true}
+	settings["config"] = Config{ServerAddress: "1.2.3.4", FlagRegex: "FLAG{test}", AuthRequired: true}
 	assert.Equal(t, http.StatusBadRequest, toolkit.MakeRequest("POST", "/setup", settings).Code)
 	settings["accounts"] = gin.Accounts{"username": "password"}
 	assert.Equal(t, http.StatusAccepted, toolkit.MakeRequest("POST", "/setup", settings).Code)
@@ -162,7 +162,7 @@ func NewRouterTestToolkit(t *testing.T, withSetup bool) *RouterTestToolkit {
 
 	if withSetup {
 		settings := gin.H{
-			"config":   Config{ServerIP: "1.2.3.4", FlagRegex: "FLAG{test}", AuthRequired: false},
+			"config":   Config{ServerAddress: "1.2.3.4", FlagRegex: "FLAG{test}", AuthRequired: false},
 			"accounts": gin.Accounts{},
 		}
 		toolkit.MakeRequest("POST", "/setup", settings)

@@ -3,13 +3,12 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
-	"net"
 )
 
 type Config struct {
-	ServerIP     string `json:"server_ip" binding:"required,ip" bson:"server_ip"`
-	FlagRegex    string `json:"flag_regex" binding:"required,min=8" bson:"flag_regex"`
-	AuthRequired bool   `json:"auth_required" bson:"auth_required"`
+	ServerAddress string `json:"server_address" binding:"required,ip|cidr" bson:"server_address"`
+	FlagRegex     string `json:"flag_regex" binding:"required,min=8" bson:"flag_regex"`
+	AuthRequired  bool   `json:"auth_required" bson:"auth_required"`
 }
 
 type ApplicationContext struct {
@@ -77,11 +76,11 @@ func (sm *ApplicationContext) configure() {
 	if sm.IsConfigured {
 		return
 	}
-	if sm.Config.ServerIP == "" || sm.Config.FlagRegex == "" {
+	if sm.Config.ServerAddress == "" || sm.Config.FlagRegex == "" {
 		return
 	}
-	serverIP := net.ParseIP(sm.Config.ServerIP)
-	if serverIP == nil {
+	serverNet := ParseIPNet(sm.Config.ServerAddress)
+	if serverNet == nil {
 		return
 	}
 
@@ -90,7 +89,7 @@ func (sm *ApplicationContext) configure() {
 		log.WithError(err).Panic("failed to create a RulesManager")
 	}
 	sm.RulesManager = rulesManager
-	sm.PcapImporter = NewPcapImporter(sm.Storage, serverIP, sm.RulesManager)
+	sm.PcapImporter = NewPcapImporter(sm.Storage, *serverNet, sm.RulesManager)
 	sm.ServicesController = NewServicesController(sm.Storage)
 	sm.ConnectionsController = NewConnectionsController(sm.Storage, sm.ServicesController)
 	sm.ConnectionStreamsController = NewConnectionStreamsController(sm.Storage)

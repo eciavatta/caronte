@@ -19,9 +19,9 @@ func TestCreateApplicationContext(t *testing.T) {
 	assert.Nil(t, appContext.RulesManager)
 
 	config := Config{
-		ServerIP:     "10.10.10.10",
-		FlagRegex:    "FLAG{test}",
-		AuthRequired: true,
+		ServerAddress: "10.10.10.10",
+		FlagRegex:     "FLAG{test}",
+		AuthRequired:  true,
 	}
 	accounts := gin.Accounts{
 		"username": "password",

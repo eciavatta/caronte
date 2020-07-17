@@ -17,7 +17,7 @@ import (
 
 func TestTakeReleaseScanners(t *testing.T) {
 	wrapper := NewTestStorageWrapper(t)
-	serverIP := layers.NewIPEndpoint(net.ParseIP(testDstIP))
+	serverNet := ParseIPNet(testDstIP)
 	ruleManager := TestRulesManager{
 		databaseUpdated: make(chan RulesDatabase),
 	}
@@ -25,7 +25,7 @@ func TestTakeReleaseScanners(t *testing.T) {
 	database, err := hyperscan.NewStreamDatabase(hyperscan.NewPattern("/nope/", 0))
 	require.NoError(t, err)
 
-	factory := NewBiDirectionalStreamFactory(wrapper.Storage, serverIP, &ruleManager)
+	factory := NewBiDirectionalStreamFactory(wrapper.Storage, *serverNet, &ruleManager)
 	version := NewRowID()
 	ruleManager.DatabaseUpdateChannel() <- RulesDatabase{database, 0, version}
 	time.Sleep(10 * time.Millisecond)
@@ -88,7 +88,7 @@ func TestConnectionFactory(t *testing.T) {
 	database, err := hyperscan.NewStreamDatabase(hyperscan.NewPattern("/nope/", 0))
 	require.NoError(t, err)
 
-	factory := NewBiDirectionalStreamFactory(wrapper.Storage, serverIP, &ruleManager)
+	factory := NewBiDirectionalStreamFactory(wrapper.Storage, *ParseIPNet(testDstIP), &ruleManager)
 	version := NewRowID()
 	ruleManager.DatabaseUpdateChannel() <- RulesDatabase{database, 0, version}
 	time.Sleep(10 * time.Millisecond)

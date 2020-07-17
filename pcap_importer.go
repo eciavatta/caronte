@@ -29,7 +29,7 @@ type PcapImporter struct {
 	sessions    map[string]ImportingSession
 	mAssemblers sync.Mutex
 	mSessions   sync.Mutex
-	serverIP    gopacket.Endpoint
+	serverNet   net.IPNet
 }
 
 type ImportingSession struct {
@@ -47,9 +47,8 @@ type ImportingSession struct {
 
 type flowCount [2]int
 
-func NewPcapImporter(storage Storage, serverIP net.IP, rulesManager RulesManager) *PcapImporter {
-	serverEndpoint := layers.NewIPEndpoint(serverIP)
-	streamPool := tcpassembly.NewStreamPool(NewBiDirectionalStreamFactory(storage, serverEndpoint, rulesManager))
+func NewPcapImporter(storage Storage, serverNet net.IPNet, rulesManager RulesManager) *PcapImporter {
+	streamPool := tcpassembly.NewStreamPool(NewBiDirectionalStreamFactory(storage, serverNet, rulesManager))
 
 	var result []ImportingSession
 	if err := storage.Find(ImportingSessions).All(&result); err != nil {
@@ -67,7 +66,7 @@ func NewPcapImporter(storage Storage, serverIP net.IP, rulesManager RulesManager
 		sessions:    sessions,
 		mAssemblers: sync.Mutex{},
 		mSessions:   sync.Mutex{},
-		serverIP:    serverEndpoint,
+		serverNet:   serverNet,
 	}
 }
 
@@ -198,8 +197,9 @@ func (pi *PcapImporter) parsePcap(session ImportingSession, fileName string, ctx
 			tcp := packet.TransportLayer().(*layers.TCP)
 			var servicePort uint16
 			var index int
-			isDstServer := packet.NetworkLayer().NetworkFlow().Dst() == pi.serverIP
-			isSrcServer := packet.NetworkLayer().NetworkFlow().Src() == pi.serverIP
+
+			isDstServer :=  pi.serverNet.Contains(packet.NetworkLayer().NetworkFlow().Dst().Raw())
+			isSrcServer :=  pi.serverNet.Contains(packet.NetworkLayer().NetworkFlow().Src().Raw())
 			if isDstServer && !isSrcServer {
 				servicePort = uint16(tcp.DstPort)
 				index = 0
@@ -208,7 +208,7 @@ func (pi *PcapImporter) parsePcap(session ImportingSession, fileName string, ctx
 				index = 1
 			} else {
 				session.InvalidPackets++
-				// continue  // workaround to process packets when services have multiple ips
+				continue
 			}
 			fCount, isPresent := session.PacketsPerService[servicePort]
 			if !isPresent {
