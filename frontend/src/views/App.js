@@ -26,7 +26,6 @@ class App extends Component {
                 <Router>
                     <Header onOpenServices={() => this.setState({servicesShow: true})}/>
                     <Switch>
-                        <Route path="/connections/:id/:format" children={<MainPane/>}/>
                         <Route path="/connections/:id" children={<MainPane/>}/>
                         <Route path="/" children={<MainPane/>}/>
                     </Switch>

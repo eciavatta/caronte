@@ -67,6 +67,9 @@ class Connection extends Component {
         if (this.props.selected) {
             classes += " connection-selected";
         }
+        if (this.props.containsFlag) {
+            classes += " contains-flag";
+        }
 
         const popoverFor = function (name, content) {
             return <Popover id={`popover-${name}-${conn.id}`} className="connection-popover">
@@ -93,27 +96,27 @@ class Connection extends Component {
                     <span className="connection-service">
                         <Button size="sm" style={{
                             "backgroundColor": serviceColor
-                        }}>{serviceName}</Button>
+                        }} onClick={() => this.props.addServicePortFilter(conn.port_dst)}>{serviceName}</Button>
                     </span>
                 </td>
-                <td className="clickable" onClick={() => this.props.onSelected()}>{conn.ip_src}</td>
-                <td className="clickable" onClick={() => this.props.onSelected()}>{conn.port_src}</td>
-                <td className="clickable" onClick={() => this.props.onSelected()}>{conn.ip_dst}</td>
-                <td className="clickable" onClick={() => this.props.onSelected()}>{conn.port_dst}</td>
-                <td className="clickable" onClick={() => this.props.onSelected()}>
+                <td className="clickable" onClick={this.props.onSelected}>{conn.ip_src}</td>
+                <td className="clickable" onClick={this.props.onSelected}>{conn.port_src}</td>
+                <td className="clickable" onClick={this.props.onSelected}>{conn.ip_dst}</td>
+                <td className="clickable" onClick={this.props.onSelected}>{conn.port_dst}</td>
+                <td className="clickable" onClick={this.props.onSelected}>
                     <OverlayTrigger trigger={["focus", "hover"]} placement="right"
                                     overlay={popoverFor("duration", timeInfo)}>
                         <span className="test-tooltip">{duration}s</span>
                     </OverlayTrigger>
                 </td>
-                <td className="clickable" onClick={() => this.props.onSelected()}>{conn.client_bytes}</td>
-                <td className="clickable" onClick={() => this.props.onSelected()}>{conn.server_bytes}</td>
-                <td>
-                    <OverlayTrigger trigger={["focus", "hover"]} placement="right"
-                                    overlay={popoverFor("hide", <span>Hide this connection from the list</span>)}>
-                        <span className={"connection-icon" + (conn.hidden ? " icon-enabled" : "")}
-                              onClick={() => this.handleAction("hide")}>%</span>
-                    </OverlayTrigger>
+                <td className="clickable" onClick={this.props.onSelected}>{conn.client_bytes}</td>
+                <td className="clickable" onClick={this.props.onSelected}>{conn.server_bytes}</td>
+                <td className="contains-flag">
+                    {/*<OverlayTrigger trigger={["focus", "hover"]} placement="right"*/}
+                    {/*                overlay={popoverFor("hide", <span>Hide this connection from the list</span>)}>*/}
+                    {/*    <span className={"connection-icon" + (conn.hidden ? " icon-enabled" : "")}*/}
+                    {/*          onClick={() => this.handleAction("hide")}>%</span>*/}
+                    {/*</OverlayTrigger>*/}
                     <OverlayTrigger trigger={["focus", "hover"]} placement="right"
                                     overlay={popoverFor("hide", <span>Mark this connection</span>)}>
                         <span className={"connection-icon" + (conn.marked ? " icon-enabled" : "")}

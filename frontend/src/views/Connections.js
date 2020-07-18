@@ -5,7 +5,6 @@ import Connection from "../components/Connection";
 import Table from 'react-bootstrap/Table';
 import {Redirect} from 'react-router';
 import {withRouter} from "react-router-dom";
-import {objectToQueryString} from "../utils";
 
 class Connections extends Component {
 
@@ -16,7 +15,11 @@ class Connections extends Component {
             connections: [],
             firstConnection: null,
             lastConnection: null,
-            showHidden: false
+            showHidden: false,
+            prevParams: null,
+            flagRule: null,
+            rules: null,
+            queryString: null
         };
 
         this.scrollTopThreashold = 0.00001;
@@ -26,10 +29,12 @@ class Connections extends Component {
 
         this.handleScroll = this.handleScroll.bind(this);
         this.connectionSelected = this.connectionSelected.bind(this);
+        this.addServicePortFilter = this.addServicePortFilter.bind(this);
     }
 
     componentDidMount() {
-        this.loadConnections({limit: this.queryLimit, hidden: this.state.showHidden});
+        this.loadConnections({limit: this.queryLimit, hidden: this.state.showHidden})
+            .then(() => this.setState({loaded: true}));
     }
 
     connectionSelected(c) {
@@ -37,7 +42,13 @@ class Connections extends Component {
         this.props.onSelected(c);
     }
 
-
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (this.state.loaded && prevProps.location.search !== this.props.location.search) {
+            this.setState({queryString: this.props.location.search});
+            this.loadConnections({limit: this.queryLimit, hidden: this.state.showHidden})
+                .then(() => console.log("Connections reloaded after query string update"));
+        }
+    }
 
     handleScroll(e) {
         let relativeScroll = e.currentTarget.scrollTop / (e.currentTarget.scrollHeight - e.currentTarget.clientHeight);
@@ -45,32 +56,38 @@ class Connections extends Component {
             this.loadConnections({
                 from: this.state.lastConnection.id, limit: this.queryLimit,
                 hidden: this.state.showHidden
-            });
+            }).then(() => console.log("Following connections loaded"));
         }
         if (!this.state.loading && relativeScroll < this.scrollTopThreashold) {
             this.loadConnections({
                 to: this.state.firstConnection.id, limit: this.queryLimit,
                 hidden: this.state.showHidden
-            });
+            }).then(() => console.log("Previous connections loaded"));
         }
+    }
 
+    addServicePortFilter(port) {
+        let urlParams = new URLSearchParams(this.props.location.search);
+        urlParams.set("service_port", port);
+        this.setState({queryString: "?" + urlParams});
     }
 
     async loadConnections(params) {
         let url = "/api/connections";
-        if (params !== undefined) {
-            const urlParams = new URLSearchParams(window.location.search);
-            let obj = Object.fromEntries(urlParams.entries());
-            url += "?" + objectToQueryString({...params, ...obj}); // TODO: remove this shit
+        const urlParams = new URLSearchParams(this.props.location.search);
+        for (const [name, value] of Object.entries(params)) {
+            urlParams.set(name, value);
         }
-        this.setState({loading: true});
-        let res = await axios.get(url);
+
+        this.setState({loading: true, prevParams: params});
+        let res = await axios.get(`${url}?${urlParams}`);
 
         let connections = this.state.connections;
         let firstConnection = this.state.firstConnection;
         let lastConnection = this.state.lastConnection;
-        if (res.data.length > 0) {
-            if (params !== undefined && params.from !== undefined) {
+
+        if (params !== undefined && params.from !== undefined) {
+            if (res.data.length > 0) {
                 connections = this.state.connections.concat(res.data);
                 lastConnection = connections[connections.length - 1];
                 if (connections.length > this.maxConnections) {
@@ -78,34 +95,55 @@ class Connections extends Component {
                         connections.length - 1);
                     firstConnection = connections[0];
                 }
-            } else if (params !== undefined && params.to !== undefined) {
+            }
+        } else if (params !== undefined && params.to !== undefined) {
+            if (res.data.length > 0) {
                 connections = res.data.concat(this.state.connections);
                 firstConnection = connections[0];
                 if (connections.length > this.maxConnections) {
                     connections = connections.slice(0, this.maxConnections);
                     lastConnection = connections[this.maxConnections - 1];
                 }
-            } else {
+            }
+        } else {
+            if (res.data.length > 0) {
                 connections = res.data;
                 firstConnection = connections[0];
                 lastConnection = connections[connections.length - 1];
+            } else {
+                connections = [];
+                firstConnection = null;
+                lastConnection = null;
             }
+        }
+
+        let flagRule = this.state.flagRule;
+        let rules = this.state.rules;
+        if (flagRule === null) {
+            let res = await axios.get("/api/rules");
+            rules = res.data;
+            flagRule = rules.filter(rule => {
+                return rule.name === "flag";
+            })[0];
         }
 
         this.setState({
             loading: false,
             connections: connections,
+            rules: res.data,
+            flagRule: flagRule,
             firstConnection: firstConnection,
             lastConnection: lastConnection
         });
     }
 
-
     render() {
-        let redirect = null;
+        let redirect;
+        let queryString = this.state.queryString !== null ? this.state.queryString : ""
         if (this.state.selected) {
-            const format = this.props.match.params.format;
-            redirect = <Redirect push to={`/connections/${this.state.selected}${format !== undefined ? ("/" + format) : ""}`} />;
+            let format = this.props.match.params.format;
+            format = format !== undefined ? "/" + format : "";
+            redirect = <Redirect push to={`/connections/${this.state.selected}${format}${queryString}`} />;
         }
 
         let loading = null;
@@ -123,8 +161,8 @@ class Connections extends Component {
                     <tr>
                         <th>service</th>
                         <th>srcip</th>
-                        <th>dstip</th>
                         <th>srcport</th>
+                        <th>dstip</th>
                         <th>dstport</th>
                         <th>duration</th>
                         <th>up</th>
@@ -137,14 +175,16 @@ class Connections extends Component {
                         this.state.connections.map(c =>
                             <Connection key={c.id} data={c} onSelected={() => this.connectionSelected(c)}
                                         selected={this.state.selected === c.id} onMarked={marked => c.marked = marked}
-                                        onEnabled={enabled => c.hidden = !enabled}/>
+                                        onEnabled={enabled => c.hidden = !enabled}
+                                        containsFlag={c.matched_rules.includes(this.state.flagRule.id)}
+                                        addServicePortFilter={this.addServicePortFilter}/>
                         )
                     }
                     {loading}
                     </tbody>
                 </Table>
 
-                {/*{redirect}*/}
+                {redirect}
             </div>
         );
     }

@@ -1,9 +1,7 @@
 import React, {Component} from 'react';
 import './ConnectionContent.scss';
-import {Col, Container, Dropdown, Row} from 'react-bootstrap';
+import {Dropdown} from 'react-bootstrap';
 import axios from 'axios';
-import {withRouter} from "react-router-dom";
-import {Redirect} from "react-router";
 
 class ConnectionContent extends Component {
 
@@ -17,12 +15,6 @@ class ConnectionContent extends Component {
 
         this.validFormats = ["default", "hex", "hexdump", "base32", "base64", "ascii", "binary", "decimal", "octal"];
         this.setFormat = this.setFormat.bind(this);
-    }
-
-    componentDidMount() {
-        if ('format' in this.props.match.params) {
-            this.setFormat(this.props.match.params.format);
-        }
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -51,11 +43,8 @@ class ConnectionContent extends Component {
             return <div>nope</div>;
         }
 
-        const format = this.state.format !== "default" ? `/${this.state.format}` : "";
-        const redirect = <Redirect push to={`/connections/${this.props.connection.id}${format}`}/>;
-
         let payload = content.map((c, i) =>
-            <span key={`content-${i}`} className={c.from_client ? "from-client" : "from-server"} title="cccccc">
+            <span key={`content-${i}`} className={c.from_client ? "from-client" : "from-server"}>
                 {c.content}
             </span>
         );
@@ -63,11 +52,11 @@ class ConnectionContent extends Component {
         return (
             <div className="connection-content">
                 <div className="connection-content-options">
-                    <Container>
-                        <Row>
-                            <Col md={2}>ciao</Col>
-                        </Row>
-                    </Container>
+                    {/*<Container>*/}
+                    {/*    <Row>*/}
+                    {/*        <Col md={2}>ciao</Col>*/}
+                    {/*    </Row>*/}
+                    {/*</Container>*/}
 
 
                     <Dropdown onSelect={this.setFormat} >
@@ -92,10 +81,6 @@ class ConnectionContent extends Component {
                 </div>
 
                 <pre>{payload}</pre>
-
-                {/*{redirect}*/}
-
-
             </div>
         );
     }
@@ -103,4 +88,4 @@ class ConnectionContent extends Component {
 }
 
 
-export default withRouter(ConnectionContent);
+export default ConnectionContent;

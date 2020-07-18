@@ -2,6 +2,7 @@
 
 .header {
   padding: 15px 30px;
+  height: 80px;
 
   > .row {
     background-color: $color-primary-0;
@@ -9,10 +10,19 @@
 
   .header-title {
     margin: 5px 0 5px -5px;
+    width: 200px;
   }
 
   .header-buttons {
     margin: 5px 0;
     text-align: right;
+  }
+
+  .filters-bar-wrapper {
+    height: 50px;
+    padding: 8px 0;
+
+    .filters-bar {
+    }
   }
 }
