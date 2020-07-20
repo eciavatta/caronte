@@ -66,6 +66,13 @@ func NewMongoStorage(uri string, port int, database string) (*MongoStorage, erro
 		return nil, err
 	}
 
+	if _, err := collections[ConnectionStreams].Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{"connection_id", -1}}, // descending
+		Options: options.Index(),
+	}); err != nil {
+		return nil, err
+	}
+
 	return &MongoStorage{
 		client:      client,
 		collections: collections,
