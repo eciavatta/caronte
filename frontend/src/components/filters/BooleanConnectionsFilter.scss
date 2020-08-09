@@ -1,0 +1,26 @@
+@import '../../colors';
+
+.filter {
+
+  .filter-boolean {
+    padding: 0 10px;
+    background-color: $color-primary-2;
+    border-radius: 5px;
+    cursor: pointer;
+    height: 34px;
+
+    span {
+      display: block;
+      font-size: 13px;
+      padding: 6px 5px;
+    }
+  }
+
+  &.filter-active {
+    .filter-boolean {
+      background-color: $color-primary-4;
+      color: $color-primary-3;
+    }
+  }
+
+}

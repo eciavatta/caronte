@@ -2,15 +2,18 @@ import React, {Component} from 'react';
 import Typed from 'typed.js';
 import './Header.scss';
 import {Button} from "react-bootstrap";
-import ServicePortFilter from "../components/ServicePortFilter";
+import StringConnectionsFilter from "../components/filters/StringConnectionsFilter";
+import {cleanNumber, validateIpAddress, validateMin, validatePort} from "../utils";
+import RulesConnectionsFilter from "../components/filters/RulesConnectionsFilter";
+import {filtersDefinitions, filtersNames} from "../components/filters/FiltersDefinitions";
 
 class Header extends Component {
 
     constructor(props) {
         super(props);
-        this.state = {
-            servicesShow: false
-        };
+        this.state = {};
+        filtersNames.forEach(elem => this.state[`${elem}_active`] = false);
+        this.fetchStateFromLocalStorage = this.fetchStateFromLocalStorage.bind(this);
     }
 
     componentDidMount() {
@@ -20,13 +23,33 @@ class Header extends Component {
             cursorChar: "❚"
         };
         this.typed = new Typed(this.el, options);
+
+        this.fetchStateFromLocalStorage();
+
+        if (typeof window !== "undefined") {
+            window.addEventListener("quick-filters", this.fetchStateFromLocalStorage);
+        }
     }
 
     componentWillUnmount() {
         this.typed.destroy();
+
+        if (typeof window !== "undefined") {
+            window.removeEventListener("quick-filters", this.fetchStateFromLocalStorage);
+        }
+    }
+
+    fetchStateFromLocalStorage() {
+        let newState = {};
+        filtersNames.forEach(elem => newState[`${elem}_active`] = localStorage.getItem(`filters.${elem}`) === "true");
+        this.setState(newState);
     }
 
     render() {
+        let quickFilters = filtersNames.filter(name => this.state[`${name}_active`])
+            .map(name => filtersDefinitions[name])
+            .slice(0, 5);
+
         return (
             <header className="header container-fluid">
                 <div className="row">
@@ -41,16 +64,14 @@ class Header extends Component {
                     <div className="col-auto">
                         <div className="filters-bar-wrapper">
                             <div className="filters-bar">
-                                <ServicePortFilter />
-                                {/*<ServicePortFilter name="started_before" default="infinity" />*/}
-                                {/*<ServicePortFilter name="started_after" default="-infinity" />*/}
-
+                                {quickFilters}
                             </div>
                         </div>
                     </div>
 
                     <div className="col">
                         <div className="header-buttons">
+                            <Button onClick={this.props.onOpenFilters}>filters</Button>
                             <Button variant="yellow" size="sm">pcaps</Button>
                             <Button variant="blue">rules</Button>
                             <Button variant="red" onClick={this.props.onOpenServices}>

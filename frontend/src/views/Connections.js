@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import './Connections.scss';
-import axios from 'axios'
+import axios from 'axios';
 import Connection from "../components/Connection";
 import Table from 'react-bootstrap/Table';
 import {Redirect} from 'react-router';
@@ -15,7 +15,6 @@ class Connections extends Component {
             connections: [],
             firstConnection: null,
             lastConnection: null,
-            showHidden: false,
             prevParams: null,
             flagRule: null,
             rules: null,
@@ -33,7 +32,7 @@ class Connections extends Component {
     }
 
     componentDidMount() {
-        this.loadConnections({limit: this.queryLimit, hidden: this.state.showHidden})
+        this.loadConnections({limit: this.queryLimit})
             .then(() => this.setState({loaded: true}));
     }
 
@@ -45,7 +44,7 @@ class Connections extends Component {
     componentDidUpdate(prevProps, prevState, snapshot) {
         if (this.state.loaded && prevProps.location.search !== this.props.location.search) {
             this.setState({queryString: this.props.location.search});
-            this.loadConnections({limit: this.queryLimit, hidden: this.state.showHidden})
+            this.loadConnections({limit: this.queryLimit})
                 .then(() => console.log("Connections reloaded after query string update"));
         }
     }
@@ -53,16 +52,12 @@ class Connections extends Component {
     handleScroll(e) {
         let relativeScroll = e.currentTarget.scrollTop / (e.currentTarget.scrollHeight - e.currentTarget.clientHeight);
         if (!this.state.loading && relativeScroll > this.scrollBottomThreashold) {
-            this.loadConnections({
-                from: this.state.lastConnection.id, limit: this.queryLimit,
-                hidden: this.state.showHidden
-            }).then(() => console.log("Following connections loaded"));
+            this.loadConnections({from: this.state.lastConnection.id, limit: this.queryLimit,})
+                .then(() => console.log("Following connections loaded"));
         }
         if (!this.state.loading && relativeScroll < this.scrollTopThreashold) {
-            this.loadConnections({
-                to: this.state.firstConnection.id, limit: this.queryLimit,
-                hidden: this.state.showHidden
-            }).then(() => console.log("Previous connections loaded"));
+            this.loadConnections({to: this.state.firstConnection.id, limit: this.queryLimit,})
+                .then(() => console.log("Previous connections loaded"));
         }
     }
 

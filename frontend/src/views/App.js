@@ -5,26 +5,32 @@ import MainPane from "./MainPane";
 import Footer from "./Footer";
 import {BrowserRouter as Router, Route, Switch} from "react-router-dom";
 import Services from "./Services";
+import Filters from "./Filters";
 
 class App extends Component {
 
     constructor(props) {
         super(props);
         this.state = {
-            servicesShow: false
+            servicesWindowOpen: false,
+            filterWindowOpen: false
         };
     }
 
     render() {
-        let modal = "";
-        if (this.state.servicesShow) {
-            modal = <Services onHide={() => this.setState({servicesShow: false})}/>;
+        let modal;
+        if (this.state.servicesWindowOpen) {
+            modal = <Services onHide={() => this.setState({servicesWindowOpen: false})}/>;
+        }
+        if (this.state.filterWindowOpen) {
+            modal = <Filters onHide={() => this.setState({filterWindowOpen: false})}/>;
         }
 
         return (
             <div className="app">
                 <Router>
-                    <Header onOpenServices={() => this.setState({servicesShow: true})}/>
+                    <Header onOpenServices={() => this.setState({servicesWindowOpen: true})}
+                            onOpenFilters={() => this.setState({filterWindowOpen: true})}/>
                     <Switch>
                         <Route path="/connections/:id" children={<MainPane/>}/>
                         <Route path="/" children={<MainPane/>}/>

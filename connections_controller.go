@@ -46,7 +46,7 @@ type ConnectionsFilter struct {
 	ClosedBefore  int64   `form:"closed_before" binding:"omitempty,gtefield=ClosedAfter"`
 	Hidden        bool    `form:"hidden"`
 	Marked        bool    `form:"marked"`
-	MatchedRules  []RowID `form:"matched_rules"`
+	MatchedRules  []string `form:"matched_rules" binding:"dive,hexadecimal,len=24"`
 	Limit         int64   `form:"limit"`
 }
 
@@ -114,7 +114,16 @@ func (cc ConnectionsController) GetConnections(c context.Context, filter Connect
 		query = query.Filter(OrderedDocument{{"marked", true}})
 	}
 	if filter.MatchedRules != nil && len(filter.MatchedRules) > 0 {
-		query = query.Filter(OrderedDocument{{"matched_rules", UnorderedDocument{"$all": filter.MatchedRules}}})
+		matchedRules := make([]RowID, len(filter.MatchedRules))
+		for i, elem := range filter.MatchedRules {
+			if id, err := RowIDFromHex(elem); err != nil {
+				log.WithError(err).WithField("filter", filter).Panic("failed to convert matched_rules ids")
+			} else {
+				matchedRules[i] = id
+			}
+		}
+
+		query = query.Filter(OrderedDocument{{"matched_rules", UnorderedDocument{"$all": matchedRules}}})
 	}
 	if filter.Limit > 0 && filter.Limit <= MaxQueryLimit {
 		query = query.Limit(filter.Limit)
