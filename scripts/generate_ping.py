@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import struct
 import socket
 import socketserver
 import sys

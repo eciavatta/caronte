@@ -7,8 +7,9 @@ class Filters extends Component {
 
     constructor(props) {
         super(props);
-        this.state = {};
-        filtersNames.forEach(elem => this.state[`${elem}_active`] = false);
+        let newState = {};
+        filtersNames.forEach(elem => newState[`${elem}_active`] = false);
+        this.state = newState;
     }
 
     componentDidMount() {
@@ -27,7 +28,7 @@ class Filters extends Component {
 
     generateRows(filtersNames) {
         return filtersNames.map(name =>
-            <tr>
+            <tr key={name}>
                 <td><input type="checkbox"
                            checked={this.state[`${name}_active`]}
                            onChange={event => this.checkboxChangesHandler(name, event)} /></td>

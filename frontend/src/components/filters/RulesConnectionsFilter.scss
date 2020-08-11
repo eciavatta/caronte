@@ -2,23 +2,16 @@
 
 .react-tags {
   position: relative;
-  padding: 0px 6px;
+  padding: 0 6px;
   border-radius: 4px;
-
   background-color: $color-primary-2;
-
-
-  /* shared font styles */
   font-size: 12px;
-
-  /* clicking anywhere will focus the input */
   cursor: text;
-
   z-index: 10;
 }
 
 .react-tags.is-focused {
-  border-color: #B1B1B1;
+  border-color: #b1b1b1;
 }
 
 .react-tags__selected {
@@ -33,11 +26,10 @@
   border-radius: 2px;
   background: $color-primary-4;
   color: $color-primary-3;
-
   font-size: 11px;
 }
 
-.react-tags__selected-tag:after {
+.react-tags__selected-tag::after {
   content: '\2715';
   color: $color-primary-3;
   margin-left: 8px;
@@ -45,24 +37,19 @@
 
 .react-tags__selected-tag:hover,
 .react-tags__selected-tag:focus {
-  border-color: #B1B1B1;
+  border-color: #b1b1b1;
 }
 
 .react-tags__search {
   display: inline-block;
   padding: 7px 10px;
-
-  /* prevent autoresize overflowing the container */
   max-width: 100%;
 }
 
 @media screen and (min-width: 30em) {
-
   .react-tags__search {
-    /* this will become the offsetParent for suggestions */
     position: relative;
   }
-
 }
 
 .react-tags__search-input {
@@ -71,11 +58,8 @@
   padding: 0;
   border: 0;
   outline: none;
-
   background-color: $color-primary-2;
   color: $color-primary-4;
-
-  /* match the font styles */
   font-size: inherit;
   line-height: inherit;
 }
@@ -92,11 +76,9 @@
 }
 
 @media screen and (min-width: 30em) {
-
   .react-tags__suggestions {
     width: 240px;
   }
-
 }
 
 .react-tags__suggestions ul {

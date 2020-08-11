@@ -2,17 +2,15 @@ import React, {Component} from 'react';
 import Typed from 'typed.js';
 import './Header.scss';
 import {Button} from "react-bootstrap";
-import StringConnectionsFilter from "../components/filters/StringConnectionsFilter";
-import {cleanNumber, validateIpAddress, validateMin, validatePort} from "../utils";
-import RulesConnectionsFilter from "../components/filters/RulesConnectionsFilter";
 import {filtersDefinitions, filtersNames} from "../components/filters/FiltersDefinitions";
 
 class Header extends Component {
 
     constructor(props) {
         super(props);
-        this.state = {};
-        filtersNames.forEach(elem => this.state[`${elem}_active`] = false);
+        let newState = {};
+        filtersNames.forEach(elem => newState[`${elem}_active`] = false);
+        this.state = newState;
         this.fetchStateFromLocalStorage = this.fetchStateFromLocalStorage.bind(this);
     }
 
@@ -73,7 +71,7 @@ class Header extends Component {
                         <div className="header-buttons">
                             <Button onClick={this.props.onOpenFilters}>filters</Button>
                             <Button variant="yellow" size="sm">pcaps</Button>
-                            <Button variant="blue">rules</Button>
+                            <Button variant="blue" onClick={this.props.onOpenRules}>rules</Button>
                             <Button variant="red" onClick={this.props.onOpenServices}>
                                 services
                             </Button>

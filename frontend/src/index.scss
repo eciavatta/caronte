@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap');
 
-@import-normalize ;
+@import-normalize;
 
 @import 'colors.scss';
 
@@ -53,7 +53,8 @@ pre {
   background-color: $color-secondary-2;
   border-bottom: 5px solid $color-secondary-1;
 
-  &:hover, &:active {
+  &:hover,
+  &:active {
     color: $color-secondary-4;
     background-color: $color-secondary-1;
   }
@@ -64,7 +65,8 @@ pre {
   background-color: $color-blue;
   border-bottom: 5px solid $color-blue-dark;
 
-  &:hover, &:active {
+  &:hover,
+  &:active {
     color: $color-blue-light;
     background-color: $color-blue-dark;
   }
