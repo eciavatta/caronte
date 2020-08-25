@@ -1,4 +1,4 @@
-FROM FROM ubuntu:20.04
+FROM ubuntu:20.04
 
 # Install tools and libraries
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -qq git golang libpcap-dev pkg-config libhyperscan-dev npm
