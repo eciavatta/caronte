@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -112,12 +113,14 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 				badRequest(c, err)
 				return
 			}
+			flushAllValue, isPresent := c.GetPostForm("flush_all")
+			flushAll := isPresent && strings.ToLower(flushAllValue) == "true"
 			fileName := fmt.Sprintf("%v-%s", time.Now().UnixNano(), fileHeader.Filename)
 			if err := c.SaveUploadedFile(fileHeader, ProcessingPcapsBasePath + fileName); err != nil {
 				log.WithError(err).Panic("failed to save uploaded file")
 			}
 
-			if sessionID, err := applicationContext.PcapImporter.ImportPcap(fileName); err != nil {
+			if sessionID, err := applicationContext.PcapImporter.ImportPcap(fileName, flushAll); err != nil {
 				unprocessableEntity(c, err)
 			} else {
 				c.JSON(http.StatusAccepted, gin.H{"session": sessionID})
@@ -127,6 +130,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 		api.POST("/pcap/file", func(c *gin.Context) {
 			var request struct {
 				File               string `json:"file"`
+				FlushAll           bool   `json:"flush_all"`
 				DeleteOriginalFile bool   `json:"delete_original_file"`
 			}
 
@@ -143,7 +147,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 			if err := CopyFile(ProcessingPcapsBasePath + fileName, request.File); err != nil {
 				log.WithError(err).Panic("failed to copy pcap file")
 			}
-			if sessionID, err := applicationContext.PcapImporter.ImportPcap(fileName); err != nil {
+			if sessionID, err := applicationContext.PcapImporter.ImportPcap(fileName, request.FlushAll); err != nil {
 				if request.DeleteOriginalFile {
 					if err := os.Remove(request.File); err != nil {
 						log.WithError(err).Panic("failed to remove processed file")

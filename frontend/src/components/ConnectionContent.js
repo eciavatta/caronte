@@ -21,7 +21,8 @@ class ConnectionContent extends Component {
         if (this.props.connection !== null && (
             this.props.connection !== prevProps.connection || this.state.format !== prevState.format)) {
             this.setState({loading: true});
-            axios.get(`/api/streams/${this.props.connection.id}?format=${this.state.format}`).then(res => {
+            // TODO: limit workaround.
+            axios.get(`/api/streams/${this.props.connection.id}?format=${this.state.format}&limit=999999`).then(res => {
                 this.setState({
                     connectionContent: res.data,
                     loading: false
@@ -52,13 +53,6 @@ class ConnectionContent extends Component {
         return (
             <div className="connection-content">
                 <div className="connection-content-options">
-                    {/*<Container>*/}
-                    {/*    <Row>*/}
-                    {/*        <Col md={2}>ciao</Col>*/}
-                    {/*    </Row>*/}
-                    {/*</Container>*/}
-
-
                     <Dropdown onSelect={this.setFormat} >
                         <Dropdown.Toggle size="sm" id="dropdown-basic">
                             format

@@ -63,11 +63,13 @@ func (sh *StreamHandler) Reassembled(reassembly []tcpassembly.Reassembly) {
 	for _, r := range reassembly {
 		skip := r.Skip
 		if r.Start {
-			skip = 0
 			sh.firstPacketSeen = r.Seen
 		}
 		if r.End {
 			sh.lastPacketSeen = r.Seen
+		}
+		if skip < 0 { // start or flush ~ workaround
+			skip = 0
 		}
 
 		reassemblyLen := len(r.Bytes)
