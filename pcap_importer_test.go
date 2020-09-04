@@ -21,11 +21,11 @@ func TestImportPcap(t *testing.T) {
 	pcapImporter.releaseAssembler(pcapImporter.takeAssembler())
 
 	fileName := copyToProcessing(t, "ping_pong_10000.pcap")
-	sessionID, err := pcapImporter.ImportPcap(fileName)
+	sessionID, err := pcapImporter.ImportPcap(fileName, false)
 	require.NoError(t, err)
 
 	duplicatePcapFileName := copyToProcessing(t, "ping_pong_10000.pcap")
-	duplicateSessionID, err := pcapImporter.ImportPcap(duplicatePcapFileName)
+	duplicateSessionID, err := pcapImporter.ImportPcap(duplicatePcapFileName, false)
 	require.Error(t, err)
 	assert.Equal(t, sessionID, duplicateSessionID)
 	assert.Error(t, os.Remove(ProcessingPcapsBasePath + duplicatePcapFileName))
@@ -52,7 +52,7 @@ func TestCancelImportSession(t *testing.T) {
 	pcapImporter := newTestPcapImporter(wrapper, "172.17.0.3")
 
 	fileName := copyToProcessing(t, "ping_pong_10000.pcap")
-	sessionID, err := pcapImporter.ImportPcap(fileName)
+	sessionID, err := pcapImporter.ImportPcap(fileName, false)
 	require.NoError(t, err)
 
 	assert.False(t, pcapImporter.CancelSession("invalid"))
@@ -79,7 +79,7 @@ func TestImportNoTcpPackets(t *testing.T) {
 	pcapImporter := newTestPcapImporter(wrapper, "172.17.0.4")
 
 	fileName := copyToProcessing(t, "icmp.pcap")
-	sessionID, err := pcapImporter.ImportPcap(fileName)
+	sessionID, err := pcapImporter.ImportPcap(fileName, false)
 	require.NoError(t, err)
 
 	session := waitSessionCompletion(t, pcapImporter, sessionID)
