@@ -13,6 +13,12 @@ import (
 	"net"
 	"os"
 	"time"
+	//"net/textproto"
+	"net/http"
+	"bufio"
+	"strings"
+	"io/ioutil"
+	"compress/gzip"
 )
 
 func Sha256Sum(fileName string) (string, error) {
@@ -106,6 +112,41 @@ func DecodeBytes(buffer []byte, format string) string {
 	default:
 		return string(buffer)
 	}
+}
+
+func DecodeHttpResponse(raw string) string {
+	var header string
+	trailer := "\n"
+	reader := bufio.NewReader(strings.NewReader(raw))
+	resp,err := http.ReadResponse(reader, &http.Request{})
+	if err != nil{
+		log.Info("Reading response: ",resp)
+		return raw + trailer
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusOK {
+		var bodyReader io.ReadCloser
+		switch resp.Header.Get("Content-Encoding") {
+		case "gzip":
+			bodyReader, err = gzip.NewReader(resp.Body)
+			if err != nil {
+				log.Error("Gunzipping body: ",err)
+			}
+			header  = "\n[==== GUNZIPPED ====]\n"
+			trailer = "\n[===================]\n"
+			defer bodyReader.Close()
+		default:
+			bodyReader = resp.Body
+		}
+		body, err := ioutil.ReadAll(bodyReader)
+		if err != nil{
+			log.Error("Reading body: ",err)
+		}
+		return raw + header + string(body) + trailer
+	}
+	return raw + trailer
 }
 
 func CopyFile(dst, src string) error {

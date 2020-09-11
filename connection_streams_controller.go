@@ -110,9 +110,15 @@ func (csc ConnectionStreamsController) GetConnectionPayload(c context.Context, c
 			}
 			size := uint64(end - start)
 
+			content := DecodeBytes(serverStream.Payload[start:end], format.Format)
+			// check if is encoded
+			if format.Format == "default" {
+				content = DecodeHttpResponse(content)
+			}
+
 			payload = Payload{
 				FromClient:      false,
-				Content:         DecodeBytes(serverStream.Payload[start:end], format.Format),
+				Content:         content,
 				Index:           start,
 				Timestamp:       serverStream.BlocksTimestamps[serverBlocksIndex],
 				IsRetransmitted: serverStream.BlocksLoss[serverBlocksIndex],
