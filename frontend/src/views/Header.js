@@ -72,9 +72,8 @@ class Header extends Component {
                             <Button onClick={this.props.onOpenFilters}>filters</Button>
                             <Button variant="yellow" size="sm">pcaps</Button>
                             <Button variant="blue" onClick={this.props.onOpenRules}>rules</Button>
-                            <Button variant="red" onClick={this.props.onOpenServices}>
-                                services
-                            </Button>
+                            <Button variant="red" onClick={this.props.onOpenServices}>services</Button>
+                            <Button variant="green" onClick={this.props.onOpenConfig}>config</Button>
                         </div>
                     </div>
                 </div>
