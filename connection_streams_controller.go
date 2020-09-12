@@ -27,6 +27,7 @@ type PatternSlice [2]uint64
 type Payload struct {
 	FromClient      bool         `json:"from_client"`
 	Content         string       `json:"content"`
+	DecodedContent  string       `json:"decoded_content"`
 	Index           int          `json:"index"`
 	Timestamp       time.Time    `json:"timestamp"`
 	IsRetransmitted bool         `json:"is_retransmitted"`
@@ -92,6 +93,7 @@ func (csc ConnectionStreamsController) GetConnectionPayload(c context.Context, c
 			payload = Payload{
 				FromClient:      true,
 				Content:         DecodeBytes(clientStream.Payload[start:end], format.Format),
+				//Request:		 ReadRequest(content),
 				Index:           start,
 				Timestamp:       clientStream.BlocksTimestamps[clientBlocksIndex],
 				IsRetransmitted: clientStream.BlocksLoss[clientBlocksIndex],
@@ -111,14 +113,14 @@ func (csc ConnectionStreamsController) GetConnectionPayload(c context.Context, c
 			size := uint64(end - start)
 
 			content := DecodeBytes(serverStream.Payload[start:end], format.Format)
-			// check if is encoded
-			if format.Format == "default" {
-				content = DecodeHttpResponse(content)
-			}
+
+			plainContent := DecodeBytes(serverStream.Payload[start:end], "default")
+			decodedContent := DecodeBytes([]byte(DecodeHttpResponse(plainContent)), format.Format)
 
 			payload = Payload{
 				FromClient:      false,
 				Content:         content,
+				DecodedContent:  decodedContent,
 				Index:           start,
 				Timestamp:       serverStream.BlocksTimestamps[serverBlocksIndex],
 				IsRetransmitted: serverStream.BlocksLoss[serverBlocksIndex],
