@@ -13,7 +13,6 @@ import (
 	"net"
 	"os"
 	"time"
-	//"net/textproto"
 	"net/http"
 	"bufio"
 	"strings"
@@ -114,19 +113,52 @@ func DecodeBytes(buffer []byte, format string) string {
 	}
 }
 
+func ReadRequest(raw string) http.Request {
+	reader := bufio.NewReader(strings.NewReader(raw))
+	req,err := http.ReadRequest(reader)
+	if err != nil{
+		log.Info("Reading request: ",req)
+		return http.Request{}
+	}
+	return *req
+}
+
+func GetHeader(raw string) string{
+	tmp := strings.Split(raw,"\r\n")
+	end := len(tmp)
+	for i, line := range tmp{
+		if line == ""{
+			end = i
+			break
+		}
+	}
+	return strings.Join(tmp[:end],"\r\n")
+}
+
+func GetBody(raw string) string{
+	tmp := strings.Split(raw,"\r\n")
+	start := 0
+	for i, line := range tmp{
+		if line == ""{
+			start = i + 2
+			break
+		}
+	}
+	return strings.Join(tmp[start:],"\r\n")
+}
+
 func DecodeHttpResponse(raw string) string {
-	var header string
-	trailer := "\n"
+	body := []byte{}
 	reader := bufio.NewReader(strings.NewReader(raw))
 	resp,err := http.ReadResponse(reader, &http.Request{})
 	if err != nil{
 		log.Info("Reading response: ",resp)
-		return raw + trailer
+		return ""
 	}
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusOK {
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 		var bodyReader io.ReadCloser
 		switch resp.Header.Get("Content-Encoding") {
 		case "gzip":
@@ -134,19 +166,28 @@ func DecodeHttpResponse(raw string) string {
 			if err != nil {
 				log.Error("Gunzipping body: ",err)
 			}
-			header  = "\n[==== GUNZIPPED ====]\n"
-			trailer = "\n[===================]\n"
 			defer bodyReader.Close()
+			body, err = ioutil.ReadAll(bodyReader)
+			if err != nil{
+				log.Error("Reading gzipped body: ",err)
+				// if the response is malformed
+				// or the connection is closed
+				fallbackReader, _ := gzip.NewReader(strings.NewReader(GetBody(raw)))
+				body, err = ioutil.ReadAll(fallbackReader)
+				if err != nil{
+					log.Error(string(body))
+				}
+			}
 		default:
 			bodyReader = resp.Body
+			body, err = ioutil.ReadAll(bodyReader)
+			if err != nil{
+				log.Error("Reading body: ",err)
+				body = []byte(GetBody(raw))
+			}
 		}
-		body, err := ioutil.ReadAll(bodyReader)
-		if err != nil{
-			log.Error("Reading body: ",err)
-		}
-		return raw + header + string(body) + trailer
 	}
-	return raw + trailer
+	return GetHeader(raw) + "\r\n\r\n"+ string(body)
 }
 
 func CopyFile(dst, src string) error {
