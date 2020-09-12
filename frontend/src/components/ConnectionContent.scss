@@ -3,7 +3,7 @@
 .connection-content {
   background-color: $color-primary-3;
   height: 100%;
-  overflow: auto;
+  overflow: fixed;
 
   pre {
     background-color: $color-primary-0;
@@ -11,7 +11,7 @@
     word-break: break-word;
     max-width: 100%;
     white-space: pre-wrap;
-    height: 100%;
+    height: 95%;
   }
 
   .from-client {
