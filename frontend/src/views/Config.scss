@@ -1,0 +1,38 @@
+@import '../colors.scss';
+
+.curl-output {
+  width: 100%;
+  font-size: 13px;
+}
+
+#passwd-form {
+	margin:auto;
+}
+
+.users-list {
+  .btn {
+    width: 70px;
+  }
+
+  td {
+    background-color: $color-primary-2;
+    border-top: 2px solid $color-primary-0;
+    vertical-align: middle;
+    text-align: center; 
+  }
+
+  th {
+    background-color: $color-primary-1;
+    text-align: center; 
+  }
+}
+
+.btn-color {
+  border: 3px solid #fff;
+}
+
+.dialog-footer {
+  .btn {
+    width: 80px;
+  }
+}
