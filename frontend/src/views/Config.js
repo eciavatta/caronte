@@ -20,7 +20,8 @@ class Config extends Component {
 			showConfig: true,
 			tmpUser:"",
 			tmpPass:"",
-			tmpConf:""
+			tmpConf:"",
+			errors:""
         };
 
         this.serverIpChanged = this.serverIpChanged.bind(this);
@@ -71,6 +72,7 @@ class Config extends Component {
 			})
 		};
 
+		let msg = "";
 
 		fetch('/setup', requestOptions)
 			.then(response => {
@@ -78,7 +80,12 @@ class Config extends Component {
 					//this.setState({showConfig:false});
 					this.props.onHide();
 					this.props.onDone();
-					console.log(this.props.disabled);
+				} else {
+					response.json().then(data => {
+						this.setState(
+							{errors : data.error.toString()}
+						);
+					});
 				}
 			}
 		);
@@ -214,6 +221,16 @@ class Config extends Component {
 
                             </Col>
 
+                        </Row>
+                        <Row>
+							<div class="error">
+							<b>
+								{this.state.errors
+									.split('\n').map((item, key) => {
+									  return <span key={key}>{item}<br/></span>})
+								}
+							</b>
+							</div>
                         </Row>
 
                     </Container>
