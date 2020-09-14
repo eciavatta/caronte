@@ -16,13 +16,16 @@ class App extends Component {
             servicesWindowOpen: false,
             filterWindowOpen: false,
             rulesWindowOpen: false,
-            configWindowOpen: false
+            configWindowOpen: false,
+            configDone: false
         };
 
 		fetch('/api/services')
 		.then(response => {
 			if( response.status === 503){
 				this.setState({configWindowOpen: true});
+			} else if (response.status === 200){
+				this.setState({configDone: true});
 			}
 		});
 
@@ -41,7 +44,8 @@ class App extends Component {
             modal = <Rules onHide={() => this.setState({rulesWindowOpen: false})}/>;
         }
         if (this.state.configWindowOpen) {
-            modal = <Config onHide={() => this.setState({configWindowOpen: false})}/>;
+            modal = <Config onHide={() => this.setState({configWindowOpen: false})}
+						onDone={() => this.setState({configDone: true})}/>;
         }
 
         return (
@@ -51,6 +55,7 @@ class App extends Component {
                             onOpenFilters={() => this.setState({filterWindowOpen: true})}
                             onOpenRules={() => this.setState({rulesWindowOpen: true})} 
                             onOpenConfig={() => this.setState({configWindowOpen: true})} 
+							onConfigDone={this.state.configDone}
 					/>
                     <Switch>
                         <Route path="/connections/:id" children={<MainPane/>}/>

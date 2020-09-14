@@ -77,6 +77,8 @@ class Config extends Component {
 				if (response.status === 202 ){
 					//this.setState({showConfig:false});
 					this.props.onHide();
+					this.props.onDone();
+					console.log(this.props.disabled);
 				}
 			}
 		);
@@ -158,6 +160,8 @@ class Config extends Component {
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
+					<div class="blink"><span><b>Warning:</b></span> once the configuration is completed, it cannot be changed unless you reset caronte :(</div> 
+					<hr/>
                     <Container>
                         <Row>
                             <Col md={5}>
