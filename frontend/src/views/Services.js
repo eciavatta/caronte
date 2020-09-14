@@ -82,16 +82,6 @@ class Services extends Component {
 				}
 			);
 
-			/*
-            axios.put("/api/services", {
-                name: this.state.name,
-                port: this.state.port,
-                color: this.state.color,
-                notes: this.state.notes
-            });
-			*/
-
-
             this.newService();
             this.loadServices();
         }

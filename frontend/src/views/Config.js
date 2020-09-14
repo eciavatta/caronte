@@ -4,7 +4,6 @@ import {
 import React, {Component, useState} from 'react';
 import './Config.scss';
 import {Button, ButtonGroup, ToggleButton, Col, Container, Form, FormControl, InputGroup, Modal, Row, Table} from "react-bootstrap";
-import axios from 'axios'
 import {createCurlCommand} from '../utils';
 
 class Config extends Component {
@@ -74,9 +73,11 @@ class Config extends Component {
 
 
 		fetch('/setup', requestOptions)
-			.then(function(response){
-				console.log(response.status);
-				console.log(response);
+			.then(response => {
+				if (response.status === 202 ){
+					//this.setState({showConfig:false});
+					this.props.onHide();
+				}
 			}
 		);
 		

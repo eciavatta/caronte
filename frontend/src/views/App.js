@@ -18,6 +18,15 @@ class App extends Component {
             rulesWindowOpen: false,
             configWindowOpen: false
         };
+
+		fetch('/api/services')
+		.then(response => {
+			if( response.status === 503){
+				this.setState({configWindowOpen: true});
+			}
+		});
+
+
     }
 
     render() {
