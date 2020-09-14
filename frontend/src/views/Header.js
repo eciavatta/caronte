@@ -70,7 +70,7 @@ class Header extends Component {
                     <div className="col">
                         <div className="header-buttons">
                             <Button onClick={this.props.onOpenFilters}>filters</Button>
-                            <Button variant="yellow" size="sm">pcaps</Button>
+                            <Button variant="warning" onClick={this.props.onOpenUpload}>pcaps</Button>
                             <Button variant="blue" onClick={this.props.onOpenRules}>rules</Button>
                             <Button variant="red" onClick={this.props.onOpenServices}>services</Button>
                             <Button variant="green" onClick={this.props.onOpenConfig} 
