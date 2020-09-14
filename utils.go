@@ -13,6 +13,11 @@ import (
 	"net"
 	"os"
 	"time"
+	"net/http"
+	"bufio"
+	"strings"
+	"io/ioutil"
+	"compress/gzip"
 )
 
 func Sha256Sum(fileName string) (string, error) {
@@ -106,6 +111,83 @@ func DecodeBytes(buffer []byte, format string) string {
 	default:
 		return string(buffer)
 	}
+}
+
+func ReadRequest(raw string) http.Request {
+	reader := bufio.NewReader(strings.NewReader(raw))
+	req,err := http.ReadRequest(reader)
+	if err != nil{
+		log.Info("Reading request: ",req)
+		return http.Request{}
+	}
+	return *req
+}
+
+func GetHeader(raw string) string{
+	tmp := strings.Split(raw,"\r\n")
+	end := len(tmp)
+	for i, line := range tmp{
+		if line == ""{
+			end = i
+			break
+		}
+	}
+	return strings.Join(tmp[:end],"\r\n")
+}
+
+func GetBody(raw string) string{
+	tmp := strings.Split(raw,"\r\n")
+	start := 0
+	for i, line := range tmp{
+		if line == ""{
+			start = i + 2
+			break
+		}
+	}
+	return strings.Join(tmp[start:],"\r\n")
+}
+
+func DecodeHttpResponse(raw string) string {
+	body := []byte{}
+	reader := bufio.NewReader(strings.NewReader(raw))
+	resp,err := http.ReadResponse(reader, &http.Request{})
+	if err != nil{
+		log.Info("Reading response: ",resp)
+		return ""
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		var bodyReader io.ReadCloser
+		switch resp.Header.Get("Content-Encoding") {
+		case "gzip":
+			bodyReader, err = gzip.NewReader(resp.Body)
+			if err != nil {
+				log.Error("Gunzipping body: ",err)
+			}
+			defer bodyReader.Close()
+			body, err = ioutil.ReadAll(bodyReader)
+			if err != nil{
+				log.Error("Reading gzipped body: ",err)
+				// if the response is malformed
+				// or the connection is closed
+				fallbackReader, _ := gzip.NewReader(strings.NewReader(GetBody(raw)))
+				body, err = ioutil.ReadAll(fallbackReader)
+				if err != nil{
+					log.Error(string(body))
+				}
+			}
+		default:
+			bodyReader = resp.Body
+			body, err = ioutil.ReadAll(bodyReader)
+			if err != nil{
+				log.Error("Reading body: ",err)
+				body = []byte(GetBody(raw))
+			}
+		}
+	}
+	return GetHeader(raw) + "\r\n\r\n"+ string(body)
 }
 
 func CopyFile(dst, src string) error {

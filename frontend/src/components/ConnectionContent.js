@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import './ConnectionContent.scss';
-import {Dropdown} from 'react-bootstrap';
+import {Dropdown, Button} from 'react-bootstrap';
 import axios from 'axios';
 
 class ConnectionContent extends Component {
@@ -10,7 +10,8 @@ class ConnectionContent extends Component {
         this.state = {
             loading: false,
             connectionContent: null,
-            format: "default"
+            format: "default",
+            decoded: false,
         };
 
         this.validFormats = ["default", "hex", "hexdump", "base32", "base64", "ascii", "binary", "decimal", "octal"];
@@ -37,6 +38,10 @@ class ConnectionContent extends Component {
         }
     }
 
+    toggleDecoded() {
+		this.setState({decoded: !this.state.decoded});
+    }
+
     render() {
         let content = this.state.connectionContent;
 
@@ -46,7 +51,22 @@ class ConnectionContent extends Component {
 
         let payload = content.map((c, i) =>
             <span key={`content-${i}`} className={c.from_client ? "from-client" : "from-server"}>
-                {c.content}
+				{c.from_client
+				?
+				<div id="content">{c.content}</div>
+				:
+					<>
+					{c.decoded_content
+					?
+					<>
+					<div style={{display: this.state.decoded ? 'none':'inherit'}} id="content">{c.content}</div>
+					<div style={{display: this.state.decoded ? 'inherit':'none'}} id="decoded_content">{c.decoded_content}</div>
+					</>
+					:
+					<div id="content">{c.content}</div>
+					}
+					</>
+				}
             </span>
         );
 
@@ -69,6 +89,9 @@ class ConnectionContent extends Component {
                             <Dropdown.Item eventKey="decimal" active={this.state.format === "decimal"}>decimal</Dropdown.Item>
                             <Dropdown.Item eventKey="octal" active={this.state.format === "octal"}>octal</Dropdown.Item>
                         </Dropdown.Menu>
+						<Button onClick={() => this.toggleDecoded()}>{this.state.decoded ? "Encode" : "Decode"}</Button>
+
+
                     </Dropdown>
 
 
