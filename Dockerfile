@@ -23,7 +23,9 @@ RUN curl -sf https://gobinaries.com/tj/node-prune | sh && cd /caronte/frontend &
 # LAST STAGE
 FROM ubuntu:20.04
 
-COPY --from=BUILDSTAGE /caronte /caronte
+COPY --from=BUILDSTAGE /caronte/caronte /caronte/caronte
+COPY --from=BUILDSTAGE /caronte/frontend /caronte/frontend
+COPY --from=BUILDSTAGE /caronte/shared /caronte/shared
 
 RUN apt-get update && \
 	DEBIAN_FRONTEND=noninteractive apt-get install -qq libpcap-dev libhyperscan-dev && \
