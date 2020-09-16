@@ -136,7 +136,7 @@ func fetchRequest(request *http.Request, body string) string {
 }
 
 func toJson(obj interface{}) string {
-	if buffer, err := json.Marshal(obj); err == nil {
+	if buffer, err := json.MarshalIndent(obj, "", "\t"); err == nil {
 		return string(buffer)
 	} else {
 		return ""

@@ -1,29 +1,104 @@
 @import '../colors.scss';
 
 .connection-content {
-  background-color: $color-primary-3;
+  background-color: $color-primary-0;
+  padding: 10px 10px 0;
   height: 100%;
-  overflow: fixed;
 
   pre {
-    background-color: $color-primary-0;
-    padding: 10px 20px;
     word-break: break-word;
-    max-width: 100%;
     white-space: pre-wrap;
-    height: 95%;
+    overflow-x: hidden;
+    height: calc(100% - 31px);
+    padding: 0 10px;
   }
 
-  .from-client {
-    color: #d4e0fc;
-  }
+  .connection-message {
+    border: 4px solid $color-primary-3;
+    border-top: 0;
+    margin: 10px 0;
+    position: relative;
 
-  .from-server {
-    color: $color-secondary-4;
-
-    &:hover {
+    .connection-message-header {
       background-color: $color-primary-3;
-      border-top: 1px solid $color-primary-1;
+      height: 25px;
+
+      .connection-message-info {
+        font-size: 11px;
+        margin-left: -10px;
+        margin-top: 6px;
+      }
+
+      .connection-message-actions {
+        margin-right: -18px;
+        display: none;
+
+        button {
+          margin: 0 3px;
+          font-size: 11px;
+          padding: 5px;
+        }
+      }
+    }
+
+    .message-content {
+      padding: 10px;
+    }
+
+    .message-parsed {
+      p {
+        margin: 0;
+        padding: 0;
+      }
+    }
+
+    &:hover .connection-message-actions {
+      display: block;
+    }
+
+    .connection-message-label {
+      position: absolute;
+      background-color: $color-primary-3;
+      top: 0;
+      padding: 10px 0;
+      font-size: 12px;
+
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+    }
+
+    &.from-client {
+      color: $color-primary-4;
+      margin-right: 100px;
+
+      .connection-message-label {
+        right: -22px;
+      }
+    }
+
+    &.from-server {
+      color: $color-primary-4;
+      margin-left: 100px;
+
+      .connection-message-label {
+        left: -22px;
+        transform: rotate(-180deg);
+      }
+    }
+
+  }
+
+  .connection-content-header {
+    background-color: $color-primary-2;
+    padding: 0;
+    height: 31px;
+
+    .header-info {
+      padding-top: 5px;
+      padding-left: 20px;
+      font-size: 13px;
     }
   }
+
+
 }

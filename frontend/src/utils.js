@@ -59,3 +59,8 @@ export function timestampToTime(timestamp) {
     let seconds = "0" + d.getSeconds();
     return hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
 }
+
+export function timestampToDateTime(timestamp) {
+    let d = new Date(timestamp);
+    return d.toLocaleDateString() + " " + d.toLocaleTimeString();
+}

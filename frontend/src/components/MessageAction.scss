@@ -1,0 +1,11 @@
+@import '../colors.scss';
+
+.message-action-value {
+  pre {
+    font-size: 13px;
+    padding: 15px;
+    background-color: $color-primary-2;
+    color: $color-primary-4;
+  }
+
+}

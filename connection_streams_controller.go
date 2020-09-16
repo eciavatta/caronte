@@ -27,13 +27,14 @@ type ConnectionStream struct {
 type PatternSlice [2]uint64
 
 type Payload struct {
-	FromClient      bool             `json:"from_client"`
-	Content         string           `json:"content"`
-	Metadata        parsers.Metadata `json:"metadata"`
-	Index           int              `json:"index"`
-	Timestamp       time.Time        `json:"timestamp"`
-	IsRetransmitted bool             `json:"is_retransmitted"`
-	RegexMatches    []RegexSlice     `json:"regex_matches"`
+	FromClient             bool             `json:"from_client"`
+	Content                string           `json:"content"`
+	Metadata               parsers.Metadata `json:"metadata"`
+	IsMetadataContinuation bool             `json:"is_metadata_continuation"`
+	Index                  int              `json:"index"`
+	Timestamp              time.Time        `json:"timestamp"`
+	IsRetransmitted        bool             `json:"is_retransmitted"`
+	RegexMatches           []RegexSlice     `json:"regex_matches"`
 }
 
 type RegexSlice struct {
@@ -138,8 +139,11 @@ func (csc ConnectionStreamsController) GetConnectionPayload(c context.Context, c
 
 		if sideChanged {
 			metadata := parsers.Parse(contentChunkBuffer.Bytes())
+			var isMetadataContinuation bool
 			for _, elem := range payloadsBuffer {
 				elem.Metadata = metadata
+				elem.IsMetadataContinuation = isMetadataContinuation
+				isMetadataContinuation = true
 			}
 
 			payloadsBuffer = payloadsBuffer[:0]
