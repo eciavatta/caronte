@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"moul.io/http2curl"
 	"net/http"
@@ -41,12 +42,13 @@ func (p HttpRequestParser) TryParse(content []byte) Metadata {
 		return nil
 	}
 	var body string
-	if request.Body != nil {
-		if buffer, err := ioutil.ReadAll(request.Body); err == nil {
-			body = string(buffer)
-		}
-		_ = request.Body.Close()
+	if buffer, err := ioutil.ReadAll(request.Body); err == nil {
+		body = string(buffer)
+	} else {
+		log.WithError(err).Error("failed to read body in http_request_parser")
+		return nil
 	}
+	_ = request.Body.Close()
 	_ = request.ParseForm()
 
 	return HttpRequestMetadata{
@@ -62,18 +64,21 @@ func (p HttpRequestParser) TryParse(content []byte) Metadata {
 		Body:          body,
 		Trailer:       JoinArrayMap(request.Trailer),
 		Reproducers: HttpRequestMetadataReproducers{
-			CurlCommand:  curlCommand(request),
+			CurlCommand:  curlCommand(content),
 			RequestsCode: requestsCode(request),
 			FetchRequest: fetchRequest(request, body),
 		},
 	}
 }
 
-func curlCommand(request *http.Request) string {
+func curlCommand(content []byte) string {
+	// a new reader is required because all the body is read before and GetBody() doesn't works
+	reader := bufio.NewReader(bytes.NewReader(content))
+	request, _ := http.ReadRequest(reader)
 	if command, err := http2curl.GetCurlCommand(request); err == nil {
 		return command.String()
 	} else {
-		return "invalid-request"
+		return err.Error()
 	}
 }
 

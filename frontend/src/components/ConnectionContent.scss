@@ -11,6 +11,11 @@
     overflow-x: hidden;
     height: calc(100% - 31px);
     padding: 0 10px;
+
+    p {
+      margin: 0;
+      padding: 0;
+    }
   }
 
   .connection-message {
@@ -43,13 +48,6 @@
 
     .message-content {
       padding: 10px;
-    }
-
-    .message-parsed {
-      p {
-        margin: 0;
-        padding: 0;
-      }
     }
 
     &:hover .connection-message-actions {
@@ -96,7 +94,13 @@
     .header-info {
       padding-top: 5px;
       padding-left: 20px;
-      font-size: 13px;
+      font-size: 12px;
+    }
+
+    .header-actions {
+      .dropdown {
+        display: inline-block;
+      }
     }
   }
 

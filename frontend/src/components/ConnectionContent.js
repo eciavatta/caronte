@@ -2,7 +2,6 @@ import React, {Component} from 'react';
 import './ConnectionContent.scss';
 import {Button, Dropdown, Row} from 'react-bootstrap';
 import axios from 'axios';
-import {timestampToDateTime, timestampToTime} from "../utils";
 import MessageAction from "./MessageAction";
 
 const classNames = require('classnames');
@@ -15,7 +14,7 @@ class ConnectionContent extends Component {
             loading: false,
             connectionContent: null,
             format: "default",
-            decoded: false,
+            tryParse: true,
             messageActionDialog: null
         };
 
@@ -43,16 +42,12 @@ class ConnectionContent extends Component {
         }
     }
 
-    toggleDecoded() {
-		this.setState({decoded: !this.state.decoded});
-    }
-
     tryParseConnectionMessage(connectionMessage) {
         if (connectionMessage.metadata == null) {
             return connectionMessage.content;
         }
         if (connectionMessage["is_metadata_continuation"]) {
-            return <span>already parsed in previous messages</span>;
+            return <span style={{"fontSize": "12px"}}>**already parsed in previous messages**</span>;
         }
 
         let unrollMap = (obj) => obj == null ? null : Object.entries(obj).map(([key, value]) =>
@@ -62,16 +57,17 @@ class ConnectionContent extends Component {
         let m = connectionMessage.metadata;
         switch (m.type) {
             case "http-request":
-                let url = <i><u><a href={"http://" + m.host + m.url} target="_blank">{m.host}{m.url}</a></u></i>;
+                let url = <i><u><a href={"http://" + m.host + m.url} target="_blank"
+                                   rel="noopener noreferrer">{m.host}{m.url}</a></u></i>;
                 return <span className="type-http-request">
-                    <p style={{"margin-bottom": "7px"}}><strong>{m.method}</strong> {url} {m.protocol}</p>
+                    <p style={{"marginBottom": "7px"}}><strong>{m.method}</strong> {url} {m.protocol}</p>
                     {unrollMap(m.headers)}
                     <div style={{"margin": "20px 0"}}>{m.body}</div>
                     {unrollMap(m.trailers)}
                 </span>;
             case "http-response":
                 return <span className="type-http-response">
-                    <p style={{"margin-bottom": "7px"}}>{m.protocol} <strong>{m.status}</strong></p>
+                    <p style={{"marginBottom": "7px"}}>{m.protocol} <strong>{m.status}</strong></p>
                     {unrollMap(m.headers)}
                     <div style={{"margin": "20px 0"}}>{m.body}</div>
                     {unrollMap(m.trailers)}
@@ -87,9 +83,10 @@ class ConnectionContent extends Component {
         }
 
         return Object.entries(connectionMessage.metadata["reproducers"]).map(([actionName, actionValue]) =>
-            <Button size="sm" onClick={() => {
+            <Button size="sm" key={actionName + "_button"} onClick={() => {
                 this.setState({
-                    messageActionDialog: <MessageAction actionName={actionName} actionValue={actionValue} onHide={() => this.setState({messageActionDialog: null})}/>
+                    messageActionDialog: <MessageAction actionName={actionName} actionValue={actionValue}
+                                                        onHide={() => this.setState({messageActionDialog: null})}/>
                 });
             }}>{actionName}</Button>
         );
@@ -115,8 +112,9 @@ class ConnectionContent extends Component {
                     </div>
                 </div>
                 <div className="connection-message-label">{c.from_client ? "client" : "server"}</div>
-                <div className={classNames("message-content", this.state.decoded ? "message-parsed" : "message-original")}>
-                    {this.state.decoded ? this.tryParseConnectionMessage(c) : c.content}
+                <div
+                    className={classNames("message-content", this.state.decoded ? "message-parsed" : "message-original")}>
+                    {this.state.tryParse && this.state.format === "default" ? this.tryParseConnectionMessage(c) : c.content}
                 </div>
             </div>
         );
@@ -129,25 +127,55 @@ class ConnectionContent extends Component {
                             <span><strong>flow</strong>: {this.props.connection.ip_src}:{this.props.connection.port_src} -> {this.props.connection.ip_dst}:{this.props.connection.port_dst}</span>
                             <span> | <strong>timestamp</strong>: {this.props.connection.started_at}</span>
                         </div>
-                        <div className="col-auto">
-                            <Dropdown onSelect={this.setFormat} >
-                                <Dropdown.Toggle size="sm" id="dropdown-basic">
+                        <div className="header-actions col-auto">
+                            <Dropdown onSelect={this.setFormat}>
+                                <Dropdown.Toggle size="sm" id="connection-content-format">
                                     format
                                 </Dropdown.Toggle>
 
                                 <Dropdown.Menu>
-                                    <Dropdown.Item eventKey="default" active={this.state.format === "default"}>plain</Dropdown.Item>
-                                    <Dropdown.Item eventKey="hex" active={this.state.format === "hex"}>hex</Dropdown.Item>
-                                    <Dropdown.Item eventKey="hexdump" active={this.state.format === "hexdump"}>hexdump</Dropdown.Item>
-                                    <Dropdown.Item eventKey="base32" active={this.state.format === "base32"}>base32</Dropdown.Item>
-                                    <Dropdown.Item eventKey="base64" active={this.state.format === "base64"}>base64</Dropdown.Item>
-                                    <Dropdown.Item eventKey="ascii" active={this.state.format === "ascii"}>ascii</Dropdown.Item>
-                                    <Dropdown.Item eventKey="binary" active={this.state.format === "binary"}>binary</Dropdown.Item>
-                                    <Dropdown.Item eventKey="decimal" active={this.state.format === "decimal"}>decimal</Dropdown.Item>
-                                    <Dropdown.Item eventKey="octal" active={this.state.format === "octal"}>octal</Dropdown.Item>
+                                    <Dropdown.Item eventKey="default"
+                                                   active={this.state.format === "default"}>plain</Dropdown.Item>
+                                    <Dropdown.Item eventKey="hex"
+                                                   active={this.state.format === "hex"}>hex</Dropdown.Item>
+                                    <Dropdown.Item eventKey="hexdump"
+                                                   active={this.state.format === "hexdump"}>hexdump</Dropdown.Item>
+                                    <Dropdown.Item eventKey="base32"
+                                                   active={this.state.format === "base32"}>base32</Dropdown.Item>
+                                    <Dropdown.Item eventKey="base64"
+                                                   active={this.state.format === "base64"}>base64</Dropdown.Item>
+                                    <Dropdown.Item eventKey="ascii"
+                                                   active={this.state.format === "ascii"}>ascii</Dropdown.Item>
+                                    <Dropdown.Item eventKey="binary"
+                                                   active={this.state.format === "binary"}>binary</Dropdown.Item>
+                                    <Dropdown.Item eventKey="decimal"
+                                                   active={this.state.format === "decimal"}>decimal</Dropdown.Item>
+                                    <Dropdown.Item eventKey="octal"
+                                                   active={this.state.format === "octal"}>octal</Dropdown.Item>
                                 </Dropdown.Menu>
-                                <Button size="sm" onClick={() => this.toggleDecoded()}>{this.state.decoded ? "Encode" : "Decode"}</Button>
+                            </Dropdown>
 
+                            <Dropdown>
+                                <Dropdown.Toggle size="sm" id="connection-content-view">
+                                    view_as
+                                </Dropdown.Toggle>
+
+                                <Dropdown.Menu>
+                                    <Dropdown.Item eventKey="default" active={true}>default</Dropdown.Item>
+                                </Dropdown.Menu>
+
+                            </Dropdown>
+
+                            <Dropdown>
+                                <Dropdown.Toggle size="sm" id="connection-content-download">
+                                    download_as
+                                </Dropdown.Toggle>
+
+                                <Dropdown.Menu>
+                                    <Dropdown.Item eventKey="nl_separated">nl_separated</Dropdown.Item>
+                                    <Dropdown.Item eventKey="only_client">only_client</Dropdown.Item>
+                                    <Dropdown.Item eventKey="only_server">only_server</Dropdown.Item>
+                                </Dropdown.Menu>
 
                             </Dropdown>
                         </div>

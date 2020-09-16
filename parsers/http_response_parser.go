@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"compress/gzip"
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 )
@@ -33,23 +34,27 @@ func (p HttpResponseParser) TryParse(content []byte) Metadata {
 	}
 	var body string
 	var compressed bool
-	if response.Body != nil {
-		switch response.Header.Get("Content-Encoding") {
-		case "gzip":
-			if gzipReader, err := gzip.NewReader(response.Body); err == nil {
-				if buffer, err := ioutil.ReadAll(gzipReader); err == nil {
-					body = string(buffer)
-					compressed = true
-				}
-				_ = gzipReader.Close()
-			}
-		default:
-			if buffer, err := ioutil.ReadAll(response.Body); err == nil {
+	switch response.Header.Get("Content-Encoding") {
+	case "gzip":
+		if gzipReader, err := gzip.NewReader(response.Body); err == nil {
+			if buffer, err := ioutil.ReadAll(gzipReader); err == nil {
 				body = string(buffer)
+				compressed = true
+			} else {
+				log.WithError(err).Error("failed to read gzipped body in http_response_parser")
+				return nil
 			}
+			_ = gzipReader.Close()
 		}
-		_ = response.Body.Close()
+	default:
+		if buffer, err := ioutil.ReadAll(response.Body); err == nil {
+			body = string(buffer)
+		} else {
+			log.WithError(err).Error("failed to read body in http_response_parser")
+			return nil
+		}
 	}
+	_ = response.Body.Close()
 
 	var location string
 	if locationUrl, err := response.Location(); err == nil {

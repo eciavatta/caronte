@@ -93,7 +93,7 @@ func (csc ConnectionStreamsController) GetConnectionPayload(c context.Context, c
 			if clientBlocksIndex < len(clientStream.BlocksIndexes)-1 {
 				end = clientStream.BlocksIndexes[clientBlocksIndex+1]
 			} else {
-				end = len(clientStream.Payload) - 1
+				end = len(clientStream.Payload)
 			}
 			size := uint64(end - start)
 
@@ -117,7 +117,7 @@ func (csc ConnectionStreamsController) GetConnectionPayload(c context.Context, c
 			if serverBlocksIndex < len(serverStream.BlocksIndexes)-1 {
 				end = serverStream.BlocksIndexes[serverBlocksIndex+1]
 			} else {
-				end = len(serverStream.Payload) - 1
+				end = len(serverStream.Payload)
 			}
 			size := uint64(end - start)
 
@@ -137,7 +137,18 @@ func (csc ConnectionStreamsController) GetConnectionPayload(c context.Context, c
 			sideChanged, lastClient, lastServer = lastClient, false, true
 		}
 
-		if sideChanged {
+		if !hasClientBlocks() {
+			clientDocumentIndex++
+			clientBlocksIndex = 0
+			clientStream = csc.getConnectionStream(c, connectionID, true, clientDocumentIndex)
+		}
+		if !hasServerBlocks() {
+			serverDocumentIndex++
+			serverBlocksIndex = 0
+			serverStream = csc.getConnectionStream(c, connectionID, false, serverDocumentIndex)
+		}
+
+		updateMetadata := func() {
 			metadata := parsers.Parse(contentChunkBuffer.Bytes())
 			var isMetadataContinuation bool
 			for _, elem := range payloadsBuffer {
@@ -149,8 +160,16 @@ func (csc ConnectionStreamsController) GetConnectionPayload(c context.Context, c
 			payloadsBuffer = payloadsBuffer[:0]
 			contentChunkBuffer.Reset()
 		}
+
+		if sideChanged {
+			updateMetadata()
+		}
 		payloadsBuffer = append(payloadsBuffer, payload)
 		contentChunkBuffer.Write(lastContentSlice)
+
+		if clientStream.ID.IsZero() && serverStream.ID.IsZero() {
+			updateMetadata()
+		}
 
 		if globalIndex > format.Skip {
 			// problem: waste of time if the payload is discarded
@@ -158,18 +177,8 @@ func (csc ConnectionStreamsController) GetConnectionPayload(c context.Context, c
 		}
 		if globalIndex > format.Skip+format.Limit {
 			// problem: the last chunk is not parsed, but can be ok because it is not finished
+			updateMetadata()
 			return payloads
-		}
-
-		if !hasClientBlocks() {
-			clientDocumentIndex++
-			clientBlocksIndex = 0
-			clientStream = csc.getConnectionStream(c, connectionID, true, clientDocumentIndex)
-		}
-		if !hasServerBlocks() {
-			serverDocumentIndex++
-			serverBlocksIndex = 0
-			serverStream = csc.getConnectionStream(c, connectionID, false, serverDocumentIndex)
 		}
 	}
 
