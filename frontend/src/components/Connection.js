@@ -57,6 +57,11 @@ class Connection extends Component {
         let closedAt = new Date(conn.closed_at);
         let processedAt = new Date(conn.processed_at);
         let duration = ((closedAt - startedAt) / 1000).toFixed(3);
+        if (duration > 1000 || duration < -1000) {
+            duration = "∞";
+        } else {
+            duration += "s";
+        }
         let timeInfo = <div>
             <span>Started at {startedAt.toLocaleDateString() + " " + startedAt.toLocaleTimeString()}</span><br/>
             <span>Processed at {processedAt.toLocaleDateString() + " " + processedAt.toLocaleTimeString()}</span><br/>
@@ -106,7 +111,7 @@ class Connection extends Component {
                 <td className="clickable" onClick={this.props.onSelected}>
                     <OverlayTrigger trigger={["focus", "hover"]} placement="right"
                                     overlay={popoverFor("duration", timeInfo)}>
-                        <span className="test-tooltip">{duration}s</span>
+                        <span className="test-tooltip">{duration}</span>
                     </OverlayTrigger>
                 </td>
                 <td className="clickable" onClick={this.props.onSelected}>{conn.client_bytes}</td>
