@@ -6,6 +6,7 @@ import {BrowserRouter as Router, Route, Switch} from "react-router-dom";
 import Services from "./Services";
 import Filters from "./Filters";
 import Rules from "./Rules";
+import Config from "./Config";
 
 class App extends Component {
 
@@ -14,8 +15,21 @@ class App extends Component {
         this.state = {
             servicesWindowOpen: false,
             filterWindowOpen: false,
-            rulesWindowOpen: false
+            rulesWindowOpen: false,
+            configWindowOpen: false,
+            configDone: false
         };
+
+		fetch('/api/services')
+		.then(response => {
+			if( response.status === 503){
+				this.setState({configWindowOpen: true});
+			} else if (response.status === 200){
+				this.setState({configDone: true});
+			}
+		});
+
+
     }
 
     render() {
@@ -29,13 +43,20 @@ class App extends Component {
         if (this.state.rulesWindowOpen) {
             modal = <Rules onHide={() => this.setState({rulesWindowOpen: false})}/>;
         }
+        if (this.state.configWindowOpen) {
+            modal = <Config onHide={() => this.setState({configWindowOpen: false})}
+						onDone={() => this.setState({configDone: true})}/>;
+        }
 
         return (
             <div className="app">
                 <Router>
                     <Header onOpenServices={() => this.setState({servicesWindowOpen: true})}
                             onOpenFilters={() => this.setState({filterWindowOpen: true})}
-                            onOpenRules={() => this.setState({rulesWindowOpen: true})} />
+                            onOpenRules={() => this.setState({rulesWindowOpen: true})} 
+                            onOpenConfig={() => this.setState({configWindowOpen: true})} 
+							onConfigDone={this.state.configDone}
+					/>
                     <Switch>
                         <Route path="/connections/:id" children={<MainPane/>}/>
                         <Route path="/" children={<MainPane/>}/>
