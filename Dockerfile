@@ -3,29 +3,28 @@ FROM ubuntu:20.04 AS BUILDSTAGE
 
 # Install tools and libraries
 RUN apt-get update && \
-	DEBIAN_FRONTEND=noninteractive apt-get install -qq git golang-1.14 pkg-config libpcap-dev libhyperscan-dev yarnpkg curl
-
-RUN ln -sf ../lib/go-1.14/bin/go /usr/bin/go
-
+	DEBIAN_FRONTEND=noninteractive apt-get install -qq golang-1.14 pkg-config libpcap-dev libhyperscan-dev yarnpkg
 
 COPY . /caronte
 
 WORKDIR /caronte
 
-RUN go mod download && go build
-
-RUN cd frontend && \
+RUN ln -sf ../lib/go-1.14/bin/go /usr/bin/go && \
+    go mod download && \
+    go build && \
+    cd frontend && \
 	yarnpkg install && \
-	yarnpkg build --production=true
-RUN curl -sf https://gobinaries.com/tj/node-prune | sh && cd /caronte/frontend && node-prune
+	yarnpkg build --production=true && \
+	cd - && \
+	mkdir -p /caronte-build/frontend && \
+	cp -r caronte pcaps/ scripts/ shared/ test_data/ /caronte-build && \
+	cp -r frontend/build/ /caronte-build/frontend
 
 
 # LAST STAGE
 FROM ubuntu:20.04
 
-COPY --from=BUILDSTAGE /caronte/caronte /caronte/caronte
-COPY --from=BUILDSTAGE /caronte/frontend /caronte/frontend
-COPY --from=BUILDSTAGE /caronte/shared /caronte/shared
+COPY --from=BUILDSTAGE /caronte-build /caronte
 
 RUN apt-get update && \
 	DEBIAN_FRONTEND=noninteractive apt-get install -qq libpcap-dev libhyperscan-dev && \
