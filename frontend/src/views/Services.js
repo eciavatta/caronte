@@ -64,12 +64,23 @@ class Services extends Component {
 
     saveService() {
         if (this.state.portValid && this.state.nameValid) {
-            axios.put("/api/services", {
-                name: this.state.name,
-                port: this.state.port,
-                color: this.state.color,
-                notes: this.state.notes
-            });
+			const requestOptions = {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ 
+				color: this.state.color,
+				name: this.state.name,
+				notes: this.state.notes,
+				port: this.state.port,
+				})
+			};
+
+
+			fetch('/api/services', requestOptions)
+				.then(function(response){
+					console.log(response);
+				}
+			);
 
             this.newService();
             this.loadServices();
