@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import './Upload.scss';
-import {Button, ButtonGroup, Col, Container, Form, FormControl, InputGroup, Modal, Row, Table} from "react-bootstrap";
+import {Button, ButtonGroup, Col, Container, Form, FormFile, InputGroup, Modal, Row, Table} from "react-bootstrap";
 import bsCustomFileInput from 'bs-custom-file-input'
 import {createCurlCommand} from '../utils';
 
@@ -24,6 +24,30 @@ class Upload extends Component {
 	componentDidMount() {
 		bsCustomFileInput.init()
 	}
+
+    onFileProcess = () => {
+		const formData = new FormData();
+		formData.append( 
+		  "file", 
+		  this.state.selectedFile.name 
+		); 
+		fetch('/api/pcap/file', {
+			method: 'POST',
+			body: formData
+		})
+			.then(response => {
+				if (response.status === 202 ){
+					this.props.onHide();
+				} else {
+					response.json().then(data => {
+						this.setState(
+							{errors : data.error.toString()}
+						);
+					});
+				}
+			}
+		);
+    }
 
     onFileUpload = () => {
 		const formData = new FormData();
@@ -80,6 +104,17 @@ class Upload extends Component {
 							custom
 							/>
                         </Row>
+						<hr/>
+                        <Row>
+							<Form.Control
+							type="text"
+							id="pcap-upload"
+							onChange={this.onLocalFileChange}
+							placeholder="local .pcap/.pcapng"
+							custom
+							/>
+                        </Row>
+						<hr/>
                         <Row>
 							<div class="error">
 							<b>
@@ -95,6 +130,7 @@ class Upload extends Component {
                 </Modal.Body>
                 <Modal.Footer className="dialog-footer">
 
+                    <Button variant="blue" onClick={this.onFileProcess}>process_local</Button>
                     <Button variant="green" onClick={this.onFileUpload}>upload</Button>
                     <Button variant="red" onClick={this.props.onHide}>close</Button>
                 </Modal.Footer>
