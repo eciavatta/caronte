@@ -5,6 +5,7 @@ import backend from "../../backend";
 import {formatSize, timestampToTime2} from "../../utils";
 import {Container, Row, Col, Form} from "react-bootstrap";
 import StringField from "../fields/StringField";
+import BooleanField from "../fields/BooleanField";
 
 class PcapPane extends Component {
 
@@ -13,6 +14,7 @@ class PcapPane extends Component {
 
         this.state = {
             sessions: [],
+            test: false
         };
 
         this.loadSessions = this.loadSessions.bind(this);
@@ -86,7 +88,7 @@ class PcapPane extends Component {
 
 
                                     <br/><br/><br/><br/>
-                                    <StringField />
+                                    <BooleanField small={true} name={"marked"} checked={this.state.test} onChange={(v) => this.setState({test: v})} />
 
                                 </div>
                             </Col>

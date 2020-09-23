@@ -35,8 +35,8 @@ class MainPane extends Component {
                             <Connections onSelected={(c) => this.setState({selectedConnection: c})} />
                         </div>
                         <div className="col-md-6 pl-0 pane">
-                            {/*<PcapPane />*/}
-                            <ConnectionContent connection={this.state.selectedConnection}/>
+                            <PcapPane />
+                            {/*<ConnectionContent connection={this.state.selectedConnection}/>*/}
                         </div>
                     </div>
                 </div>

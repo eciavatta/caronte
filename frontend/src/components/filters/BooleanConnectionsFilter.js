@@ -1,9 +1,7 @@
 import React, {Component} from 'react';
 import {withRouter} from "react-router-dom";
 import {Redirect} from "react-router";
-import './BooleanConnectionsFilter.scss';
-
-const classNames = require('classnames');
+import BooleanField from "../fields/BooleanField";
 
 class BooleanConnectionsFilter extends Component {
 
@@ -57,11 +55,9 @@ class BooleanConnectionsFilter extends Component {
         }
 
         return (
-            <div className={classNames("filter", "d-inline-block", {"filter-active" : this.toBoolean(this.state.filterActive)})}>
-                <div className="filter-boolean" onClick={this.filterChanged}>
-                    <span>{this.props.filterName}</span>
-                </div>
-
+            <div className="filter" style={{"width": `${this.props.width}px`}}>
+                <BooleanField checked={this.toBoolean(this.state.filterActive)} name={this.props.filterName}
+                             onChange={this.filterChanged} />
                 {redirect}
             </div>
         );

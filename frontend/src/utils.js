@@ -83,6 +83,6 @@ export function formatSize(size) {
     }
 }
 
-export function randomClassName(size = 10) {
-    return Math.random().toString(36).substring(size);
+export function randomClassName() {
+    return Math.random().toString(36).slice(2)
 }

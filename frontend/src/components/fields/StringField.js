@@ -6,8 +6,14 @@ const classNames = require('classnames');
 
 class StringField extends Component {
 
+    constructor(props) {
+        super(props);
+
+        this.id = `field-${this.props.name || "noname"}-${randomClassName()}`;
+    }
+
     render() {
-        const id = `field-${this.props.name || "noname"}-${randomClassName()}`;
+
         const active = this.props.active || false;
         const invalid = this.props.invalid || false;
         const small = this.props.small || false;
@@ -27,18 +33,18 @@ class StringField extends Component {
         };
 
         return (
-            <div className={classNames("field", "string-field", {"field-active" : active},
-                {"field-invalid": invalid}, {"field-small": small}, {"field-inline": inline})}>
+            <div className={classNames("string-field", {"field-active" : active}, {"field-invalid": invalid},
+                {"field-small": small}, {"field-inline": inline})}>
                 <div className="field-wrapper">
                     { name &&
                     <div className="field-name">
-                        <label id={id}>{name}:</label>
+                        <label id={this.id}>{name}:</label>
                     </div>
                     }
                     <div className="field-input">
                         <div className="field-value">
                             <input type={type} placeholder={this.props.defaultValue} aria-label={name}
-                                   aria-describedby={id} onChange={handler} value={value} />
+                                   aria-describedby={this.id} onChange={handler} value={value} />
                         </div>
                         { value !== "" &&
                         <div className="field-clear">

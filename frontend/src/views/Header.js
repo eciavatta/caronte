@@ -60,10 +60,8 @@ class Header extends Component {
                     </div>
 
                     <div className="col-auto">
-                        <div className="filters-bar-wrapper">
-                            <div className="filters-bar">
-                                {quickFilters}
-                            </div>
+                        <div className="filters-bar">
+                            {quickFilters}
                         </div>
                     </div>
 

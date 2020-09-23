@@ -22,8 +22,12 @@
     }
   }
 
-  .filters-bar-wrapper {
-    height: 50px;
+  .filters-bar {
     padding: 8px 0;
+
+    .filter {
+      display: inline-block;
+      margin-right: 10px;
+    }
   }
 }
