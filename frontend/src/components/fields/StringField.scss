@@ -1,66 +1,117 @@
 @import '../../colors.scss';
 
 .field {
-  margin: 0 10px;
-  position: relative;
-
-  .field-name-wrapper {
-    background-color: $color-primary-2;
-    padding: 3px 7px;
-    border-top-left-radius: 5px;
-    border-bottom-left-radius: 5px;
-  }
+  font-size: 0.9em;
 
   .field-name {
-    font-size: 13px;
+    label {
+      margin: 0;
+    }
   }
 
-  .field-value {
-    font-size: 13px;
-    padding-left: 0;
-    border-radius: 5px;
+  .field-input {
+    position: relative;
 
-    &:focus {
+    .field-value input {
       background-color: $color-primary-2;
+      width: 100%;
+      border: none;
+      color: $color-primary-4;
+      border-radius: 5px;
+      padding: 7px 10px;
+
+      &:focus {
+        background-color: $color-primary-1;
+        color: $color-primary-4;
+        box-shadow: none;
+        outline: none;
+      }
+
+      &[readonly] {
+        background-color: $color-primary-2;
+        border: none;
+        color: $color-primary-4;
+      }
+
+      &[readonly]:focus {
+        background-color: $color-primary-1;
+        color: $color-primary-4;
+        box-shadow: none;
+      }
     }
   }
 
   &.field-active {
-    .field-name-wrapper {
-      background-color: $color-primary-4;
-      color: $color-primary-3;
+    &.field-inline .field-name {
+      background-color: $color-primary-4 !important;
+      color: $color-primary-3 !important;
     }
 
-    .field-value {
-      background-color: $color-primary-4;
-      color: $color-primary-3;
+    .field-value input {
+      background-color: $color-primary-4 !important;
+      color: $color-primary-3 !important;
     }
   }
 
   &.field-invalid {
-    .field-name-wrapper {
-      background-color: $color-secondary-2;
-      color: $color-primary-4;
+    &.field-inline .field-name {
+      background-color: $color-secondary-2 !important;
+      color: $color-primary-4 !important;
     }
 
-    .field-value {
-      background-color: $color-secondary-2;
-      color: $color-primary-4;
+    .field-value input {
+      background-color: $color-secondary-2 !important;
+      color: $color-primary-4 !important;
     }
   }
 
-  .field-delete {
-    position: absolute;
-    right: 10px;
-    top: 10px;
-    z-index: 10;
-    font-size: 11px;
-    letter-spacing: -0.5px;
-    color: $color-primary-2;
-    cursor: pointer;
+  &.field-small {
+    font-size: 0.8em;
+  }
 
-    .field-delete-icon {
-      font-weight: 800;
+  &.field-inline .field-wrapper {
+    display: flex;
+
+    .field-name {
+      background-color: $color-primary-2;
+      padding: 6px 7px;
+      border-top-left-radius: 5px;
+      border-bottom-left-radius: 5px;
     }
+
+    .field-input {
+      width: 100%;
+
+      input {
+        border-bottom-left-radius: 0;
+        border-top-left-radius: 0;
+        padding-left: 3px;
+      }
+    }
+
+    &:focus-within .field-name {
+      background-color: $color-primary-1;
+    }
+  }
+
+  .field-clear {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    z-index: 10;
+    font-size: 0.9em;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    cursor: pointer;
+  }
+
+  &.field-active .field-clear {
+    color: $color-primary-2;
+  }
+
+  .field-error {
+    padding: 5px 10px;
+    font-size: 0.9em;
+    color: $color-secondary-0;
   }
 }

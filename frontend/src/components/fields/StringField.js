@@ -1,26 +1,55 @@
 import React, {Component} from 'react';
 import './StringField.scss';
+import {randomClassName} from "../../utils";
 
 const classNames = require('classnames');
 
 class StringField extends Component {
 
     render() {
-        return (
-            <div className={classNames("field", "d-inline-block", {"field-active" : this.props.isActive},
-                {"field-invalid": this.props.isInvalid})}>
-                <div className="input-group">
-                    <div className="field-name-wrapper">
-                        <span className="field-name" id={`field-${this.props.name}`}>{this.props.name}:</span>
-                    </div>
-                    <input placeholder={this.props.defaultValue} aria-label={this.props.name}
-                           aria-describedby={`filter-${this.props.name}`} className="field-value"
-                           onChange={this.props.onValueChanged} value={this.props.value} />
-                </div>
+        const id = `field-${this.props.name || "noname"}-${randomClassName()}`;
+        const active = this.props.active || false;
+        const invalid = this.props.invalid || false;
+        const small = this.props.small || false;
+        const inline = this.props.inline || false;
+        const name = this.props.name || null;
+        const value = this.props.value || "";
+        const type = this.props.type || "text";
+        const error = this.props.error || null;
+        const handler = (e) => {
+            if (this.props.onChange) {
+                if (e == null) {
+                    this.props.onChange("");
+                } else {
+                    this.props.onChange(e.target.value);
+                }
+            }
+        };
 
-                { this.props.active &&
-                <div className="field-clear">
-                        <span className="filter-delete-icon" onClick={() => this.props.onValueChanged("")}>del</span>
+        return (
+            <div className={classNames("field", "string-field", {"field-active" : active},
+                {"field-invalid": invalid}, {"field-small": small}, {"field-inline": inline})}>
+                <div className="field-wrapper">
+                    { name &&
+                    <div className="field-name">
+                        <label id={id}>{name}:</label>
+                    </div>
+                    }
+                    <div className="field-input">
+                        <div className="field-value">
+                            <input type={type} placeholder={this.props.defaultValue} aria-label={name}
+                                   aria-describedby={id} onChange={handler} value={value} />
+                        </div>
+                        { value !== "" &&
+                        <div className="field-clear">
+                            <span onClick={() => handler(null)}>del</span>
+                        </div>
+                        }
+                    </div>
+                </div>
+                {error &&
+                <div className="field-error">
+                    error: {error}
                 </div>
                 }
             </div>

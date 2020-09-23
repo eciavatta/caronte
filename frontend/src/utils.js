@@ -82,3 +82,7 @@ export function formatSize(size) {
         return `${(size / 1000000).toFixed(1)}M`;
     }
 }
+
+export function randomClassName(size = 10) {
+    return Math.random().toString(36).substring(size);
+}
