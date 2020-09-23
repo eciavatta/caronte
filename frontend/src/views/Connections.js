@@ -1,10 +1,10 @@
 import React, {Component} from 'react';
 import './Connections.scss';
-import axios from 'axios';
 import Connection from "../components/Connection";
 import Table from 'react-bootstrap/Table';
 import {Redirect} from 'react-router';
 import {withRouter} from "react-router-dom";
+import backend from "../backend";
 
 class Connections extends Component {
 
@@ -75,15 +75,15 @@ class Connections extends Component {
         }
 
         this.setState({loading: true, prevParams: params});
-        let res = await axios.get(`${url}?${urlParams}`);
+        let res = await backend.get(`${url}?${urlParams}`);
 
         let connections = this.state.connections;
         let firstConnection = this.state.firstConnection;
         let lastConnection = this.state.lastConnection;
 
         if (params !== undefined && params.from !== undefined) {
-            if (res.data.length > 0) {
-                connections = this.state.connections.concat(res.data);
+            if (res.length > 0) {
+                connections = this.state.connections.concat(res);
                 lastConnection = connections[connections.length - 1];
                 if (connections.length > this.maxConnections) {
                     connections = connections.slice(connections.length - this.maxConnections,
@@ -92,8 +92,8 @@ class Connections extends Component {
                 }
             }
         } else if (params !== undefined && params.to !== undefined) {
-            if (res.data.length > 0) {
-                connections = res.data.concat(this.state.connections);
+            if (res.length > 0) {
+                connections = res.concat(this.state.connections);
                 firstConnection = connections[0];
                 if (connections.length > this.maxConnections) {
                     connections = connections.slice(0, this.maxConnections);
@@ -101,8 +101,8 @@ class Connections extends Component {
                 }
             }
         } else {
-            if (res.data.length > 0) {
-                connections = res.data;
+            if (res.length > 0) {
+                connections = res;
                 firstConnection = connections[0];
                 lastConnection = connections[connections.length - 1];
             } else {
@@ -115,8 +115,7 @@ class Connections extends Component {
         let flagRule = this.state.flagRule;
         let rules = this.state.rules;
         if (flagRule === null) {
-            let res = await axios.get("/api/rules");
-            rules = res.data;
+            rules = await backend.get("/api/rules");
             flagRule = rules.filter(rule => {
                 return rule.name === "flag";
             })[0];
@@ -125,7 +124,7 @@ class Connections extends Component {
         this.setState({
             loading: false,
             connections: connections,
-            rules: res.data,
+            rules: res,
             flagRule: flagRule,
             firstConnection: firstConnection,
             lastConnection: lastConnection
@@ -134,7 +133,7 @@ class Connections extends Component {
 
     render() {
         let redirect;
-        let queryString = this.state.queryString !== null ? this.state.queryString : ""
+        let queryString = this.state.queryString !== null ? this.state.queryString : "";
         if (this.state.selected) {
             let format = this.props.match.params.format;
             format = format !== undefined ? "/" + format : "";

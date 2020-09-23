@@ -1,8 +1,8 @@
 import React, {Component} from 'react';
 import './Services.scss';
 import {Button, ButtonGroup, Col, Container, Form, FormControl, InputGroup, Modal, Row, Table} from "react-bootstrap";
-import axios from 'axios'
 import {createCurlCommand} from '../utils';
+import backend from "../backend";
 
 class Services extends Component {
 
@@ -64,31 +64,20 @@ class Services extends Component {
 
     saveService() {
         if (this.state.portValid && this.state.nameValid) {
-			const requestOptions = {
-			method: 'PUT',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ 
-				color: this.state.color,
-				name: this.state.name,
-				notes: this.state.notes,
-				port: this.state.port,
-				})
-			};
-
-
-			fetch('/api/services', requestOptions)
-				.then(function(response){
-					console.log(response);
-				}
-			);
-
-            this.newService();
-            this.loadServices();
+			backend.put("/api/services", {
+                color: this.state.color,
+                name: this.state.name,
+                notes: this.state.notes,
+                port: this.state.port,
+            }).then(_ => {
+                this.newService();
+                this.loadServices();
+            });
         }
     }
 
     loadServices() {
-        axios.get("/api/services").then(res => this.setState({services: res.data}));
+        backend.get("/api/services").then(res => this.setState({services: res}));
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {

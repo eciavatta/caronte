@@ -69,12 +69,12 @@ class Header extends Component {
 
                     <div className="col">
                         <div className="header-buttons">
-                            <Button onClick={this.props.onOpenFilters}>filters</Button>
-                            <Button variant="warning" onClick={this.props.onOpenUpload}>pcaps</Button>
-                            <Button variant="blue" onClick={this.props.onOpenRules}>rules</Button>
-                            <Button variant="red" onClick={this.props.onOpenServices}>services</Button>
-                            <Button variant="green" onClick={this.props.onOpenConfig} 
-								disabled={this.props.onConfigDone}>config</Button>
+                            <Button variant="pink" onClick={this.props.onOpenFilters}>filters</Button>
+                            <Button variant="purple" onClick={this.props.onOpenUpload}>pcaps</Button>
+                            <Button variant="deep-purple" onClick={this.props.onOpenRules}>rules</Button>
+                            <Button variant="indigo" onClick={this.props.onOpenServices}>services</Button>
+                            <Button variant="blue" onClick={this.props.onOpenConfig}
+								disabled={false}>config</Button>
                         </div>
                     </div>
                 </div>

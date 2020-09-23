@@ -1,7 +1,8 @@
 import React, {Component} from 'react';
 import './Connection.scss';
-import axios from 'axios'
 import {Button, Form, OverlayTrigger, Popover} from "react-bootstrap";
+import backend from "../backend";
+import {formatSize} from "../utils";
 
 class Connection extends Component {
 
@@ -19,22 +20,18 @@ class Connection extends Component {
     handleAction(name) {
         if (name === "hide") {
             const enabled = !this.props.data.hidden;
-            axios.post(`/api/connections/${this.props.data.id}/${enabled ? "hide" : "show"}`)
-                .then(res => {
-                    if (res.status === 202) {
-                        this.props.onEnabled(!enabled);
-                        this.setState({update: true});
-                    }
+            backend.post(`/api/connections/${this.props.data.id}/${enabled ? "hide" : "show"}`)
+                .then(_ => {
+                    this.props.onEnabled(!enabled);
+                    this.setState({update: true});
                 });
         }
         if (name === "mark") {
             const marked = this.props.data.marked;
-            axios.post(`/api/connections/${this.props.data.id}/${marked ? "unmark" : "mark"}`)
-                .then(res => {
-                    if (res.status === 202) {
-                        this.props.onMarked(!marked);
-                        this.setState({update: true});
-                    }
+            backend.post(`/api/connections/${this.props.data.id}/${marked ? "unmark" : "mark"}`)
+                .then(_ => {
+                    this.props.onMarked(!marked);
+                    this.setState({update: true});
                 });
         }
         if (name === "copy") {
@@ -114,8 +111,8 @@ class Connection extends Component {
                         <span className="test-tooltip">{duration}</span>
                     </OverlayTrigger>
                 </td>
-                <td className="clickable" onClick={this.props.onSelected}>{conn.client_bytes}</td>
-                <td className="clickable" onClick={this.props.onSelected}>{conn.server_bytes}</td>
+                <td className="clickable" onClick={this.props.onSelected}>{formatSize(conn.client_bytes)}</td>
+                <td className="clickable" onClick={this.props.onSelected}>{formatSize(conn.server_bytes)}</td>
                 <td className="contains-flag">
                     {/*<OverlayTrigger trigger={["focus", "hover"]} placement="right"*/}
                     {/*                overlay={popoverFor("hide", <span>Hide this connection from the list</span>)}>*/}

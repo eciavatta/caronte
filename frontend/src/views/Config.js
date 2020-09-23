@@ -1,10 +1,6 @@
-import {
-    validateIpAddress,
-} from "../utils";
-import React, {Component, useState} from 'react';
+import React, {Component} from 'react';
 import './Config.scss';
-import {Button, ButtonGroup, ToggleButton, Col, Container, Form, FormControl, InputGroup, Modal, Row, Table} from "react-bootstrap";
-import {createCurlCommand} from '../utils';
+import {Button, ButtonGroup, Col, Container, Form, Modal, Row, Table, ToggleButton} from "react-bootstrap";
 
 class Config extends Component {
 

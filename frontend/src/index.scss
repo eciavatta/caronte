@@ -49,14 +49,62 @@ pre {
 }
 
 .btn-red {
-  color: $color-secondary-4;
-  background-color: $color-secondary-2;
-  border-bottom: 5px solid $color-secondary-1;
+  color: $color-red-light;
+  background-color: $color-red;
+  border-bottom: 5px solid $color-red-dark;
 
   &:hover,
   &:active {
-    color: $color-secondary-4;
-    background-color: $color-secondary-1;
+    color: $color-red-light;
+    background-color: $color-red-dark;
+  }
+}
+
+.btn-pink {
+  color: $color-pink-light;
+  background-color: $color-pink;
+  border-bottom: 5px solid $color-pink-dark;
+
+  &:hover,
+  &:active {
+    color: $color-pink-light;
+    background-color: $color-pink-dark;
+  }
+}
+
+.btn-purple {
+  color: $color-purple-light;
+  background-color: $color-purple;
+  border-bottom: 5px solid $color-purple-dark;
+
+  &:hover,
+  &:active {
+    color: $color-purple-light;
+    background-color: $color-purple-dark;
+  }
+}
+
+.btn-deep-purple {
+  color: $color-deep-purple-light;
+  background-color: $color-deep-purple;
+  border-bottom: 5px solid $color-deep-purple-dark;
+
+  &:hover,
+  &:active {
+    color: $color-deep-purple-light;
+    background-color: $color-deep-purple-dark;
+  }
+}
+
+.btn-indigo {
+  color: $color-indigo-light;
+  background-color: $color-indigo;
+  border-bottom: 5px solid $color-indigo-dark;
+
+  &:hover,
+  &:active {
+    color: $color-indigo-light;
+    background-color: $color-indigo-dark;
   }
 }
 

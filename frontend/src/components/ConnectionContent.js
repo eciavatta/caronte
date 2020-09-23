@@ -1,8 +1,8 @@
 import React, {Component} from 'react';
 import './ConnectionContent.scss';
 import {Button, Dropdown, Row} from 'react-bootstrap';
-import axios from 'axios';
 import MessageAction from "./MessageAction";
+import backend from "../backend";
 
 const classNames = require('classnames');
 
@@ -27,9 +27,9 @@ class ConnectionContent extends Component {
             this.props.connection !== prevProps.connection || this.state.format !== prevState.format)) {
             this.setState({loading: true});
             // TODO: limit workaround.
-            axios.get(`/api/streams/${this.props.connection.id}?format=${this.state.format}&limit=999999`).then(res => {
+            backend.get(`/api/streams/${this.props.connection.id}?format=${this.state.format}&limit=999999`).then(res => {
                 this.setState({
-                    connectionContent: res.data,
+                    connectionContent: res,
                     loading: false
                 });
             });

@@ -64,3 +64,21 @@ export function timestampToDateTime(timestamp) {
     let d = new Date(timestamp);
     return d.toLocaleDateString() + " " + d.toLocaleTimeString();
 }
+
+export function timestampToTime2(timestamp) {
+    let d = new Date(timestamp);
+    let hours = d.getHours();
+    let minutes = "0" + d.getMinutes();
+    let seconds = "0" + d.getSeconds();
+    return hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
+}
+
+export function formatSize(size) {
+    if (size < 1000) {
+        return `${size}`;
+    } else if (size < 1000000) {
+        return `${(size / 1000).toFixed(1)}K`;
+    } else {
+        return `${(size / 1000000).toFixed(1)}M`;
+    }
+}

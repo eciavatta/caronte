@@ -1,0 +1,55 @@
+@import '../../colors.scss';
+
+.pane-container {
+  background-color: $color-primary-3;
+  padding: 10px 10px 0;
+  height: 100%;
+
+  .section-header {
+    background-color: $color-primary-2;
+    padding: 5px 10px;
+    height: 31px;
+
+    font-weight: 500;
+    font-size: 14px;
+
+    .api-response {
+      float: right;
+    }
+  }
+
+  .section-table {
+    margin-top: 10px;
+
+    .table-row {
+      background-color: $color-primary-0;
+      border-top: 3px solid $color-primary-3;
+      border-bottom: 3px solid $color-primary-3;
+    }
+
+    .table-cell-action {
+      font-size: 13px;
+      font-weight: 600;
+    }
+  }
+
+  .section-content {
+    background-color: $color-primary-0;
+    padding: 10px;
+  }
+
+
+
+  th {
+    background-color: $color-primary-2;
+    border-top: 3px solid $color-primary-3;
+    border-bottom: 3px solid $color-primary-3;
+    font-size: 13.5px;
+    position: sticky;
+    top: 10px;
+    padding: 5px;
+  }
+
+
+
+}

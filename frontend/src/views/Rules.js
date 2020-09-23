@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import './Services.scss';
 import {Button, ButtonGroup, Col, Container, Form, FormControl, InputGroup, Modal, Row, Table} from "react-bootstrap";
-import axios from "axios";
+import backend from "../backend";
 
 class Rules extends Component {
 
@@ -18,7 +18,7 @@ class Rules extends Component {
     }
 
     loadRules() {
-        axios.get("/api/rules").then(res => this.setState({rules: res.data}));
+        backend.get("/api/rules").then(res => this.setState({rules: res.data}));
     }
 
     render() {
