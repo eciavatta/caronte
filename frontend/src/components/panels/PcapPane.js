@@ -2,10 +2,11 @@ import React, {Component} from 'react';
 import './PcapPane.scss';
 import Table from "react-bootstrap/Table";
 import backend from "../../backend";
-import {formatSize, timestampToTime2} from "../../utils";
-import {Container, Row, Col, Form} from "react-bootstrap";
-import StringField from "../fields/StringField";
-import BooleanField from "../fields/BooleanField";
+import {createCurlCommand, formatSize, timestampToTime2} from "../../utils";
+import {Button, Col, Container, Form, Row} from "react-bootstrap";
+import InputField from "../fields/InputField";
+import CheckField from "../fields/CheckField";
+import TextField from "../fields/TextField";
 
 class PcapPane extends Component {
 
@@ -14,10 +15,17 @@ class PcapPane extends Component {
 
         this.state = {
             sessions: [],
-            test: false
+            isFileValid: true,
+            isFileFocused: false,
+            selectedFile: null,
+            uploadFlushAll: false,
+            uploadStatusCode: null,
+            uploadOutput: null
         };
 
         this.loadSessions = this.loadSessions.bind(this);
+        this.handleFileChange = this.handleFileChange.bind(this);
+        this.handleUploadPcap = this.handleUploadPcap.bind(this);
     }
 
     componentDidMount() {
@@ -26,6 +34,34 @@ class PcapPane extends Component {
 
     loadSessions() {
         backend.get("/api/pcap/sessions").then(res => this.setState({sessions: res}));
+    }
+
+    handleFileChange(file) {
+        this.setState({
+            isFileValid: file != null && file.type.endsWith("pcap"),
+            isFileFocused: false,
+            selectedFile: file
+        });
+    }
+
+    handleUploadPcap() {
+        if (this.state.selectedFile == null || !this.state.isFileValid) {
+            this.setState({isFileFocused: true});
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append(
+            "file",
+            this.state.selectedFile
+        );
+
+        backend.postFile("/api/pcap/upload", formData).then(response =>
+            response.json().then(result => this.setState({
+                uploadStatusCode: response.status + " " + response.statusText,
+                uploadOutput: JSON.stringify(result)
+            }))
+        );
     }
 
     render() {
@@ -38,9 +74,19 @@ class PcapPane extends Component {
                 <td>{s["processed_packets"]}</td>
                 <td>{s["invalid_packets"]}</td>
                 <td>undefined</td>
-                <td className="table-cell-action"><a target="_blank" href={"/api/pcap/sessions/" + s["id"] + "/download"}>download</a></td>
+                <td className="table-cell-action"><a target="_blank"
+                                                     href={"/api/pcap/sessions/" + s["id"] + "/download"}>download</a>
+                </td>
             </tr>
         );
+
+        const uploadOutput = this.state.uploadOutput != null ? this.state.uploadOutput :
+            createCurlCommand("pcap/upload", "POST", null, {
+                file: "@" + ((this.state.selectedFile != null && this.state.isFileValid) ? this.state.selectedFile.name :
+                    "invalid.pcap"),
+                flush_all: this.state.uploadFlushAll
+            })
+        ;
 
         return (
             <div className="pane-container">
@@ -77,19 +123,25 @@ class PcapPane extends Component {
                             <Col>
                                 <div className="section-header">
                                     <span className="api-request">POST /api/pcap/upload</span>
-                                    <span className="api-response"></span>
+                                    <span className="api-response">{this.state.uploadStatusCode}</span>
                                 </div>
 
                                 <div className="section-content">
-                                    <Form.File className="custom-file" onChange={this.onFileChange}
-                                        label=".pcap/.pcapng" id="custom-file"
-                                        custom={true}
-                                    />
+                                    <InputField type={"file"} name={"file"} invalid={!this.state.isFileValid}
+                                                active={this.state.isFileFocused}
+                                                onChange={this.handleFileChange} value={this.state.selectedFile}
+                                                defaultValue={"No .pcap[ng] selected"}/>
 
+                                    <div className="upload-actions">
+                                        <div className="upload-options">
+                                            <span>options:</span>
+                                            <CheckField name="flush_all" checked={this.state.uploadFlushAll}
+                                                        onChange={v => this.setState({uploadFlushAll: v})}/>
+                                        </div>
+                                        <Button variant="green" onClick={this.handleUploadPcap}>upload</Button>
+                                    </div>
 
-                                    <br/><br/><br/><br/>
-                                    <BooleanField small={true} name={"marked"} checked={this.state.test} onChange={(v) => this.setState({test: v})} />
-
+                                    <TextField value={uploadOutput} rows={4} readonly small={true}/>
                                 </div>
                             </Col>
 
@@ -108,8 +160,6 @@ class PcapPane extends Component {
                             </Col>
                         </Row>
                     </Container>
-
-
 
 
                 </div>

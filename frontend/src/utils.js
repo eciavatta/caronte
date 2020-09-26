@@ -1,9 +1,19 @@
 const timeRegex = /^(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$/;
 
-export function createCurlCommand(subCommand, data) {
-    let full = window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : '');
-    return `curl --request PUT \\\n  --url ${full}/api${subCommand} \\\n  ` +
-        `--header 'content-type: application/json' \\\n  --data '${JSON.stringify(data)}'`;
+export function createCurlCommand(subCommand, method = null, json = null, data = null) {
+    const full = window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : '');
+
+    let contentType = null;
+    let content = null;
+    if (json != null) {
+        contentType = '    -H "Content-Type: application/json" \\\n';
+        content = `    -d '${JSON.stringify(json)}'`;
+    } else if (data != null) {
+        contentType = '    -H "Content-Type: multipart/form-data" \\\n';
+        content = "    " + Object.entries(data).map(([key, value]) => `-F "${key}=${value}"`).join(" \\\n    ");
+    }
+
+    return `curl${method != null ? " -X " + method : ""} "${full}/api${subCommand}" \\\n` + contentType + "" + content;
 }
 
 export function validateIpAddress(ipAddress) {

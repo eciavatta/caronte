@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import './MainPane.scss';
 import Connections from "./Connections";
 import ConnectionContent from "../components/ConnectionContent";
-import {withRouter} from "react-router-dom";
+import {Route, Switch, withRouter} from "react-router-dom";
 import PcapPane from "../components/panels/PcapPane";
 import backend from "../backend";
 
@@ -35,8 +35,10 @@ class MainPane extends Component {
                             <Connections onSelected={(c) => this.setState({selectedConnection: c})} />
                         </div>
                         <div className="col-md-6 pl-0 pane">
-                            <PcapPane />
-                            {/*<ConnectionContent connection={this.state.selectedConnection}/>*/}
+                            <Switch>
+                                <Route path="/pcaps" children={<PcapPane />} />
+                                <Route children={<ConnectionContent connection={this.state.selectedConnection} />} />
+                            </Switch>
                         </div>
                     </div>
                 </div>

@@ -38,8 +38,6 @@
     padding: 10px;
   }
 
-
-
   th {
     background-color: $color-primary-2;
     border-top: 3px solid $color-primary-3;
@@ -50,6 +48,18 @@
     padding: 5px;
   }
 
+  .upload-actions {
+    display: flex;
+    align-items: flex-end;
+    margin-bottom: 20px;
+  }
 
+  .upload-options {
+    flex: 1;
+
+    span {
+      font-size: 0.9em;
+    }
+  }
 
 }

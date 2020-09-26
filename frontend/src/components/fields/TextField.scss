@@ -1,0 +1,79 @@
+@import '../../colors.scss';
+
+.text-field {
+  font-size: 0.9em;
+  margin: 5px 0;
+
+  label {
+    display: block;
+    margin: 0;
+  }
+
+  textarea {
+    background-color: $color-primary-2;
+    width: 100%;
+    border: none;
+    color: $color-primary-4;
+    border-radius: 5px;
+    padding: 7px 10px;
+    resize: none;
+
+    &:focus {
+      background-color: $color-primary-1;
+      color: $color-primary-4;
+      box-shadow: none;
+      outline: none;
+    }
+
+    &[readonly] {
+      background-color: $color-primary-2;
+      border: none;
+      color: $color-primary-4;
+    }
+
+    &[readonly]:focus {
+      background-color: $color-primary-1;
+      color: $color-primary-4;
+      box-shadow: none;
+    }
+  }
+
+  &.field-active {
+    textarea {
+      background-color: $color-primary-4 !important;
+      color: $color-primary-3 !important;
+    }
+  }
+
+  &.field-invalid {
+    textarea {
+      background-color: $color-secondary-2 !important;
+      color: $color-primary-4 !important;
+    }
+  }
+
+  &.field-small {
+    font-size: 0.8em;
+  }
+
+  .field-clear {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    z-index: 10;
+    font-size: 0.9em;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    cursor: pointer;
+  }
+
+  &.field-active .field-clear {
+    color: $color-primary-2;
+  }
+
+  .field-error {
+    padding: 5px 10px;
+    font-size: 0.9em;
+    color: $color-secondary-0;
+  }
+}

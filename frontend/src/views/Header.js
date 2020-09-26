@@ -3,6 +3,7 @@ import Typed from 'typed.js';
 import './Header.scss';
 import {Button} from "react-bootstrap";
 import {filtersDefinitions, filtersNames} from "../components/filters/FiltersDefinitions";
+import {Link} from "react-router-dom";
 
 class Header extends Component {
 
@@ -68,7 +69,9 @@ class Header extends Component {
                     <div className="col">
                         <div className="header-buttons">
                             <Button variant="pink" onClick={this.props.onOpenFilters}>filters</Button>
-                            <Button variant="purple" onClick={this.props.onOpenUpload}>pcaps</Button>
+                            <Link to="/pcaps">
+                                <Button variant="purple">pcaps</Button>
+                            </Link>
                             <Button variant="deep-purple" onClick={this.props.onOpenRules}>rules</Button>
                             <Button variant="indigo" onClick={this.props.onOpenServices}>services</Button>
                             <Button variant="blue" onClick={this.props.onOpenConfig}

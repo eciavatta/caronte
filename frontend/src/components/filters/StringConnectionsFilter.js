@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import {withRouter} from "react-router-dom";
 import {Redirect} from "react-router";
-import StringField from "../fields/StringField";
+import InputField from "../fields/InputField";
 
 class StringConnectionsFilter extends Component {
 
@@ -114,9 +114,9 @@ class StringConnectionsFilter extends Component {
 
         return (
             <div className="filter" style={{"width": `${this.props.width}px`}}>
-                <StringField active={active} invalid={this.state.invalidValue} name={this.props.filterName}
-                             defaultValue={this.props.defaultFilterValue} onChange={this.filterChanged}
-                             value={this.state.fieldValue} inline={true} small={true} />
+                <InputField active={active} invalid={this.state.invalidValue} name={this.props.filterName}
+                            defaultValue={this.props.defaultFilterValue} onChange={this.filterChanged}
+                            value={this.state.fieldValue} inline={true} small={true} />
                 {redirect}
             </div>
         );

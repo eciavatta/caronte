@@ -1,7 +1,8 @@
 @import '../../colors.scss';
 
-.string-field {
+.input-field {
   font-size: 0.9em;
+  margin: 5px 0;
 
   .field-name {
     label {
@@ -12,31 +13,52 @@
   .field-input {
     position: relative;
 
-    .field-value input {
-      background-color: $color-primary-2;
-      width: 100%;
-      border: none;
-      color: $color-primary-4;
-      border-radius: 5px;
-      padding: 7px 10px;
-
-      &:focus {
-        background-color: $color-primary-1;
-        color: $color-primary-4;
-        box-shadow: none;
-        outline: none;
-      }
-
-      &[readonly] {
+    .field-value {
+      input, .file-label {
         background-color: $color-primary-2;
+        width: 100%;
         border: none;
         color: $color-primary-4;
+        border-radius: 5px;
+        padding: 7px 10px;
+
+        &:focus {
+          background-color: $color-primary-1;
+          color: $color-primary-4;
+          box-shadow: none;
+          outline: none;
+        }
+
+        &[readonly] {
+          background-color: $color-primary-2;
+          border: none;
+          color: $color-primary-4;
+        }
+
+        &[readonly]:focus {
+          background-color: $color-primary-1;
+          color: $color-primary-4;
+          box-shadow: none;
+        }
       }
 
-      &[readonly]:focus {
+      input[type="file"] {
+        display: none;
+      }
+
+      .file-label {
+        margin: 0;
+      }
+
+      .file-label:after {
+        content: "Browse";
+        position: absolute;
+        right: 0;
+        top: 0;
+        padding: 7px 10px 7px 12px;
         background-color: $color-primary-1;
-        color: $color-primary-4;
-        box-shadow: none;
+        border-bottom-right-radius: 5px;
+        border-top-right-radius: 5px;
       }
     }
   }
@@ -47,9 +69,13 @@
       color: $color-primary-3 !important;
     }
 
-    .field-value input {
+    .field-value input, .field-value .file-label {
       background-color: $color-primary-4 !important;
       color: $color-primary-3 !important;
+    }
+
+    .file-label:after {
+      background-color: $color-secondary-4 !important;
     }
   }
 
@@ -59,9 +85,13 @@
       color: $color-primary-4 !important;
     }
 
-    .field-value input {
+    .field-value input, .field-value .file-label {
       background-color: $color-secondary-2 !important;
       color: $color-primary-4 !important;
+    }
+
+    .file-label:after {
+      background-color: $color-secondary-1 !important;
     }
   }
 
@@ -82,7 +112,7 @@
     .field-input {
       width: 100%;
 
-      input {
+      input, .file-label {
         border-bottom-left-radius: 0;
         border-top-left-radius: 0;
         padding-left: 3px;

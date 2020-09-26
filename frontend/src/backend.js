@@ -1,11 +1,11 @@
 
-async function request(method, url, data) {
+async function json(method, url, data, headers) {
     const options = {
         method: method,
         mode: "cors",
         cache: "no-cache",
         credentials: "same-origin",
-        headers: {
+        headers: headers || {
             "Content-Type": "application/json"
         },
         redirect: "follow",
@@ -18,19 +18,35 @@ async function request(method, url, data) {
     return result.json();
 }
 
+async function file(url, data, headers) {
+    const options = {
+        method: "POST",
+        mode: "cors",
+        cache: "no-cache",
+        credentials: "same-origin",
+        body: data,
+        redirect: "follow",
+        referrerPolicy: "no-referrer",
+    };
+    return await fetch(url, options);
+}
+
 const backend = {
-    get: (url = "") => {
-        return request("GET", url, null);
+    get: (url = "", headers = null) => {
+        return json("GET", url, null, headers);
     },
-    post: (url = "", data = null) => {
-        return request("POST", url, data);
+    post: (url = "", data = null, headers = null) => {
+        return json("POST", url, data, headers);
     },
-    put: (url = "", data = null) => {
-        return request("PUT", url, data);
+    put: (url = "", data = null, headers = null) => {
+        return json("PUT", url, data, headers);
     },
-    delete: (url = "", data = null) => {
-        return request("DELETE", url, data);
-    }
+    delete: (url = "", data = null, headers = null) => {
+        return json("DELETE", url, data, headers);
+    },
+    postFile: (url = "", data = null, headers = null) => {
+        return file(url, data, headers);
+    },
 };
 
 export default backend;

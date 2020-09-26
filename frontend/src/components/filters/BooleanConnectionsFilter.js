@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import {withRouter} from "react-router-dom";
 import {Redirect} from "react-router";
-import BooleanField from "../fields/BooleanField";
+import CheckField from "../fields/CheckField";
 
 class BooleanConnectionsFilter extends Component {
 
@@ -56,8 +56,8 @@ class BooleanConnectionsFilter extends Component {
 
         return (
             <div className="filter" style={{"width": `${this.props.width}px`}}>
-                <BooleanField checked={this.toBoolean(this.state.filterActive)} name={this.props.filterName}
-                             onChange={this.filterChanged} />
+                <CheckField checked={this.toBoolean(this.state.filterActive)} name={this.props.filterName}
+                            onChange={this.filterChanged} />
                 {redirect}
             </div>
         );

@@ -1,10 +1,10 @@
 import React, {Component} from 'react';
-import './StringField.scss';
+import './InputField.scss';
 import {randomClassName} from "../../utils";
 
 const classNames = require('classnames');
 
-class StringField extends Component {
+class InputField extends Component {
 
     constructor(props) {
         super(props);
@@ -13,7 +13,6 @@ class StringField extends Component {
     }
 
     render() {
-
         const active = this.props.active || false;
         const invalid = this.props.invalid || false;
         const small = this.props.small || false;
@@ -22,31 +21,41 @@ class StringField extends Component {
         const value = this.props.value || "";
         const type = this.props.type || "text";
         const error = this.props.error || null;
+        const defaultValue = this.props.defaultValue || null;
         const handler = (e) => {
             if (this.props.onChange) {
-                if (e == null) {
+                if (type === "file") {
+                    let file = e.target.files[0];
+                    this.props.onChange(file);
+                } else if (e == null) {
                     this.props.onChange("");
                 } else {
                     this.props.onChange(e.target.value);
                 }
             }
         };
+        let inputProps = {};
+        if (type !== "file") {
+            inputProps["value"] = value;
+        }
 
         return (
-            <div className={classNames("string-field", {"field-active" : active}, {"field-invalid": invalid},
+            <div className={classNames("input-field", {"field-active" : active}, {"field-invalid": invalid},
                 {"field-small": small}, {"field-inline": inline})}>
                 <div className="field-wrapper">
                     { name &&
                     <div className="field-name">
-                        <label id={this.id}>{name}:</label>
+                        <label>{name}:</label>
                     </div>
                     }
                     <div className="field-input">
                         <div className="field-value">
-                            <input type={type} placeholder={this.props.defaultValue} aria-label={name}
-                                   aria-describedby={this.id} onChange={handler} value={value} />
+                            { type === "file" && <label for={this.id} className={"file-label"}>
+                                {value.name || defaultValue}</label> }
+                            <input type={type} placeholder={defaultValue} id={this.id}
+                                   aria-describedby={this.id} onChange={handler} {...inputProps} />
                         </div>
-                        { value !== "" &&
+                        { type !== "file" && value !== "" &&
                         <div className="field-clear">
                             <span onClick={() => handler(null)}>del</span>
                         </div>
@@ -63,4 +72,4 @@ class StringField extends Component {
     }
 }
 
-export default StringField;
+export default InputField;

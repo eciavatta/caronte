@@ -102,7 +102,7 @@ class Services extends Component {
             output += "assert(len(name) >= 3)\n";
         }
         if (output === "") {
-            output = createCurlCommand("/services", {
+            output = createCurlCommand("/services", "PUT", {
                 "port": this.state.port,
                 "name": this.state.name,
                 "color": this.state.color,

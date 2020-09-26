@@ -2,12 +2,11 @@ import React, {Component} from 'react';
 import Header from "./Header";
 import MainPane from "./MainPane";
 import Footer from "./Footer";
-import {BrowserRouter as Router, Route, Switch} from "react-router-dom";
+import {BrowserRouter as Router} from "react-router-dom";
 import Services from "./Services";
 import Filters from "./Filters";
 import Rules from "./Rules";
 import Config from "./Config";
-import Upload from "./Upload";
 
 class App extends Component {
 
@@ -18,7 +17,6 @@ class App extends Component {
             filterWindowOpen: false,
             rulesWindowOpen: false,
             configWindowOpen: false,
-            uploadWindowOpen: false,
             configDone: false
         };
 
@@ -49,9 +47,6 @@ class App extends Component {
             modal = <Config onHide={() => this.setState({configWindowOpen: false})}
 						onDone={() => this.setState({configDone: true})}/>;
         }
-        if (this.state.uploadWindowOpen) {
-            modal = <Upload onHide={() => this.setState({uploadWindowOpen: false}) }/>;
-        }
 
         return (
             <div className="app">
@@ -63,10 +58,7 @@ class App extends Component {
                             onOpenUpload={() => this.setState({uploadWindowOpen: true})} 
 							onConfigDone={this.state.configDone}
 					/>
-                    <Switch>
-                        <Route path="/connections/:id" children={<MainPane/>}/>
-                        <Route path="/" children={<MainPane/>}/>
-                    </Switch>
+                    <MainPane />
                     {modal}
                     <Footer/>
                 </Router>
