@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import './InputField.scss';
+import './common.scss';
 import {randomClassName} from "../../utils";
 
 const classNames = require('classnames');
@@ -36,12 +37,12 @@ class InputField extends Component {
         };
         let inputProps = {};
         if (type !== "file") {
-            inputProps["value"] = value;
+            inputProps["value"] = value || this.props.initialValue;
         }
 
         return (
-            <div className={classNames("input-field", {"field-active" : active}, {"field-invalid": invalid},
-                {"field-small": small}, {"field-inline": inline})}>
+            <div className={classNames("field", "input-field", {"field-active" : active},
+                {"field-invalid": invalid}, {"field-small": small}, {"field-inline": inline})}>
                 <div className="field-wrapper">
                     { name &&
                     <div className="field-name">

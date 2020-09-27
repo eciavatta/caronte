@@ -1,5 +1,5 @@
 
-async function json(method, url, data, headers) {
+async function json(method, url, data, headers, returnJson) {
     const options = {
         method: method,
         mode: "cors",
@@ -15,7 +15,18 @@ async function json(method, url, data, headers) {
         options.body = JSON.stringify(data);
     }
     const result = await fetch(url, options);
-    return result.json();
+    if (returnJson) {
+        if (result.status >= 200 && result.status < 300) {
+            return result.json();
+        } else {
+            return Promise.reject({
+                response: result,
+                json: await result.json()
+            });
+        }
+    } else {
+        return result;
+    }
 }
 
 async function file(url, data, headers) {
@@ -43,6 +54,18 @@ const backend = {
     },
     delete: (url = "", data = null, headers = null) => {
         return json("DELETE", url, data, headers);
+    },
+    getJson: (url = "", headers = null) => {
+        return json("GET", url, null, headers, true);
+    },
+    postJson: (url = "", data = null, headers = null) => {
+        return json("POST", url, data, headers, true);
+    },
+    putJson: (url = "", data = null, headers = null) => {
+        return json("PUT", url, data, headers, true);
+    },
+    deleteJson: (url = "", data = null, headers = null) => {
+        return json("DELETE", url, data, headers, true);
     },
     postFile: (url = "", data = null, headers = null) => {
         return file(url, data, headers);

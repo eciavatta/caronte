@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import './TextField.scss';
+import './common.scss';
 import {randomClassName} from "../../utils";
 
 const classNames = require('classnames');
@@ -28,11 +29,11 @@ class TextField extends Component {
         };
 
         return (
-            <div className={classNames("text-field", {"field-active": this.props.active},
+            <div className={classNames("field", "text-field", {"field-active": this.props.active},
                 {"field-invalid": this.props.invalid}, {"field-small": this.props.small})}>
                 {name && <label htmlFor={this.id}>{name}:</label>}
                 <textarea id={this.id} placeholder={this.props.defaultValue} onChange={handler} rows={rows}
-                          readOnly={this.props.readonly} value={this.props.value} />
+                          readOnly={this.props.readonly} value={this.props.value} ref={this.props.textRef} />
                 {error && <div className="field-error">error: {error}</div>}
             </div>
         );

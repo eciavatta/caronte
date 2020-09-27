@@ -21,118 +21,6 @@ pre {
   font-size: 14px;
 }
 
-.btn {
-  border-radius: 0;
-  background-color: $color-primary-2;
-  border: none;
-  border-bottom: 5px solid $color-primary-1;
-  color: $color-primary-4;
-  outline: none;
-  padding: 5px 12px;
-  font-weight: 500;
-
-  &:hover,
-  &:active {
-    background-color: $color-primary-1;
-    color: $color-primary-4;
-  }
-
-  &:focus,
-  &:active {
-    outline: none !important;
-    box-shadow: none !important;
-  }
-}
-
-.btn-sm {
-  border: none;
-  font-size: 12px;
-}
-
-.btn-red {
-  color: $color-red-light;
-  background-color: $color-red;
-  border-bottom: 5px solid $color-red-dark;
-
-  &:hover,
-  &:active {
-    color: $color-red-light;
-    background-color: $color-red-dark;
-  }
-}
-
-.btn-pink {
-  color: $color-pink-light;
-  background-color: $color-pink;
-  border-bottom: 5px solid $color-pink-dark;
-
-  &:hover,
-  &:active {
-    color: $color-pink-light;
-    background-color: $color-pink-dark;
-  }
-}
-
-.btn-purple {
-  color: $color-purple-light;
-  background-color: $color-purple;
-  border-bottom: 5px solid $color-purple-dark;
-
-  &:hover,
-  &:active {
-    color: $color-purple-light;
-    background-color: $color-purple-dark;
-  }
-}
-
-.btn-deep-purple {
-  color: $color-deep-purple-light;
-  background-color: $color-deep-purple;
-  border-bottom: 5px solid $color-deep-purple-dark;
-
-  &:hover,
-  &:active {
-    color: $color-deep-purple-light;
-    background-color: $color-deep-purple-dark;
-  }
-}
-
-.btn-indigo {
-  color: $color-indigo-light;
-  background-color: $color-indigo;
-  border-bottom: 5px solid $color-indigo-dark;
-
-  &:hover,
-  &:active {
-    color: $color-indigo-light;
-    background-color: $color-indigo-dark;
-  }
-}
-
-.btn-blue {
-  color: $color-blue-light;
-  background-color: $color-blue;
-  border-bottom: 5px solid $color-blue-dark;
-
-  &:hover,
-  &:active {
-    color: $color-blue-light;
-    background-color: $color-blue-dark;
-  }
-}
-
-.btn-green {
-  color: $color-green-light;
-  background-color: $color-green;
-  border-bottom: 5px solid $color-green-dark;
-
-  &:hover,
-  &:active {
-    color: $color-green-light;
-    background-color: $color-green-dark;
-  }
-}
-
 a {
   color: $color-primary-4;
 
@@ -189,4 +77,8 @@ textarea.form-control {
 
 .text-muted {
   color: $color-primary-4 !important;
+}
+
+.popover-header {
+  color: $color-primary-1;
 }

@@ -22,19 +22,29 @@ class ConnectionContent extends Component {
         this.setFormat = this.setFormat.bind(this);
     }
 
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        if (this.props.connection !== null && (
-            this.props.connection !== prevProps.connection || this.state.format !== prevState.format)) {
-            this.setState({loading: true});
-            // TODO: limit workaround.
-            backend.get(`/api/streams/${this.props.connection.id}?format=${this.state.format}&limit=999999`).then(res => {
-                this.setState({
-                    connectionContent: res,
-                    loading: false
-                });
-            });
+    componentDidMount() {
+        if (this.props.connection != null) {
+            this.loadStream();
         }
     }
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (this.props.connection != null && (
+            this.props.connection !== prevProps.connection || this.state.format !== prevState.format)) {
+            this.loadStream();
+        }
+    }
+
+    loadStream = () => {
+        this.setState({loading: true});
+        // TODO: limit workaround.
+        backend.getJson(`/api/streams/${this.props.connection.id}?format=${this.state.format}&limit=999999`).then(res => {
+            this.setState({
+                connectionContent: res,
+                loading: false
+            });
+        });
+    };
 
     setFormat(format) {
         if (this.validFormats.includes(format)) {

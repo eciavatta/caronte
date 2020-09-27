@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import './CheckField.scss';
+import './common.scss';
 import {randomClassName} from "../../utils";
 
 const classNames = require('classnames');
@@ -23,10 +24,10 @@ class CheckField extends Component {
         };
 
         return (
-            <div className={classNames( "check-field", {"field-checked" : checked}, {"field-small": small})}>
+            <div className={classNames( "field", "check-field", {"field-checked" : checked}, {"field-small": small})}>
                 <div className="field-input">
                     <input type="checkbox" id={this.id} checked={checked} onChange={handler} />
-                    <label htmlFor={this.id}>{(checked ? "✓ " : "✗ ") + name}</label>
+                    <label htmlFor={this.id}>{(checked ? "✓ " : "✗ ") + (name != null ? name : "")}</label>
                 </div>
             </div>
         );

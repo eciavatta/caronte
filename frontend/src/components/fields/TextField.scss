@@ -10,32 +10,7 @@
   }
 
   textarea {
-    background-color: $color-primary-2;
-    width: 100%;
-    border: none;
-    color: $color-primary-4;
-    border-radius: 5px;
-    padding: 7px 10px;
     resize: none;
-
-    &:focus {
-      background-color: $color-primary-1;
-      color: $color-primary-4;
-      box-shadow: none;
-      outline: none;
-    }
-
-    &[readonly] {
-      background-color: $color-primary-2;
-      border: none;
-      color: $color-primary-4;
-    }
-
-    &[readonly]:focus {
-      background-color: $color-primary-1;
-      color: $color-primary-4;
-      box-shadow: none;
-    }
   }
 
   &.field-active {

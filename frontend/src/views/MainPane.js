@@ -5,24 +5,25 @@ import ConnectionContent from "../components/ConnectionContent";
 import {Route, Switch, withRouter} from "react-router-dom";
 import PcapPane from "../components/panels/PcapPane";
 import backend from "../backend";
+import RulePane from "../components/panels/RulePane";
 
 class MainPane extends Component {
 
     constructor(props) {
         super(props);
         this.state = {
-            selectedConnection: null
+            selectedConnection: null,
+            loading: false
         };
     }
 
     componentDidMount() {
-        if ('id' in this.props.match.params) {
-            const id = this.props.match.params.id;
-            backend.get(`/api/connections/${id}`).then(res => {
-                if (res.status === 200) {
-                    this.setState({selectedConnection: res});
-                }
-            });
+        const match = this.props.location.pathname.match(/^\/connections\/([a-f0-9]{24})$/);
+        if (match != null) {
+            this.setState({loading: true});
+            backend.getJson(`/api/connections/${match[1]}`)
+                .then(connection => this.setState({selectedConnection: connection, loading: false}))
+                .catch(error => console.log(error));
         }
     }
 
@@ -32,12 +33,18 @@ class MainPane extends Component {
                 <div className="container-fluid">
                     <div className="row">
                         <div className="col-md-6 pane">
-                            <Connections onSelected={(c) => this.setState({selectedConnection: c})} />
+                            {
+                                !this.state.loading &&
+                                    <Connections onSelected={(c) => this.setState({selectedConnection: c})}
+                                                 initialConnection={this.state.selectedConnection} />
+                            }
                         </div>
                         <div className="col-md-6 pl-0 pane">
                             <Switch>
                                 <Route path="/pcaps" children={<PcapPane />} />
-                                <Route children={<ConnectionContent connection={this.state.selectedConnection} />} />
+                                <Route path="/rules" children={<RulePane />} />
+                                <Route exact path="/connections/:id" children={<ConnectionContent connection={this.state.selectedConnection} />} />
+                                <Route children={<ConnectionContent />} />
                             </Switch>
                         </div>
                     </div>

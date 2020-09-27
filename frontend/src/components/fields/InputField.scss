@@ -14,40 +14,18 @@
     position: relative;
 
     .field-value {
-      input, .file-label {
+      .file-label {
         background-color: $color-primary-2;
+        margin: 0;
         width: 100%;
-        border: none;
         color: $color-primary-4;
         border-radius: 5px;
         padding: 7px 10px;
-
-        &:focus {
-          background-color: $color-primary-1;
-          color: $color-primary-4;
-          box-shadow: none;
-          outline: none;
-        }
-
-        &[readonly] {
-          background-color: $color-primary-2;
-          border: none;
-          color: $color-primary-4;
-        }
-
-        &[readonly]:focus {
-          background-color: $color-primary-1;
-          color: $color-primary-4;
-          box-shadow: none;
-        }
+        cursor: pointer;
       }
 
       input[type="file"] {
         display: none;
-      }
-
-      .file-label {
-        margin: 0;
       }
 
       .file-label:after {

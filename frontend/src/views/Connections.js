@@ -25,21 +25,21 @@ class Connections extends Component {
         this.scrollBottomThreashold = 0.99999;
         this.maxConnections = 500;
         this.queryLimit = 50;
-
-        this.handleScroll = this.handleScroll.bind(this);
-        this.connectionSelected = this.connectionSelected.bind(this);
-        this.addServicePortFilter = this.addServicePortFilter.bind(this);
     }
 
     componentDidMount() {
         this.loadConnections({limit: this.queryLimit})
             .then(() => this.setState({loaded: true}));
+        if (this.props.initialConnection != null) {
+            this.setState({selected: this.props.initialConnection.id});
+            // TODO: scroll to initial connection
+        }
     }
 
-    connectionSelected(c) {
+    connectionSelected = (c) => {
         this.setState({selected: c.id});
         this.props.onSelected(c);
-    }
+    };
 
     componentDidUpdate(prevProps, prevState, snapshot) {
         if (this.state.loaded && prevProps.location.search !== this.props.location.search) {
@@ -49,7 +49,7 @@ class Connections extends Component {
         }
     }
 
-    handleScroll(e) {
+    handleScroll = (e) => {
         let relativeScroll = e.currentTarget.scrollTop / (e.currentTarget.scrollHeight - e.currentTarget.clientHeight);
         if (!this.state.loading && relativeScroll > this.scrollBottomThreashold) {
             this.loadConnections({from: this.state.lastConnection.id, limit: this.queryLimit,})
@@ -59,13 +59,13 @@ class Connections extends Component {
             this.loadConnections({to: this.state.firstConnection.id, limit: this.queryLimit,})
                 .then(() => console.log("Previous connections loaded"));
         }
-    }
+    };
 
-    addServicePortFilter(port) {
+    addServicePortFilter = (port) => {
         let urlParams = new URLSearchParams(this.props.location.search);
         urlParams.set("service_port", port);
         this.setState({queryString: "?" + urlParams});
-    }
+    };
 
     async loadConnections(params) {
         let url = "/api/connections";
@@ -75,7 +75,7 @@ class Connections extends Component {
         }
 
         this.setState({loading: true, prevParams: params});
-        let res = await backend.get(`${url}?${urlParams}`);
+        let res = await backend.getJson(`${url}?${urlParams}`);
 
         let connections = this.state.connections;
         let firstConnection = this.state.firstConnection;
@@ -115,7 +115,7 @@ class Connections extends Component {
         let flagRule = this.state.flagRule;
         let rules = this.state.rules;
         if (flagRule === null) {
-            rules = await backend.get("/api/rules");
+            rules = await backend.getJson("/api/rules");
             flagRule = rules.filter(rule => {
                 return rule.name === "flag";
             })[0];

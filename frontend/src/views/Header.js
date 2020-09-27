@@ -72,7 +72,9 @@ class Header extends Component {
                             <Link to="/pcaps">
                                 <Button variant="purple">pcaps</Button>
                             </Link>
-                            <Button variant="deep-purple" onClick={this.props.onOpenRules}>rules</Button>
+                            <Link to="/rules">
+                                <Button variant="deep-purple">rules</Button>
+                            </Link>
                             <Button variant="indigo" onClick={this.props.onOpenServices}>services</Button>
                             <Button variant="blue" onClick={this.props.onOpenConfig}
 								disabled={false}>config</Button>
