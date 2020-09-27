@@ -38,15 +38,24 @@ class ChoiceField extends Component {
             <span className="field-option" key={key} onClick={() => handler(key)}>{values[i]}</span>
         );
 
+        let fieldValue = "";
+        if (inline && name) {
+            fieldValue = name;
+        }
+        if (!this.props.onlyName && inline && name) {
+            fieldValue += ": ";
+        }
+        if (!this.props.onlyName) {
+            fieldValue += this.props.value || "select a value";
+        }
+
         return (
             <div className={classNames( "field", "choice-field", {"field-inline" : inline},
                 {"field-small": this.props.small})}>
                 {!inline && name && <label className="field-name">{name}:</label>}
                 <div className={classNames("field-select", {"select-expanded": this.state.expanded})}
                      tabIndex={0} onBlur={collapse} onClick={() => this.state.expanded ? collapse() : expand()}>
-                    <div className="field-value">
-                        {((inline && name) ? (name + ": ") : "") + (this.props.value || "select a value")}
-                    </div>
+                    <div className="field-value">{fieldValue}</div>
                     <div className="field-options">
                         {options}
                     </div>

@@ -3,10 +3,11 @@ import './PcapPane.scss';
 import Table from "react-bootstrap/Table";
 import backend from "../../backend";
 import {createCurlCommand, formatSize, timestampToTime2} from "../../utils";
-import {Button, Col, Container, Row} from "react-bootstrap";
+import {Col, Container, Row} from "react-bootstrap";
 import InputField from "../fields/InputField";
 import CheckField from "../fields/CheckField";
 import TextField from "../fields/TextField";
+import ButtonField from "../fields/ButtonField";
 
 class PcapPane extends Component {
 
@@ -167,7 +168,7 @@ class PcapPane extends Component {
                                             <CheckField name="flush_all" checked={this.state.uploadFlushAll}
                                                         onChange={v => this.setState({uploadFlushAll: v})}/>
                                         </div>
-                                        <Button variant="green" onClick={this.handleUploadPcap}>upload</Button>
+                                        <ButtonField variant="green" bordered onClick={this.handleUploadPcap} name="upload" />
                                     </div>
 
                                     <TextField value={uploadOutput} rows={4} readonly small={true}/>
@@ -192,7 +193,7 @@ class PcapPane extends Component {
                                             <CheckField name="delete_original_file" checked={this.state.uploadFlushAll}
                                                         onChange={v => this.setState({uploadFlushAll: v})}/>
                                         </div>
-                                        <Button variant="blue" onClick={this.handleUploadPcap}>process</Button>
+                                        <ButtonField variant="blue" bordered onClick={this.handleUploadPcap} name="process" />
                                     </div>
 
                                     <TextField value={uploadOutput} rows={4} readonly small={true}/>

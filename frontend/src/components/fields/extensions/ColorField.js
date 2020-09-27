@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Button, ButtonGroup, Form, OverlayTrigger, Popover} from "react-bootstrap";
+import {OverlayTrigger, Popover} from "react-bootstrap";
 import './ColorField.scss';
 import InputField from "../InputField";
 
@@ -9,7 +9,6 @@ class ColorField extends Component {
         super(props);
 
         this.state = {
-            invalid: false
         };
 
         this.colors = ["#E53935", "#D81B60", "#8E24AA", "#5E35B1", "#3949AB", "#1E88E5", "#039BE5", "#00ACC1",
@@ -18,8 +17,7 @@ class ColorField extends Component {
 
     render() {
         const colorButtons = this.colors.map((color) =>
-            <span key={"button" + color} className="color-input"
-                  style={{"backgroundColor": color, "borderColor": this.state.color === color ? "#fff" : color}}
+            <span key={"button" + color} className="color-input" style={{"backgroundColor": color}}
                   onClick={() => {
                       this.setState({color: color});
                       if (typeof this.props.onChange === "function") {
@@ -44,16 +42,19 @@ class ColorField extends Component {
             </Popover>
         );
 
-        return (
-            <div className="color-field">
-                <InputField {...this.props} name="color" />
+        let buttonStyles = {};
+        if (this.state.color) {
+            buttonStyles["backgroundColor"] = this.state.color;
+        }
 
+        return (
+            <div className="field color-field">
+                <InputField {...this.props} name="color" />
                 <div className="color-picker">
                     <OverlayTrigger trigger="click" placement="top" overlay={popover} rootClose>
-                        <Button variant="picker" size="sm">pick</Button>
+                        <button type="button" className="picker-button" style={buttonStyles}>pick</button>
                     </OverlayTrigger>
                 </div>
-
             </div>
         );
     }

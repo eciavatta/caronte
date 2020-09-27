@@ -31,5 +31,9 @@
 
   &.field-small {
     font-size: 0.8em;
+
+    .field-input label {
+      padding: 7px 15px;
+    }
   }
 }

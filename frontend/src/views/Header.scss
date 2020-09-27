@@ -14,11 +14,12 @@
   }
 
   .header-buttons {
-    margin: 5px 0;
-    text-align: right;
+    margin: 7px 0;
+    display: flex;
+    justify-content: flex-end;
 
-    button {
-      margin-left: 10px;
+    .button-field {
+      margin-left: 7px;
     }
   }
 

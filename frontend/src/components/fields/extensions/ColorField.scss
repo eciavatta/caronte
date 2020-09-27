@@ -16,15 +16,14 @@
   .color-picker {
     margin-bottom: 5.5px;
 
-    .btn-picker {
-      padding: 8.5px 15px;
+    .picker-button {
+      font-size: 0.8em;
+      padding: 8px 15px;
       border-bottom-right-radius: 5px;
       border-top-right-radius: 5px;
-      background-color: $color-indigo;
+      background-color: $color-primary-1;
     }
   }
-
-
 }
 
 .colors-container {

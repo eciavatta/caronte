@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import './RulePane.scss';
 import Table from "react-bootstrap/Table";
-import {Button, Col, Container, Row} from "react-bootstrap";
+import {Col, Container, Row} from "react-bootstrap";
 import InputField from "../fields/InputField";
 import CheckField from "../fields/CheckField";
 import TextField from "../fields/TextField";
@@ -141,18 +141,12 @@ class RulePane extends Component {
                                         <td><CheckField small /></td>
                                         <td style={{"width": "70px"}}><NumericField small /></td>
                                         <td style={{"width": "70px"}}><NumericField small /></td>
-                                        <td><ChoiceField small keys={[0, 1, 2]} values={["both", "c->s", "s->c"]} value="both" /></td>
-                                        <td><Button  variant="green" size="sm">add</Button></td>
+                                        <td><ChoiceField inline small keys={[0, 1, 2]} values={["both", "c->s", "s->c"]} value="both" /></td>
+                                        <td><ButtonField  variant="green" small name="add" inline rounded /></td>
                                     </tr>
                                 </tbody>
                             </Table>
                         </div>
-
-                        <ButtonField name="add_rule" variant="green" bordered />
-                        <br />
-                        <ButtonField name="add_rule" small color="red"/>
-                        <br />
-                        <ButtonField name="add_rule" bordered border={"green"} />
                     </div>
                 </div>
 

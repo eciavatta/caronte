@@ -51,7 +51,7 @@
     }
 
     &:hover .connection-message-actions {
-      display: block;
+      display: flex;
     }
 
     .connection-message-label {
@@ -89,17 +89,19 @@
   .connection-content-header {
     background-color: $color-primary-2;
     padding: 0;
-    height: 31px;
+    height: 33px;
 
     .header-info {
-      padding-top: 5px;
+      padding-top: 7px;
       padding-left: 20px;
       font-size: 12px;
     }
 
     .header-actions {
-      .dropdown {
-        display: inline-block;
+      display: flex;
+
+      .choice-field {
+        margin-top: -5px;
       }
     }
   }

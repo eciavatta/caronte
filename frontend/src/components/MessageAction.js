@@ -40,8 +40,8 @@ class MessageAction extends Component {
                     <TextField readonly value={this.props.actionValue} textRef={this.actionValue} rows={15} />
                 </Modal.Body>
                 <Modal.Footer className="dialog-footer">
-                    <ButtonField variant="green" onClick={this.copyActionValue} name={this.state.copyButtonText} />
-                    <ButtonField variant="red" onClick={this.props.onHide} name="close" />
+                    <ButtonField variant="green" bordered onClick={this.copyActionValue} name={this.state.copyButtonText} />
+                    <ButtonField variant="red" bordered onClick={this.props.onHide} name="close" />
                 </Modal.Footer>
             </Modal>
         );

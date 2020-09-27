@@ -1,8 +1,9 @@
 import React, {Component} from 'react';
 import './Connection.scss';
-import {Button, Form, OverlayTrigger, Popover} from "react-bootstrap";
+import {Form, OverlayTrigger, Popover} from "react-bootstrap";
 import backend from "../backend";
 import {formatSize} from "../utils";
+import ButtonField from "./fields/ButtonField";
 
 class Connection extends Component {
 
@@ -96,9 +97,8 @@ class Connection extends Component {
             <tr className={classes}>
                 <td>
                     <span className="connection-service">
-                        <Button size="sm" style={{
-                            "backgroundColor": serviceColor
-                        }} onClick={() => this.props.addServicePortFilter(conn.port_dst)}>{serviceName}</Button>
+                        <ButtonField small fullSpan color={serviceColor} name={serviceName}
+                                     onClick={() => this.props.addServicePortFilter(conn.port_dst)} />
                     </span>
                 </td>
                 <td className="clickable" onClick={this.props.onSelected}>{conn.ip_src}</td>

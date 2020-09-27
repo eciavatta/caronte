@@ -4,6 +4,7 @@ import './Header.scss';
 import {Button} from "react-bootstrap";
 import {filtersDefinitions, filtersNames} from "../components/filters/FiltersDefinitions";
 import {Link} from "react-router-dom";
+import ButtonField from "../components/fields/ButtonField";
 
 class Header extends Component {
 
@@ -68,16 +69,16 @@ class Header extends Component {
 
                     <div className="col">
                         <div className="header-buttons">
-                            <Button variant="pink" onClick={this.props.onOpenFilters}>filters</Button>
+                            <ButtonField variant="pink" onClick={this.props.onOpenFilters} name="filters" bordered />
                             <Link to="/pcaps">
-                                <Button variant="purple">pcaps</Button>
+                                <ButtonField variant="purple" name="pcaps" bordered />
                             </Link>
                             <Link to="/rules">
-                                <Button variant="deep-purple">rules</Button>
+                                <ButtonField variant="deep-purple" name="rules" bordered />
                             </Link>
-                            <Button variant="indigo" onClick={this.props.onOpenServices}>services</Button>
-                            <Button variant="blue" onClick={this.props.onOpenConfig}
-								disabled={false}>config</Button>
+                            <ButtonField variant="indigo" onClick={this.props.onOpenServices} name="services" bordered />
+                            <ButtonField variant="blue" onClick={this.props.onOpenConfig}
+								disabled={false} name="config" bordered />
                         </div>
                     </div>
                 </div>
