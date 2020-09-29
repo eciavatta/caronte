@@ -115,7 +115,7 @@ class StringConnectionsFilter extends Component {
         return (
             <div className="filter" style={{"width": `${this.props.width}px`}}>
                 <InputField active={active} invalid={this.state.invalidValue} name={this.props.filterName}
-                            defaultValue={this.props.defaultFilterValue} onChange={this.filterChanged}
+                            placeholder={this.props.defaultFilterValue} onChange={this.filterChanged}
                             value={this.state.fieldValue} inline={true} small={true} />
                 {redirect}
             </div>

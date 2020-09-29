@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
-import './PcapPane.scss';
+// import './PcapPane.scss';
+import './common.scss';
 import Table from "react-bootstrap/Table";
 import backend from "../../backend";
 import {createCurlCommand, formatSize, timestampToTime2} from "../../utils";
@@ -37,7 +38,7 @@ class PcapPane extends Component {
     }
 
     loadSessions = () => {
-        backend.getJson("/api/pcap/sessions").then(res => this.setState({sessions: res}));
+        backend.getJson("/api/pcap/sessions").then(res => this.setState({sessions: res.json}));
     };
 
     handleUploadFileChange = (file) => {
@@ -104,7 +105,7 @@ class PcapPane extends Component {
                 <td>{s["processed_packets"]}</td>
                 <td>{s["invalid_packets"]}</td>
                 <td>undefined</td>
-                <td className="table-cell-action"><a target="_blank"
+                <td className="table-cell-action"><a target="_blank" rel="noopener noreferrer"
                                                      href={"/api/pcap/sessions/" + s["id"] + "/download"}>download</a>
                 </td>
             </tr>

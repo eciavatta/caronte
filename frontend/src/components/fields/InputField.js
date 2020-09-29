@@ -20,16 +20,17 @@ class InputField extends Component {
         const inline = this.props.inline || false;
         const name = this.props.name || null;
         const value = this.props.value || "";
+        const defaultValue = this.props.defaultValue || "";
         const type = this.props.type || "text";
         const error = this.props.error || null;
-        const defaultValue = this.props.defaultValue || null;
+
         const handler = (e) => {
-            if (this.props.onChange) {
+            if (typeof this.props.onChange === "function") {
                 if (type === "file") {
                     let file = e.target.files[0];
                     this.props.onChange(file);
                 } else if (e == null) {
-                    this.props.onChange("");
+                    this.props.onChange(defaultValue);
                 } else {
                     this.props.onChange(e.target.value);
                 }
@@ -37,7 +38,7 @@ class InputField extends Component {
         };
         let inputProps = {};
         if (type !== "file") {
-            inputProps["value"] = value || this.props.initialValue;
+            inputProps["value"] = value || defaultValue;
         }
 
         return (
@@ -52,8 +53,8 @@ class InputField extends Component {
                     <div className="field-input">
                         <div className="field-value">
                             { type === "file" && <label for={this.id} className={"file-label"}>
-                                {value.name || defaultValue}</label> }
-                            <input type={type} placeholder={defaultValue} id={this.id}
+                                {value.name || this.props.placeholder}</label> }
+                            <input type={type} placeholder={this.props.placeholder} id={this.id}
                                    aria-describedby={this.id} onChange={handler} {...inputProps} />
                         </div>
                         { type !== "file" && value !== "" &&

@@ -6,10 +6,6 @@ const classNames = require('classnames');
 
 class ButtonField extends Component {
 
-    constructor(props) {
-        super(props);
-    }
-
     render() {
         const handler = () => {
             if (typeof this.props.onClick === "function") {

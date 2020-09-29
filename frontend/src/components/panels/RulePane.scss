@@ -1,16 +1,32 @@
 
 .rule-pane {
-  .post-rules-actions {
-    display: flex;
+  display: flex;
+  flex-direction: column;
 
-    .rules-options {
-      flex: 1;
+  .rules-list {
+    flex: 2 1;
+    overflow: hidden;
+
+    .section-content {
+      height: 100%;
     }
 
-    button {
-      margin-left: 10px;
+    .section-table {
+      height: calc(100% - 30px);
     }
   }
 
+  .rule-edit {
+    flex: 3 0;
+    display: flex;
+    flex-direction: column;
 
+    .section-content {
+      flex: 1;
+    }
+
+    .section-table {
+      max-height: 150px;
+    }
+  }
 }

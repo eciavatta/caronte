@@ -75,7 +75,7 @@ class Connections extends Component {
         }
 
         this.setState({loading: true, prevParams: params});
-        let res = await backend.getJson(`${url}?${urlParams}`);
+        let res = (await backend.getJson(`${url}?${urlParams}`)).json;
 
         let connections = this.state.connections;
         let firstConnection = this.state.firstConnection;
@@ -115,7 +115,7 @@ class Connections extends Component {
         let flagRule = this.state.flagRule;
         let rules = this.state.rules;
         if (flagRule === null) {
-            rules = await backend.getJson("/api/rules");
+            rules = (await backend.getJson("/api/rules")).json;
             flagRule = rules.filter(rule => {
                 return rule.name === "flag";
             })[0];

@@ -5,7 +5,6 @@ import Footer from "./Footer";
 import {BrowserRouter as Router} from "react-router-dom";
 import Services from "./Services";
 import Filters from "./Filters";
-import Rules from "./Rules";
 import Config from "./Config";
 
 class App extends Component {
@@ -15,7 +14,6 @@ class App extends Component {
         this.state = {
             servicesWindowOpen: false,
             filterWindowOpen: false,
-            rulesWindowOpen: false,
             configWindowOpen: false,
             configDone: false
         };
@@ -40,9 +38,6 @@ class App extends Component {
         if (this.state.filterWindowOpen) {
             modal = <Filters onHide={() => this.setState({filterWindowOpen: false})}/>;
         }
-        if (this.state.rulesWindowOpen) {
-            modal = <Rules onHide={() => this.setState({rulesWindowOpen: false})}/>;
-        }
         if (this.state.configWindowOpen) {
             modal = <Config onHide={() => this.setState({configWindowOpen: false})}
 						onDone={() => this.setState({configDone: true})}/>;
@@ -53,7 +48,6 @@ class App extends Component {
                 <Router>
                     <Header onOpenServices={() => this.setState({servicesWindowOpen: true})}
                             onOpenFilters={() => this.setState({filterWindowOpen: true})}
-                            onOpenRules={() => this.setState({rulesWindowOpen: true})} 
                             onOpenConfig={() => this.setState({configWindowOpen: true})} 
                             onOpenUpload={() => this.setState({uploadWindowOpen: true})} 
 							onConfigDone={this.state.configDone}

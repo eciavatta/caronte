@@ -1,7 +1,6 @@
 import React, {Component} from 'react';
 import Typed from 'typed.js';
 import './Header.scss';
-import {Button} from "react-bootstrap";
 import {filtersDefinitions, filtersNames} from "../components/filters/FiltersDefinitions";
 import {Link} from "react-router-dom";
 import ButtonField from "../components/fields/ButtonField";

@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import './ConnectionContent.scss';
-import {Dropdown, Row} from 'react-bootstrap';
+import {Row} from 'react-bootstrap';
 import MessageAction from "./MessageAction";
 import backend from "../backend";
 import ButtonField from "./fields/ButtonField";
@@ -42,7 +42,7 @@ class ConnectionContent extends Component {
         // TODO: limit workaround.
         backend.getJson(`/api/streams/${this.props.connection.id}?format=${this.state.format}&limit=999999`).then(res => {
             this.setState({
-                connectionContent: res,
+                connectionContent: res.json,
                 loading: false
             });
         });

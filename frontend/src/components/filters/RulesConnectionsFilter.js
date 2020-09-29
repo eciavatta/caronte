@@ -25,7 +25,7 @@ class RulesConnectionsFilter extends Component {
         let activeRules = params.getAll("matched_rules") || [];
 
         backend.getJson("/api/rules").then(res => {
-            let rules = res.flatMap(rule => rule.enabled ? [{id: rule.id, name: rule.name}] : []);
+            let rules = res.json.flatMap(rule => rule.enabled ? [{id: rule.id, name: rule.name}] : []);
             activeRules = rules.filter(rule => activeRules.some(id => rule.id === id));
             this.setState({rules, activeRules, mounted: true});
         });

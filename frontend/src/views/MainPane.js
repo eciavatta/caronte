@@ -22,7 +22,7 @@ class MainPane extends Component {
         if (match != null) {
             this.setState({loading: true});
             backend.getJson(`/api/connections/${match[1]}`)
-                .then(connection => this.setState({selectedConnection: connection, loading: false}))
+                .then(res => this.setState({selectedConnection: res.json, loading: false}))
                 .catch(error => console.log(error));
         }
     }

@@ -68,8 +68,6 @@ class Config extends Component {
 			})
 		};
 
-		let msg = "";
-
 		fetch('/setup', requestOptions)
 			.then(response => {
 				if (response.status === 202 ){

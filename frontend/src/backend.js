@@ -1,5 +1,5 @@
 
-async function json(method, url, data, headers, returnJson) {
+async function json(method, url, data, headers) {
     const options = {
         method: method,
         mode: "cors",
@@ -14,18 +14,17 @@ async function json(method, url, data, headers, returnJson) {
     if (data != null) {
         options.body = JSON.stringify(data);
     }
-    const result = await fetch(url, options);
-    if (returnJson) {
-        if (result.status >= 200 && result.status < 300) {
-            return result.json();
-        } else {
-            return Promise.reject({
-                response: result,
-                json: await result.json()
-            });
-        }
-    } else {
+    const response = await fetch(url, options);
+    const result = {
+        statusCode: response.status,
+        status: `${response.status} ${response.statusText}`,
+        json: await response.json()
+    };
+
+    if (response.status >= 200 && response.status < 300) {
         return result;
+    } else {
+        return Promise.reject(result);
     }
 }
 
@@ -56,16 +55,16 @@ const backend = {
         return json("DELETE", url, data, headers);
     },
     getJson: (url = "", headers = null) => {
-        return json("GET", url, null, headers, true);
+        return json("GET", url, null, headers);
     },
     postJson: (url = "", data = null, headers = null) => {
-        return json("POST", url, data, headers, true);
+        return json("POST", url, data, headers);
     },
     putJson: (url = "", data = null, headers = null) => {
-        return json("PUT", url, data, headers, true);
+        return json("PUT", url, data, headers);
     },
     deleteJson: (url = "", data = null, headers = null) => {
-        return json("DELETE", url, data, headers, true);
+        return json("DELETE", url, data, headers);
     },
     postFile: (url = "", data = null, headers = null) => {
         return file(url, data, headers);
