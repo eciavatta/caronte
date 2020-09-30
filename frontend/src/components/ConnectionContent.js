@@ -40,7 +40,7 @@ class ConnectionContent extends Component {
     loadStream = () => {
         this.setState({loading: true});
         // TODO: limit workaround.
-        backend.getJson(`/api/streams/${this.props.connection.id}?format=${this.state.format}&limit=999999`).then(res => {
+        backend.get(`/api/streams/${this.props.connection.id}?format=${this.state.format}&limit=999999`).then(res => {
             this.setState({
                 connectionContent: res.json,
                 loading: false

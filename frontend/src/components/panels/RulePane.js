@@ -73,13 +73,13 @@ class RulePane extends Component {
     };
 
     loadRules = () => {
-        backend.getJson("/api/rules").then(res => this.setState({rules: res.json, rulesStatusCode: res.status}))
+        backend.get("/api/rules").then(res => this.setState({rules: res.json, rulesStatusCode: res.status}))
             .catch(res => this.setState({rulesStatusCode: res.status, rulesResponse: JSON.stringify(res.json)}));
     };
 
     addRule = () => {
         if (this.validateRule(this.state.newRule)) {
-            backend.postJson("/api/rules", this.state.newRule).then(res => {
+            backend.post("/api/rules", this.state.newRule).then(res => {
                 this.reset();
                 this.setState({ruleStatusCode: res.status});
                 this.loadRules();
@@ -92,7 +92,7 @@ class RulePane extends Component {
     updateRule = () => {
         const rule = this.state.selectedRule;
         if (this.validateRule(rule)) {
-            backend.putJson(`/api/rules/${rule.id}`, rule).then(res => {
+            backend.put(`/api/rules/${rule.id}`, rule).then(res => {
                 this.reset();
                 this.setState({ruleStatusCode: res.status});
                 this.loadRules();

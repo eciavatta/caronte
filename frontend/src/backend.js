@@ -1,7 +1,8 @@
 
-async function json(method, url, data, headers) {
+async function json(method, url, data, json, headers) {
     const options = {
         method: method,
+        body: json != null ? JSON.stringify(json) : data,
         mode: "cors",
         cache: "no-cache",
         credentials: "same-origin",
@@ -11,9 +12,6 @@ async function json(method, url, data, headers) {
         redirect: "follow",
         referrerPolicy: "no-referrer",
     };
-    if (data != null) {
-        options.body = JSON.stringify(data);
-    }
     const response = await fetch(url, options);
     const result = {
         statusCode: response.status,
@@ -28,47 +26,17 @@ async function json(method, url, data, headers) {
     }
 }
 
-async function file(url, data, headers) {
-    const options = {
-        method: "POST",
-        mode: "cors",
-        cache: "no-cache",
-        credentials: "same-origin",
-        body: data,
-        redirect: "follow",
-        referrerPolicy: "no-referrer",
-    };
-    return await fetch(url, options);
-}
-
 const backend = {
-    get: (url = "", headers = null) => {
-        return json("GET", url, null, headers);
-    },
-    post: (url = "", data = null, headers = null) => {
-        return json("POST", url, data, headers);
-    },
-    put: (url = "", data = null, headers = null) => {
-        return json("PUT", url, data, headers);
-    },
-    delete: (url = "", data = null, headers = null) => {
-        return json("DELETE", url, data, headers);
-    },
-    getJson: (url = "", headers = null) => {
-        return json("GET", url, null, headers);
-    },
-    postJson: (url = "", data = null, headers = null) => {
-        return json("POST", url, data, headers);
-    },
-    putJson: (url = "", data = null, headers = null) => {
-        return json("PUT", url, data, headers);
-    },
-    deleteJson: (url = "", data = null, headers = null) => {
-        return json("DELETE", url, data, headers);
-    },
-    postFile: (url = "", data = null, headers = null) => {
-        return file(url, data, headers);
-    },
+    get: (url = "", headers = null) =>
+        json("GET", url, null,null, headers),
+    post: (url = "", data = null, headers = null) =>
+        json("POST", url, null, data, headers),
+    put: (url = "", data = null, headers = null) =>
+        json("PUT", url, null, data, headers),
+    delete: (url = "", data = null, headers = null) =>
+        json("DELETE", url, null, data, headers),
+    postFile: (url = "", data = null, headers = {}) =>
+        json("POST", url, data, null, headers)
 };
 
 export default backend;

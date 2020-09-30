@@ -75,7 +75,7 @@ class Connections extends Component {
         }
 
         this.setState({loading: true, prevParams: params});
-        let res = (await backend.getJson(`${url}?${urlParams}`)).json;
+        let res = (await backend.get(`${url}?${urlParams}`)).json;
 
         let connections = this.state.connections;
         let firstConnection = this.state.firstConnection;
@@ -115,7 +115,7 @@ class Connections extends Component {
         let flagRule = this.state.flagRule;
         let rules = this.state.rules;
         if (flagRule === null) {
-            rules = (await backend.getJson("/api/rules")).json;
+            rules = (await backend.get("/api/rules")).json;
             flagRule = rules.filter(rule => {
                 return rule.name === "flag";
             })[0];
@@ -170,7 +170,7 @@ class Connections extends Component {
                             <Connection key={c.id} data={c} onSelected={() => this.connectionSelected(c)}
                                         selected={this.state.selected === c.id} onMarked={marked => c.marked = marked}
                                         onEnabled={enabled => c.hidden = !enabled}
-                                        containsFlag={c.matched_rules.includes(this.state.flagRule.id)}
+                                        containsFlag={this.state.flagRule && c.matched_rules.includes(this.state.flagRule.id)}
                                         addServicePortFilter={this.addServicePortFilter}/>
                         )
                     }

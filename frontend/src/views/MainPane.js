@@ -21,7 +21,7 @@ class MainPane extends Component {
         const match = this.props.location.pathname.match(/^\/connections\/([a-f0-9]{24})$/);
         if (match != null) {
             this.setState({loading: true});
-            backend.getJson(`/api/connections/${match[1]}`)
+            backend.get(`/api/connections/${match[1]}`)
                 .then(res => this.setState({selectedConnection: res.json, loading: false}))
                 .catch(error => console.log(error));
         }

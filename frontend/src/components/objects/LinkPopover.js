@@ -22,7 +22,7 @@ class LinkPopover extends Component {
         );
 
         return (this.props.content ?
-            <OverlayTrigger trigger="hover" placement={this.props.placement || "top"} overlay={popover}>
+            <OverlayTrigger trigger={["hover", "focus"]} placement={this.props.placement || "top"} overlay={popover}>
                 <span className="link-popover">{this.props.text}</span>
             </OverlayTrigger> :
             <span className="link-popover-empty">{this.props.text}</span>

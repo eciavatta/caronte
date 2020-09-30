@@ -1,3 +1,5 @@
+import React from "react";
+
 const timeRegex = /^(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$/;
 
 export function createCurlCommand(subCommand, method = null, json = null, data = null) {
@@ -75,12 +77,27 @@ export function timestampToDateTime(timestamp) {
     return d.toLocaleDateString() + " " + d.toLocaleTimeString();
 }
 
-export function timestampToTime2(timestamp) {
-    let d = new Date(timestamp);
-    let hours = d.getHours();
-    let minutes = "0" + d.getMinutes();
-    let seconds = "0" + d.getSeconds();
+export function dateTimeToTime(dateTime) {
+    if (typeof dateTime === "string") {
+        dateTime = new Date(dateTime);
+    }
+
+    let hours = dateTime.getHours();
+    let minutes = "0" + dateTime.getMinutes();
+    let seconds = "0" + dateTime.getSeconds();
     return hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
+}
+
+export function durationBetween(from, to) {
+    if (typeof from === "string") {
+        from = new Date(from);
+    }
+    if (typeof to === "string") {
+        to = new Date(to);
+    }
+    const duration = ((to - from) / 1000).toFixed(3);
+
+    return (duration > 1000 || duration < -1000) ? "∞" : duration + "s";
 }
 
 export function formatSize(size) {
