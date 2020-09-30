@@ -10,7 +10,7 @@ services:
   caronte:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.testing
     image: caronte
     ports:
       - "6666:6666"
