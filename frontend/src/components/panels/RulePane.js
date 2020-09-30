@@ -344,27 +344,29 @@ class RulePane extends Component {
                                     <span>filters:</span>
                                     <NumericField name="service_port" inline value={rule.filter.service_port}
                                                   onChange={(v) => this.updateParam((r) => r.filter.service_port = v)}
-                                                  min={0} max={65565} error={this.state.ruleServicePortError} />
+                                                  min={0} max={65565} error={this.state.ruleServicePortError}
+                                                  readonly={isUpdate} />
                                     <NumericField name="client_port" inline value={rule.filter.client_port}
                                                   onChange={(v) => this.updateParam((r) => r.filter.client_port = v)}
-                                                  min={0} max={65565} error={this.state.ruleClientPortError} />
+                                                  min={0} max={65565} error={this.state.ruleClientPortError}
+                                                  readonly={isUpdate} />
                                     <InputField name="client_address" value={rule.filter.client_address}
-                                                error={this.state.ruleClientAddressError}
+                                                error={this.state.ruleClientAddressError} readonly={isUpdate}
                                                 onChange={(v) => this.updateParam((r) => r.filter.client_address = v)} />
                                 </Col>
 
                                 <Col style={{"paddingTop": "11px"}}>
                                     <NumericField name="min_duration" inline value={rule.filter.min_duration}
-                                                  error={this.state.ruleDurationError}
+                                                  error={this.state.ruleDurationError} readonly={isUpdate}
                                                   onChange={(v) => this.updateParam((r) => r.filter.min_duration = v)} />
                                     <NumericField name="max_duration" inline value={rule.filter.max_duration}
-                                                  error={this.state.ruleDurationError}
+                                                  error={this.state.ruleDurationError} readonly={isUpdate}
                                                   onChange={(v) => this.updateParam((r) => r.filter.max_duration = v)} />
                                     <NumericField name="min_bytes" inline value={rule.filter.min_bytes}
-                                                  error={this.state.ruleBytesError}
+                                                  error={this.state.ruleBytesError} readonly={isUpdate}
                                                   onChange={(v) => this.updateParam((r) => r.filter.min_bytes = v)} />
                                     <NumericField name="max_bytes" inline value={rule.filter.max_bytes}
-                                                  error={this.state.ruleBytesError}
+                                                  error={this.state.ruleBytesError} readonly={isUpdate}
                                                   onChange={(v) => this.updateParam((r) => r.filter.max_bytes = v)} />
                                 </Col>
                             </Row>

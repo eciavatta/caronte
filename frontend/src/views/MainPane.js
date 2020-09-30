@@ -6,6 +6,7 @@ import {Route, Switch, withRouter} from "react-router-dom";
 import PcapPane from "../components/panels/PcapPane";
 import backend from "../backend";
 import RulePane from "../components/panels/RulePane";
+import ServicePane from "../components/panels/ServicePane";
 
 class MainPane extends Component {
 
@@ -43,6 +44,7 @@ class MainPane extends Component {
                             <Switch>
                                 <Route path="/pcaps" children={<PcapPane />} />
                                 <Route path="/rules" children={<RulePane />} />
+                                <Route path="/services" children={<ServicePane />} />
                                 <Route exact path="/connections/:id" children={<ConnectionContent connection={this.state.selectedConnection} />} />
                                 <Route children={<ConnectionContent />} />
                             </Switch>

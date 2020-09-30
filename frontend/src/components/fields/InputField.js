@@ -55,7 +55,8 @@ class InputField extends Component {
                             { type === "file" && <label for={this.id} className={"file-label"}>
                                 {value.name || this.props.placeholder}</label> }
                             <input type={type} placeholder={this.props.placeholder} id={this.id}
-                                   aria-describedby={this.id} onChange={handler} {...inputProps} />
+                                   aria-describedby={this.id} onChange={handler} {...inputProps}
+                                   readOnly={this.props.readonly} />
                         </div>
                         { type !== "file" && value !== "" &&
                         <div className="field-clear">

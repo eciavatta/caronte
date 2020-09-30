@@ -75,7 +75,9 @@ class Header extends Component {
                             <Link to="/rules">
                                 <ButtonField variant="deep-purple" name="rules" bordered />
                             </Link>
-                            <ButtonField variant="indigo" onClick={this.props.onOpenServices} name="services" bordered />
+                            <Link to="/services">
+                                <ButtonField variant="indigo" name="services" bordered />
+                            </Link>
                             <ButtonField variant="blue" onClick={this.props.onOpenConfig}
 								disabled={false} name="config" bordered />
                         </div>

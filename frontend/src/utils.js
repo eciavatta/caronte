@@ -1,5 +1,3 @@
-import React from "react";
-
 const timeRegex = /^(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$/;
 
 export function createCurlCommand(subCommand, method = null, json = null, data = null) {
@@ -111,5 +109,5 @@ export function formatSize(size) {
 }
 
 export function randomClassName() {
-    return Math.random().toString(36).slice(2)
+    return Math.random().toString(36).slice(2);
 }

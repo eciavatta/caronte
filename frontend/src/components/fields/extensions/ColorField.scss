@@ -1,28 +1,36 @@
 @import '../../../colors.scss';
 
 .color-field {
-  display: flex;
-  align-items: flex-end;
+  .color-input {
+    display: flex;
+    align-items: flex-end;
 
-  .input-field {
-    flex: 1;
+    .input-field {
+      flex: 1;
 
-    input {
-      border-bottom-right-radius: 0 !important;
-      border-top-right-radius: 0 !important;
+      input {
+        border-bottom-right-radius: 0 !important;
+        border-top-right-radius: 0 !important;
+      }
+    }
+
+    .color-picker {
+      margin-bottom: 5px;
+
+      .picker-button {
+        font-size: 0.8em;
+        padding: 8px 15px;
+        border-bottom-right-radius: 5px;
+        border-top-right-radius: 5px;
+        background-color: $color-primary-1;
+      }
     }
   }
 
-  .color-picker {
-    margin-bottom: 5.5px;
-
-    .picker-button {
-      font-size: 0.8em;
-      padding: 8px 15px;
-      border-bottom-right-radius: 5px;
-      border-top-right-radius: 5px;
-      background-color: $color-primary-1;
-    }
+  .color-error {
+    font-size: 0.8em;
+    color: $color-secondary-0;
+    margin-left: 10px;
   }
 }
 
