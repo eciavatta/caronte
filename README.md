@@ -1,10 +1,9 @@
-# [WIP] Caronte
+# Caronte
 
 [![Build Status](https://travis-ci.com/eciavatta/caronte.svg?branch=develop)](https://travis-ci.com/eciavatta/caronte)
 [![codecov](https://codecov.io/gh/eciavatta/caronte/branch/develop/graph/badge.svg)](https://codecov.io/gh/eciavatta/caronte)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/009dca44f4da4118a20aed2b9b7610c0)](https://www.codacy.com/manual/eciavatta/caronte?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=eciavatta/caronte&amp;utm_campaign=Badge_Grade)
 
-<img align="left" src="https://divinacommedia.weebly.com/uploads/5/5/2/3/5523249/1299707879.jpg">
 Caronte is a tool to analyze the network flow during capture the flag events of type attack/defence.
 It reassembles TCP packets captured in pcap files to rebuild TCP connections, and analyzes each connection to find user-defined patterns.
 The patterns can be defined as regex or using protocol specific rules.
@@ -18,7 +17,7 @@ There are two ways to install Caronte:
 ### Run with Docker
 The only things to do are:
 -   clone the repo, with `git clone https://github.com/eciavatta/caronte.git`
--   inside the `caronte` folder, run `docker-compose up --build -d`
+-   inside the `caronte` folder, run `docker-compose up -d`
 -   wait for the image to be compiled and open browser at `http://localhost:3333`
 
 ### Manually installation
@@ -44,7 +43,7 @@ Run the binary with `./caronte`. The available configuration options are:
 ```
 
 ## Configuration
-The configuration takes place at runtime on the first start via the graphical interface (TO BE IMPLEMENTED) or via API. It is necessary to setup:
+The configuration takes place at runtime on the first start via the graphical interface or via API. It is necessary to setup:
 -   the `server_address`: the ip address of the vulnerable machine. Must be the destination address of all the connections in the pcaps. If each vulnerable service has an own ip, this param accept also a CIDR address. The address can be either IPv4 both IPv6
 -   the `flag_regex`: the regular expression that matches a flag. Usually provided on the competition rules page
 -   `auth_required`: if true a basic authentication is enabled to protect the analyzer
