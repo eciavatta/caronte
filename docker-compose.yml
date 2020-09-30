@@ -8,10 +8,7 @@ services:
     restart: always
 
   caronte:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: caronte
+    image: eciavatta/caronte:latest
     ports:
       - "3333:3333"
     depends_on:

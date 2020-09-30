@@ -27,7 +27,7 @@ FROM ubuntu:20.04
 COPY --from=BUILDSTAGE /caronte-build /caronte
 
 RUN apt-get update && \
-	DEBIAN_FRONTEND=noninteractive apt-get install -qq libpcap-dev libhyperscan-dev && \
+	DEBIAN_FRONTEND=noninteractive apt-get install -qq golang-1.14 pkg-config libpcap-dev libhyperscan-dev && \
 	rm -rf /var/lib/apt/lists/*
 
 ENV GIN_MODE release
