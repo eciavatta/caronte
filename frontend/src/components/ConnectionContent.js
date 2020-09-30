@@ -1,8 +1,10 @@
 import React, {Component} from 'react';
 import './ConnectionContent.scss';
-import {Button, Dropdown, Row} from 'react-bootstrap';
-import axios from 'axios';
+import {Row} from 'react-bootstrap';
 import MessageAction from "./MessageAction";
+import backend from "../backend";
+import ButtonField from "./fields/ButtonField";
+import ChoiceField from "./fields/ChoiceField";
 
 const classNames = require('classnames');
 
@@ -22,19 +24,29 @@ class ConnectionContent extends Component {
         this.setFormat = this.setFormat.bind(this);
     }
 
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        if (this.props.connection !== null && (
-            this.props.connection !== prevProps.connection || this.state.format !== prevState.format)) {
-            this.setState({loading: true});
-            // TODO: limit workaround.
-            axios.get(`/api/streams/${this.props.connection.id}?format=${this.state.format}&limit=999999`).then(res => {
-                this.setState({
-                    connectionContent: res.data,
-                    loading: false
-                });
-            });
+    componentDidMount() {
+        if (this.props.connection != null) {
+            this.loadStream();
         }
     }
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (this.props.connection != null && (
+            this.props.connection !== prevProps.connection || this.state.format !== prevState.format)) {
+            this.loadStream();
+        }
+    }
+
+    loadStream = () => {
+        this.setState({loading: true});
+        // TODO: limit workaround.
+        backend.get(`/api/streams/${this.props.connection.id}?format=${this.state.format}&limit=999999`).then(res => {
+            this.setState({
+                connectionContent: res.json,
+                loading: false
+            });
+        });
+    };
 
     setFormat(format) {
         if (this.validFormats.includes(format)) {
@@ -51,7 +63,7 @@ class ConnectionContent extends Component {
         }
 
         let unrollMap = (obj) => obj == null ? null : Object.entries(obj).map(([key, value]) =>
-            <p><strong>{key}</strong>: {value}</p>
+            <p key={key}><strong>{key}</strong>: {value}</p>
         );
 
         let m = connectionMessage.metadata;
@@ -83,12 +95,12 @@ class ConnectionContent extends Component {
         }
 
         return Object.entries(connectionMessage.metadata["reproducers"]).map(([actionName, actionValue]) =>
-            <Button size="sm" key={actionName + "_button"} onClick={() => {
+            <ButtonField small key={actionName + "_button"} name={actionName} onClick={() => {
                 this.setState({
                     messageActionDialog: <MessageAction actionName={actionName} actionValue={actionValue}
                                                         onHide={() => this.setState({messageActionDialog: null})}/>
                 });
-            }}>{actionName}</Button>
+            }} />
         );
     }
 
@@ -128,56 +140,16 @@ class ConnectionContent extends Component {
                             <span> | <strong>timestamp</strong>: {this.props.connection.started_at}</span>
                         </div>
                         <div className="header-actions col-auto">
-                            <Dropdown onSelect={this.setFormat}>
-                                <Dropdown.Toggle size="sm" id="connection-content-format">
-                                    format
-                                </Dropdown.Toggle>
+                            <ChoiceField name="format" inline small onlyName
+                                         keys={["default", "hex", "hexdump", "base32", "base64", "ascii", "binary", "decimal", "octal"]}
+                                         values={["plain", "hex", "hexdump", "base32", "base64", "ascii", "binary", "decimal", "octal"]}
+                                         onChange={this.setFormat} value={this.state.value} />
 
-                                <Dropdown.Menu>
-                                    <Dropdown.Item eventKey="default"
-                                                   active={this.state.format === "default"}>plain</Dropdown.Item>
-                                    <Dropdown.Item eventKey="hex"
-                                                   active={this.state.format === "hex"}>hex</Dropdown.Item>
-                                    <Dropdown.Item eventKey="hexdump"
-                                                   active={this.state.format === "hexdump"}>hexdump</Dropdown.Item>
-                                    <Dropdown.Item eventKey="base32"
-                                                   active={this.state.format === "base32"}>base32</Dropdown.Item>
-                                    <Dropdown.Item eventKey="base64"
-                                                   active={this.state.format === "base64"}>base64</Dropdown.Item>
-                                    <Dropdown.Item eventKey="ascii"
-                                                   active={this.state.format === "ascii"}>ascii</Dropdown.Item>
-                                    <Dropdown.Item eventKey="binary"
-                                                   active={this.state.format === "binary"}>binary</Dropdown.Item>
-                                    <Dropdown.Item eventKey="decimal"
-                                                   active={this.state.format === "decimal"}>decimal</Dropdown.Item>
-                                    <Dropdown.Item eventKey="octal"
-                                                   active={this.state.format === "octal"}>octal</Dropdown.Item>
-                                </Dropdown.Menu>
-                            </Dropdown>
+                             <ChoiceField name="view_as" inline small onlyName keys={["default"]} values={["default"]} />
 
-                            <Dropdown>
-                                <Dropdown.Toggle size="sm" id="connection-content-view">
-                                    view_as
-                                </Dropdown.Toggle>
-
-                                <Dropdown.Menu>
-                                    <Dropdown.Item eventKey="default" active={true}>default</Dropdown.Item>
-                                </Dropdown.Menu>
-
-                            </Dropdown>
-
-                            <Dropdown>
-                                <Dropdown.Toggle size="sm" id="connection-content-download">
-                                    download_as
-                                </Dropdown.Toggle>
-
-                                <Dropdown.Menu>
-                                    <Dropdown.Item eventKey="nl_separated">nl_separated</Dropdown.Item>
-                                    <Dropdown.Item eventKey="only_client">only_client</Dropdown.Item>
-                                    <Dropdown.Item eventKey="only_server">only_server</Dropdown.Item>
-                                </Dropdown.Menu>
-
-                            </Dropdown>
+                            <ChoiceField name="download_as" inline small onlyName
+                                         keys={["nl_separated", "only_client", "only_server"]}
+                                         values={["nl_separated", "only_client", "only_server"]} />
                         </div>
                     </Row>
                 </div>

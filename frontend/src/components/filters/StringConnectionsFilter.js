@@ -1,9 +1,7 @@
 import React, {Component} from 'react';
 import {withRouter} from "react-router-dom";
 import {Redirect} from "react-router";
-import './StringConnectionsFilter.scss';
-
-const classNames = require('classnames');
+import InputField from "../fields/InputField";
 
 class StringConnectionsFilter extends Component {
 
@@ -62,8 +60,7 @@ class StringConnectionsFilter extends Component {
             (typeof this.props.validateFunc === "function" && this.props.validateFunc(value));
     }
 
-    filterChanged(event) {
-        let fieldValue = event.target.value;
+    filterChanged(fieldValue) {
         if (this.state.timeoutHandle !== null) {
             clearTimeout(this.state.timeoutHandle);
         }
@@ -116,26 +113,10 @@ class StringConnectionsFilter extends Component {
         let active = this.state.filterValue !== null;
 
         return (
-            <div className={classNames("filter", "d-inline-block", {"filter-active" : active},
-                {"filter-invalid": this.state.invalidValue})} style={{"width": "200px"}}>
-                <div className="input-group">
-                    <div className="filter-name-wrapper">
-                        <span className="filter-name" id={`filter-${this.props.filterName}`}>{this.props.filterName}:</span>
-                    </div>
-                    <input placeholder={this.props.defaultFilterValue} aria-label={this.props.filterName}
-                           aria-describedby={`filter-${this.props.filterName}`} className="form-control filter-value"
-                           onChange={this.filterChanged} value={this.state.fieldValue} />
-                </div>
-
-                { active &&
-                    <div className="filter-delete">
-                        <span className="filter-delete-icon" onClick={() => {
-                            this.needRedirect = true;
-                            this.setState({fieldValue: "", filterValue: null});
-                        }}>del</span>
-                    </div>
-                }
-
+            <div className="filter" style={{"width": `${this.props.width}px`}}>
+                <InputField active={active} invalid={this.state.invalidValue} name={this.props.filterName}
+                            placeholder={this.props.defaultFilterValue} onChange={this.filterChanged}
+                            value={this.state.fieldValue} inline={true} small={true} />
                 {redirect}
             </div>
         );

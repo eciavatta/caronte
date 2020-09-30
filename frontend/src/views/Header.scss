@@ -14,12 +14,21 @@
   }
 
   .header-buttons {
-    margin: 5px 0;
-    text-align: right;
+    margin: 7px 0;
+    display: flex;
+    justify-content: flex-end;
+
+    .button-field {
+      margin-left: 7px;
+    }
   }
 
-  .filters-bar-wrapper {
-    height: 50px;
-    padding: 8px 0;
+  .filters-bar {
+    padding: 3px 0;
+
+    .filter {
+      display: inline-block;
+      margin-right: 10px;
+    }
   }
 }

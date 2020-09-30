@@ -1,0 +1,123 @@
+@import '../../colors.scss';
+
+.button-field {
+  font-size: 0.9em;
+
+  .button-bordered {
+    border-bottom: 5px solid $color-primary-1;
+  }
+
+  &.field-small {
+    font-size: 0.8em;
+
+    button {
+      padding: 3px 12px;
+    }
+  }
+
+  .button-variant-red {
+    color: $color-red-light;
+    background-color: $color-red;
+
+    &.button-bordered {
+      border-bottom: 5px solid $color-red-dark;
+    }
+
+    &:hover,
+    &:active {
+      color: $color-red-light;
+      background-color: $color-red-dark;
+    }
+  }
+
+  .button-variant-pink {
+    color: $color-pink-light;
+    background-color: $color-pink;
+
+    &.button-bordered {
+      border-bottom: 5px solid $color-pink-dark;
+    }
+
+    &:hover,
+    &:active {
+      color: $color-pink-light;
+      background-color: $color-pink-dark;
+    }
+  }
+
+  .button-variant-purple {
+    color: $color-purple-light;
+    background-color: $color-purple;
+
+    &.button-bordered {
+      border-bottom: 5px solid $color-purple-dark;
+    }
+
+    &:hover,
+    &:active {
+      color: $color-purple-light;
+      background-color: $color-purple-dark;
+    }
+  }
+
+  .button-variant-deep-purple {
+    color: $color-deep-purple-light;
+    background-color: $color-deep-purple;
+
+    &.button-bordered {
+      border-bottom: 5px solid $color-deep-purple-dark;
+    }
+
+    &:hover,
+    &:active {
+      color: $color-deep-purple-light;
+      background-color: $color-deep-purple-dark;
+    }
+  }
+
+  .button-variant-indigo {
+    color: $color-indigo-light;
+    background-color: $color-indigo;
+
+    &.button-bordered {
+      border-bottom: 5px solid $color-indigo-dark;
+    }
+
+    &:hover,
+    &:active {
+      color: $color-indigo-light;
+      background-color: $color-indigo-dark;
+    }
+  }
+
+  .button-variant-blue {
+    color: $color-blue-light;
+    background-color: $color-blue;
+
+    &.button-bordered {
+      border-bottom: 5px solid $color-blue-dark;
+    }
+
+    &:hover,
+    &:active {
+      color: $color-blue-light;
+      background-color: $color-blue-dark;
+    }
+  }
+
+  .button-variant-green {
+    color: $color-green-light;
+    background-color: $color-green;
+
+    &.button-bordered {
+      border-bottom: 5px solid $color-green-dark;
+    }
+
+    &:hover,
+    &:active {
+      color: $color-green-light;
+      background-color: $color-green-dark;
+    }
+  }
+
+}

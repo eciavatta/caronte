@@ -1,10 +1,11 @@
 import React, {Component} from 'react';
 import './Connections.scss';
-import axios from 'axios';
 import Connection from "../components/Connection";
 import Table from 'react-bootstrap/Table';
 import {Redirect} from 'react-router';
 import {withRouter} from "react-router-dom";
+import backend from "../backend";
+import ConnectionMatchedRules from "../components/ConnectionMatchedRules";
 
 class Connections extends Component {
 
@@ -25,21 +26,21 @@ class Connections extends Component {
         this.scrollBottomThreashold = 0.99999;
         this.maxConnections = 500;
         this.queryLimit = 50;
-
-        this.handleScroll = this.handleScroll.bind(this);
-        this.connectionSelected = this.connectionSelected.bind(this);
-        this.addServicePortFilter = this.addServicePortFilter.bind(this);
     }
 
     componentDidMount() {
         this.loadConnections({limit: this.queryLimit})
             .then(() => this.setState({loaded: true}));
+        if (this.props.initialConnection != null) {
+            this.setState({selected: this.props.initialConnection.id});
+            // TODO: scroll to initial connection
+        }
     }
 
-    connectionSelected(c) {
+    connectionSelected = (c) => {
         this.setState({selected: c.id});
         this.props.onSelected(c);
-    }
+    };
 
     componentDidUpdate(prevProps, prevState, snapshot) {
         if (this.state.loaded && prevProps.location.search !== this.props.location.search) {
@@ -49,7 +50,7 @@ class Connections extends Component {
         }
     }
 
-    handleScroll(e) {
+    handleScroll = (e) => {
         let relativeScroll = e.currentTarget.scrollTop / (e.currentTarget.scrollHeight - e.currentTarget.clientHeight);
         if (!this.state.loading && relativeScroll > this.scrollBottomThreashold) {
             this.loadConnections({from: this.state.lastConnection.id, limit: this.queryLimit,})
@@ -59,13 +60,23 @@ class Connections extends Component {
             this.loadConnections({to: this.state.firstConnection.id, limit: this.queryLimit,})
                 .then(() => console.log("Previous connections loaded"));
         }
-    }
+    };
 
-    addServicePortFilter(port) {
-        let urlParams = new URLSearchParams(this.props.location.search);
+    addServicePortFilter = (port) => {
+        const urlParams = new URLSearchParams(this.props.location.search);
         urlParams.set("service_port", port);
         this.setState({queryString: "?" + urlParams});
-    }
+    };
+
+    addMatchedRulesFilter = (matchedRule) => {
+        const urlParams = new URLSearchParams(this.props.location.search);
+        const oldMatchedRules = urlParams.getAll("matched_rules") || [];
+
+        if (!oldMatchedRules.includes(matchedRule)) {
+            urlParams.append("matched_rules", matchedRule);
+            this.setState({queryString: "?" + urlParams});
+        }
+    };
 
     async loadConnections(params) {
         let url = "/api/connections";
@@ -75,15 +86,15 @@ class Connections extends Component {
         }
 
         this.setState({loading: true, prevParams: params});
-        let res = await axios.get(`${url}?${urlParams}`);
+        let res = (await backend.get(`${url}?${urlParams}`)).json;
 
         let connections = this.state.connections;
         let firstConnection = this.state.firstConnection;
         let lastConnection = this.state.lastConnection;
 
         if (params !== undefined && params.from !== undefined) {
-            if (res.data.length > 0) {
-                connections = this.state.connections.concat(res.data);
+            if (res.length > 0) {
+                connections = this.state.connections.concat(res);
                 lastConnection = connections[connections.length - 1];
                 if (connections.length > this.maxConnections) {
                     connections = connections.slice(connections.length - this.maxConnections,
@@ -92,8 +103,8 @@ class Connections extends Component {
                 }
             }
         } else if (params !== undefined && params.to !== undefined) {
-            if (res.data.length > 0) {
-                connections = res.data.concat(this.state.connections);
+            if (res.length > 0) {
+                connections = res.concat(this.state.connections);
                 firstConnection = connections[0];
                 if (connections.length > this.maxConnections) {
                     connections = connections.slice(0, this.maxConnections);
@@ -101,8 +112,8 @@ class Connections extends Component {
                 }
             }
         } else {
-            if (res.data.length > 0) {
-                connections = res.data;
+            if (res.length > 0) {
+                connections = res;
                 firstConnection = connections[0];
                 lastConnection = connections[connections.length - 1];
             } else {
@@ -112,21 +123,15 @@ class Connections extends Component {
             }
         }
 
-        let flagRule = this.state.flagRule;
         let rules = this.state.rules;
-        if (flagRule === null) {
-            let res = await axios.get("/api/rules");
-            rules = res.data;
-            flagRule = rules.filter(rule => {
-                return rule.name === "flag";
-            })[0];
+        if (rules === null) {
+            rules = (await backend.get("/api/rules")).json;
         }
 
         this.setState({
             loading: false,
             connections: connections,
-            rules: res.data,
-            flagRule: flagRule,
+            rules: rules,
             firstConnection: firstConnection,
             lastConnection: lastConnection
         });
@@ -134,7 +139,7 @@ class Connections extends Component {
 
     render() {
         let redirect;
-        let queryString = this.state.queryString !== null ? this.state.queryString : ""
+        let queryString = this.state.queryString !== null ? this.state.queryString : "";
         if (this.state.selected) {
             let format = this.props.match.params.format;
             format = format !== undefined ? "/" + format : "";
@@ -159,6 +164,7 @@ class Connections extends Component {
                         <th>srcport</th>
                         <th>dstip</th>
                         <th>dstport</th>
+                        <th>started_at</th>
                         <th>duration</th>
                         <th>up</th>
                         <th>down</th>
@@ -167,13 +173,18 @@ class Connections extends Component {
                     </thead>
                     <tbody>
                     {
-                        this.state.connections.map(c =>
-                            <Connection key={c.id} data={c} onSelected={() => this.connectionSelected(c)}
-                                        selected={this.state.selected === c.id} onMarked={marked => c.marked = marked}
-                                        onEnabled={enabled => c.hidden = !enabled}
-                                        containsFlag={c.matched_rules.includes(this.state.flagRule.id)}
-                                        addServicePortFilter={this.addServicePortFilter}/>
-                        )
+                        this.state.connections.flatMap(c => {
+                            return [<Connection key={c.id} data={c} onSelected={() => this.connectionSelected(c)}
+                                                selected={this.state.selected === c.id}
+                                                onMarked={marked => c.marked = marked}
+                                                onEnabled={enabled => c.hidden = !enabled}
+                                                addServicePortFilter={this.addServicePortFilter} />,
+                                c.matched_rules.length > 0 &&
+                                    <ConnectionMatchedRules key={c.id + "_m"} matchedRules={c.matched_rules}
+                                                            rules={this.state.rules}
+                                                            addMatchedRulesFilter={this.addMatchedRulesFilter} />
+                            ];
+                        })
                     }
                     {loading}
                     </tbody>

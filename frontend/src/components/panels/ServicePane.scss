@@ -1,0 +1,22 @@
+
+.service-pane {
+  display: flex;
+  flex-direction: column;
+
+  .services-list {
+    flex: 1;
+    overflow: hidden;
+
+    .section-content {
+      height: 100%;
+    }
+
+    .section-table {
+      height: calc(100% - 30px);
+    }
+  }
+
+  .service-edit {
+    flex: 0;
+  }
+}

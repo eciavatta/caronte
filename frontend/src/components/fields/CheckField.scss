@@ -1,0 +1,39 @@
+@import '../../colors.scss';
+
+.check-field {
+  font-size: 0.9em;
+  margin: 5px 0;
+
+  .field-input {
+    border-radius: 5px;
+    width: fit-content;
+    background-color: $color-primary-2;
+
+    input {
+      display: none;
+    }
+
+    label {
+      margin: 0;
+      padding: 6px 15px;
+      cursor: pointer;
+    }
+
+    &:hover {
+      background-color: $color-primary-1;
+    }
+  }
+
+  &.field-checked .field-input {
+    background-color: $color-primary-4 !important;
+    color: $color-primary-3;
+  }
+
+  &.field-small {
+    font-size: 0.8em;
+
+    .field-input label {
+      padding: 7px 15px;
+    }
+  }
+}

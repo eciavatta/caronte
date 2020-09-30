@@ -11,77 +11,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: $color-primary-2;
   color: $color-primary-4;
-  height: 100%;
-  max-height: 100%;
+  height: 100vh;
+  font-size: 100%;
 }
 
 pre {
   font-family: 'Fira Code', monospace;
   font-size: 14px;
-}
-
-.btn {
-  border-radius: 0;
-  background-color: $color-primary-2;
-  border: none;
-  border-bottom: 5px solid $color-primary-1;
-  color: $color-primary-4;
-  outline: none;
-  padding: 5px 12px;
-  font-weight: 500;
-
-  &:hover,
-  &:active {
-    background-color: $color-primary-1;
-    color: $color-primary-4;
-  }
-
-  &:focus,
-  &:active {
-    outline: none !important;
-    box-shadow: none !important;
-  }
-}
-
-.btn-sm {
-  border: none;
-  font-size: 12px;
-}
-
-.btn-red {
-  color: $color-secondary-4;
-  background-color: $color-secondary-2;
-  border-bottom: 5px solid $color-secondary-1;
-
-  &:hover,
-  &:active {
-    color: $color-secondary-4;
-    background-color: $color-secondary-1;
-  }
-}
-
-.btn-blue {
-  color: $color-blue-light;
-  background-color: $color-blue;
-  border-bottom: 5px solid $color-blue-dark;
-
-  &:hover,
-  &:active {
-    color: $color-blue-light;
-    background-color: $color-blue-dark;
-  }
-}
-
-.btn-green {
-  color: $color-green-light;
-  background-color: $color-green;
-  border-bottom: 5px solid $color-green-dark;
-
-  &:hover,
-  &:active {
-    color: $color-green-light;
-    background-color: $color-green-dark;
-  }
 }
 
 a {
@@ -130,40 +66,14 @@ a {
   }
 }
 
-textarea.form-control {
-  resize: none;
-}
-
-input.form-control,
-textarea.form-control {
-  background-color: $color-primary-2;
-  border: none;
-  color: $color-primary-4;
-  font-family: 'Fira Code', monospace;
-
-  &:focus {
-    background-color: $color-primary-1;
-    color: $color-primary-4;
-    box-shadow: none;
-  }
-
-  &[readonly] {
-    background-color: $color-primary-2;
-    border: none;
-    color: $color-primary-4;
-  }
-
-  &[readonly]:focus {
-    background-color: $color-primary-1;
-    color: $color-primary-4;
-    box-shadow: none;
-  }
-}
-
 .table {
   color: $color-primary-4;
 }
 
 .text-muted {
   color: $color-primary-4 !important;
+}
+
+.popover-header {
+  color: $color-primary-1;
 }

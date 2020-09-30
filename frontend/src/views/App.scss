@@ -1,0 +1,15 @@
+
+.main {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+
+  .main-content {
+    flex: 1 1;
+    overflow: hidden;
+  }
+
+  .main-header, .main-footer {
+    flex: 0 0;
+  }
+}

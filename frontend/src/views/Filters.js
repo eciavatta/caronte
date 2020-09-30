@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
-import './Services.scss';
-import {Button, Col, Container, Modal, Row, Table} from "react-bootstrap";
+import {Col, Container, Modal, Row, Table} from "react-bootstrap";
 import {filtersDefinitions, filtersNames} from "../components/filters/FiltersDefinitions";
+import ButtonField from "../components/fields/ButtonField";
 
 class Filters extends Component {
 
@@ -89,7 +89,7 @@ class Filters extends Component {
                     </Container>
                 </Modal.Body>
                 <Modal.Footer className="dialog-footer">
-                    <Button variant="red" onClick={this.props.onHide}>close</Button>
+                    <ButtonField variant="red" bordered onClick={this.props.onHide} name="close" />
                 </Modal.Footer>
             </Modal>
         );

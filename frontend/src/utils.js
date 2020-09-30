@@ -1,9 +1,19 @@
 const timeRegex = /^(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$/;
 
-export function createCurlCommand(subCommand, data) {
-    let full = window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : '');
-    return `curl --request PUT \\\n  --url ${full}/api${subCommand} \\\n  ` +
-        `--header 'content-type: application/json' \\\n  --data '${JSON.stringify(data)}'`;
+export function createCurlCommand(subCommand, method = null, json = null, data = null) {
+    const full = window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : '');
+
+    let contentType = null;
+    let content = null;
+    if (json != null) {
+        contentType = '    -H "Content-Type: application/json" \\\n';
+        content = `    -d '${JSON.stringify(json)}'`;
+    } else if (data != null) {
+        contentType = '    -H "Content-Type: multipart/form-data" \\\n';
+        content = "    " + Object.entries(data).map(([key, value]) => `-F "${key}=${value}"`).join(" \\\n    ");
+    }
+
+    return `curl${method != null ? " -X " + method : ""} "${full}/api${subCommand}" \\\n` + contentType + "" + content;
 }
 
 export function validateIpAddress(ipAddress) {
@@ -63,4 +73,41 @@ export function timestampToTime(timestamp) {
 export function timestampToDateTime(timestamp) {
     let d = new Date(timestamp);
     return d.toLocaleDateString() + " " + d.toLocaleTimeString();
+}
+
+export function dateTimeToTime(dateTime) {
+    if (typeof dateTime === "string") {
+        dateTime = new Date(dateTime);
+    }
+
+    let hours = dateTime.getHours();
+    let minutes = "0" + dateTime.getMinutes();
+    let seconds = "0" + dateTime.getSeconds();
+    return hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
+}
+
+export function durationBetween(from, to) {
+    if (typeof from === "string") {
+        from = new Date(from);
+    }
+    if (typeof to === "string") {
+        to = new Date(to);
+    }
+    const duration = ((to - from) / 1000).toFixed(3);
+
+    return (duration > 1000 || duration < -1000) ? "∞" : duration + "s";
+}
+
+export function formatSize(size) {
+    if (size < 1000) {
+        return `${size}`;
+    } else if (size < 1000000) {
+        return `${(size / 1000).toFixed(1)}K`;
+    } else {
+        return `${(size / 1000000).toFixed(1)}M`;
+    }
+}
+
+export function randomClassName() {
+    return Math.random().toString(36).slice(2);
 }

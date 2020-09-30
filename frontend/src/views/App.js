@@ -1,49 +1,46 @@
 import React, {Component} from 'react';
+import './App.scss';
 import Header from "./Header";
-import MainPane from "./MainPane";
+import MainPane from "../components/panels/MainPane";
 import Footer from "./Footer";
-import {BrowserRouter as Router, Route, Switch} from "react-router-dom";
-import Services from "./Services";
+import {BrowserRouter as Router} from "react-router-dom";
 import Filters from "./Filters";
-import Rules from "./Rules";
+import backend from "../backend";
+import ConfigurationPane from "../components/panels/ConfigurationPane";
 
 class App extends Component {
 
     constructor(props) {
         super(props);
-        this.state = {
-            servicesWindowOpen: false,
-            filterWindowOpen: false,
-            rulesWindowOpen: false
-        };
+
+        this.state = {};
+    }
+
+    componentDidMount() {
+        backend.get("/api/services").then(_ => this.setState({configured: true}));
     }
 
     render() {
         let modal;
-        if (this.state.servicesWindowOpen) {
-            modal = <Services onHide={() => this.setState({servicesWindowOpen: false})}/>;
-        }
-        if (this.state.filterWindowOpen) {
+        if (this.state.filterWindowOpen && this.state.configured) {
             modal = <Filters onHide={() => this.setState({filterWindowOpen: false})}/>;
-        }
-        if (this.state.rulesWindowOpen) {
-            modal = <Rules onHide={() => this.setState({rulesWindowOpen: false})}/>;
         }
 
         return (
-            <div className="app">
+            <div className="main">
                 <Router>
-                    <Header onOpenServices={() => this.setState({servicesWindowOpen: true})}
-                            onOpenFilters={() => this.setState({filterWindowOpen: true})}
-                            onOpenRules={() => this.setState({rulesWindowOpen: true})} />
-                    <Switch>
-                        <Route path="/connections/:id" children={<MainPane/>}/>
-                        <Route path="/" children={<MainPane/>}/>
-                    </Switch>
-                    {modal}
-                    <Footer/>
+                    <div className="main-header">
+                        <Header onOpenFilters={() => this.setState({filterWindowOpen: true})} />
+                    </div>
+                    <div className="main-content">
+                        {this.state.configured ? <MainPane /> :
+                            <ConfigurationPane onConfigured={() => this.setState({configured: true})} />}
+                        {modal}
+                    </div>
+                    <div className="main-footer">
+                        {this.state.configured && <Footer/>}
+                    </div>
                 </Router>
-
             </div>
         );
     }

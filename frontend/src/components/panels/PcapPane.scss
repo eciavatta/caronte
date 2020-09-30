@@ -1,0 +1,39 @@
+@import '../../colors.scss';
+
+.pcap-pane {
+  display: flex;
+  flex-direction: column;
+
+  .pcap-list {
+    flex: 1;
+    overflow: hidden;
+
+    .section-content {
+      height: 100%;
+    }
+
+    .section-table {
+      height: calc(100% - 30px);
+    }
+
+    .table-cell-action {
+      font-size: 13px;
+      font-weight: 600;
+    }
+  }
+
+  .upload-actions {
+    display: flex;
+    align-items: flex-end;
+    margin-bottom: 20px;
+  }
+
+  .upload-options {
+    flex: 1;
+
+    span {
+      font-size: 0.9em;
+    }
+  }
+
+}

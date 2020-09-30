@@ -1,8 +1,9 @@
 import React, {Component} from 'react';
 import Typed from 'typed.js';
 import './Header.scss';
-import {Button} from "react-bootstrap";
 import {filtersDefinitions, filtersNames} from "../components/filters/FiltersDefinitions";
+import {Link} from "react-router-dom";
+import ButtonField from "../components/fields/ButtonField";
 
 class Header extends Component {
 
@@ -45,7 +46,7 @@ class Header extends Component {
 
     render() {
         let quickFilters = filtersNames.filter(name => this.state[`${name}_active`])
-            .map(name => filtersDefinitions[name])
+            .map(name => <React.Fragment key={name} >{filtersDefinitions[name]}</React.Fragment>)
             .slice(0, 5);
 
         return (
@@ -60,21 +61,26 @@ class Header extends Component {
                     </div>
 
                     <div className="col-auto">
-                        <div className="filters-bar-wrapper">
-                            <div className="filters-bar">
-                                {quickFilters}
-                            </div>
+                        <div className="filters-bar">
+                            {quickFilters}
                         </div>
                     </div>
 
                     <div className="col">
                         <div className="header-buttons">
-                            <Button onClick={this.props.onOpenFilters}>filters</Button>
-                            <Button variant="yellow" size="sm">pcaps</Button>
-                            <Button variant="blue" onClick={this.props.onOpenRules}>rules</Button>
-                            <Button variant="red" onClick={this.props.onOpenServices}>
-                                services
-                            </Button>
+                            <ButtonField variant="pink" onClick={this.props.onOpenFilters} name="filters" bordered />
+                            <Link to="/pcaps">
+                                <ButtonField variant="purple" name="pcaps" bordered />
+                            </Link>
+                            <Link to="/rules">
+                                <ButtonField variant="deep-purple" name="rules" bordered />
+                            </Link>
+                            <Link to="/services">
+                                <ButtonField variant="indigo" name="services" bordered />
+                            </Link>
+                            <Link to="/config">
+                                <ButtonField variant="blue" name="config" bordered />
+                            </Link>
                         </div>
                     </div>
                 </div>

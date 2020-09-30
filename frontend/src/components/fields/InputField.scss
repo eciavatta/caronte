@@ -1,0 +1,125 @@
+@import '../../colors.scss';
+
+.input-field {
+  font-size: 0.9em;
+  margin: 5px 0;
+
+  .field-name {
+    label {
+      margin: 0;
+    }
+  }
+
+  .field-input {
+    position: relative;
+
+    .field-value {
+      .file-label {
+        background-color: $color-primary-2;
+        margin: 0;
+        width: 100%;
+        color: $color-primary-4;
+        border-radius: 5px;
+        padding: 7px 10px;
+        cursor: pointer;
+      }
+
+      input[type="file"] {
+        display: none;
+      }
+
+      .file-label:after {
+        content: "Browse";
+        position: absolute;
+        right: 0;
+        top: 0;
+        padding: 7px 10px 7px 12px;
+        background-color: $color-primary-1;
+        border-bottom-right-radius: 5px;
+        border-top-right-radius: 5px;
+      }
+    }
+  }
+
+  &.field-active {
+    &.field-inline .field-name {
+      background-color: $color-primary-4 !important;
+      color: $color-primary-3 !important;
+    }
+
+    .field-value input, .field-value .file-label {
+      background-color: $color-primary-4 !important;
+      color: $color-primary-3 !important;
+    }
+
+    .file-label:after {
+      background-color: $color-secondary-4 !important;
+    }
+  }
+
+  &.field-invalid {
+    &.field-inline .field-name {
+      background-color: $color-secondary-2 !important;
+      color: $color-primary-4 !important;
+    }
+
+    .field-value input, .field-value .file-label {
+      background-color: $color-secondary-2 !important;
+      color: $color-primary-4 !important;
+    }
+
+    .file-label:after {
+      background-color: $color-secondary-1 !important;
+    }
+  }
+
+  &.field-small {
+    font-size: 0.8em;
+  }
+
+  &.field-inline .field-wrapper {
+    display: flex;
+
+    .field-name {
+      background-color: $color-primary-2;
+      padding: 6px 7px;
+      border-top-left-radius: 5px;
+      border-bottom-left-radius: 5px;
+    }
+
+    .field-input {
+      width: 100%;
+
+      input, .file-label {
+        border-bottom-left-radius: 0;
+        border-top-left-radius: 0;
+        padding-left: 3px;
+      }
+    }
+
+    &:focus-within .field-name {
+      background-color: $color-primary-1;
+    }
+  }
+
+  .field-clear {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    z-index: 10;
+    font-size: 0.9em;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    cursor: pointer;
+  }
+
+  &.field-active .field-clear {
+    color: $color-primary-2;
+  }
+
+  .field-error {
+    padding: 5px 10px;
+    font-size: 0.9em;
+    color: $color-secondary-0;
+  }
+}

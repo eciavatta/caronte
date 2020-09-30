@@ -1,6 +1,8 @@
 import React, {Component} from 'react';
 import './MessageAction.scss';
-import {Button, FormControl, InputGroup, Modal} from "react-bootstrap";
+import {Modal} from "react-bootstrap";
+import TextField from "./fields/TextField";
+import ButtonField from "./fields/ButtonField";
 
 class MessageAction extends Component {
 
@@ -35,14 +37,11 @@ class MessageAction extends Component {
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <InputGroup>
-                        <FormControl as="textarea" className="message-action-value" readOnly={true}
-                                     style={{"height": "300px"}} value={this.props.actionValue} ref={this.actionValue} />
-                    </InputGroup>
+                    <TextField readonly value={this.props.actionValue} textRef={this.actionValue} rows={15} />
                 </Modal.Body>
                 <Modal.Footer className="dialog-footer">
-                    <Button variant="green" onClick={this.copyActionValue}>{this.state.copyButtonText}</Button>
-                    <Button variant="red" onClick={this.props.onHide}>close</Button>
+                    <ButtonField variant="green" bordered onClick={this.copyActionValue} name={this.state.copyButtonText} />
+                    <ButtonField variant="red" bordered onClick={this.props.onHide} name="close" />
                 </Modal.Footer>
             </Modal>
         );

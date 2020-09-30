@@ -1,7 +1,11 @@
 import React, {Component} from 'react';
 import './Connection.scss';
-import axios from 'axios'
-import {Button, Form, OverlayTrigger, Popover} from "react-bootstrap";
+import {Form, OverlayTrigger, Popover} from "react-bootstrap";
+import backend from "../backend";
+import {dateTimeToTime, durationBetween, formatSize} from "../utils";
+import ButtonField from "./fields/ButtonField";
+
+const classNames = require('classnames');
 
 class Connection extends Component {
 
@@ -19,22 +23,18 @@ class Connection extends Component {
     handleAction(name) {
         if (name === "hide") {
             const enabled = !this.props.data.hidden;
-            axios.post(`/api/connections/${this.props.data.id}/${enabled ? "hide" : "show"}`)
-                .then(res => {
-                    if (res.status === 202) {
-                        this.props.onEnabled(!enabled);
-                        this.setState({update: true});
-                    }
+            backend.post(`/api/connections/${this.props.data.id}/${enabled ? "hide" : "show"}`)
+                .then(_ => {
+                    this.props.onEnabled(!enabled);
+                    this.setState({update: true});
                 });
         }
         if (name === "mark") {
             const marked = this.props.data.marked;
-            axios.post(`/api/connections/${this.props.data.id}/${marked ? "unmark" : "mark"}`)
-                .then(res => {
-                    if (res.status === 202) {
-                        this.props.onMarked(!marked);
-                        this.setState({update: true});
-                    }
+            backend.post(`/api/connections/${this.props.data.id}/${marked ? "unmark" : "mark"}`)
+                .then(_ => {
+                    this.props.onMarked(!marked);
+                    this.setState({update: true});
                 });
         }
         if (name === "copy") {
@@ -56,25 +56,11 @@ class Connection extends Component {
         let startedAt = new Date(conn.started_at);
         let closedAt = new Date(conn.closed_at);
         let processedAt = new Date(conn.processed_at);
-        let duration = ((closedAt - startedAt) / 1000).toFixed(3);
-        if (duration > 1000 || duration < -1000) {
-            duration = "∞";
-        } else {
-            duration += "s";
-        }
         let timeInfo = <div>
             <span>Started at {startedAt.toLocaleDateString() + " " + startedAt.toLocaleTimeString()}</span><br/>
             <span>Processed at {processedAt.toLocaleDateString() + " " + processedAt.toLocaleTimeString()}</span><br/>
             <span>Closed at {closedAt.toLocaleDateString() + " " + closedAt.toLocaleTimeString()}</span>
         </div>;
-
-        let classes = "connection";
-        if (this.props.selected) {
-            classes += " connection-selected";
-        }
-        if (this.props.containsFlag) {
-            classes += " contains-flag";
-        }
 
         const popoverFor = function (name, content) {
             return <Popover id={`popover-${name}-${conn.id}`} className="connection-popover">
@@ -96,27 +82,28 @@ class Connection extends Component {
         </div>;
 
         return (
-            <tr className={classes}>
+            <tr className={classNames("connection", {"connection-selected": this.props.selected},
+                {"has-matched-rules": conn.matched_rules.length > 0})}>
                 <td>
                     <span className="connection-service">
-                        <Button size="sm" style={{
-                            "backgroundColor": serviceColor
-                        }} onClick={() => this.props.addServicePortFilter(conn.port_dst)}>{serviceName}</Button>
+                        <ButtonField small fullSpan color={serviceColor} name={serviceName}
+                                     onClick={() => this.props.addServicePortFilter(conn.port_dst)} />
                     </span>
                 </td>
                 <td className="clickable" onClick={this.props.onSelected}>{conn.ip_src}</td>
                 <td className="clickable" onClick={this.props.onSelected}>{conn.port_src}</td>
                 <td className="clickable" onClick={this.props.onSelected}>{conn.ip_dst}</td>
                 <td className="clickable" onClick={this.props.onSelected}>{conn.port_dst}</td>
+                <td className="clickable" onClick={this.props.onSelected}>{dateTimeToTime(conn.started_at)}</td>
                 <td className="clickable" onClick={this.props.onSelected}>
                     <OverlayTrigger trigger={["focus", "hover"]} placement="right"
                                     overlay={popoverFor("duration", timeInfo)}>
-                        <span className="test-tooltip">{duration}</span>
+                        <span className="test-tooltip">{durationBetween(startedAt, closedAt)}</span>
                     </OverlayTrigger>
                 </td>
-                <td className="clickable" onClick={this.props.onSelected}>{conn.client_bytes}</td>
-                <td className="clickable" onClick={this.props.onSelected}>{conn.server_bytes}</td>
-                <td className="contains-flag">
+                <td className="clickable" onClick={this.props.onSelected}>{formatSize(conn.client_bytes)}</td>
+                <td className="clickable" onClick={this.props.onSelected}>{formatSize(conn.server_bytes)}</td>
+                <td>
                     {/*<OverlayTrigger trigger={["focus", "hover"]} placement="right"*/}
                     {/*                overlay={popoverFor("hide", <span>Hide this connection from the list</span>)}>*/}
                     {/*    <span className={"connection-icon" + (conn.hidden ? " icon-enabled" : "")}*/}
