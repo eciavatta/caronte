@@ -20,9 +20,12 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 	router.MaxMultipartMemory = 8 << 30
 
 	router.Use(static.Serve("/", static.LocalFile("./frontend/build", true)))
-	router.GET("/connections/:id", func(c *gin.Context) {
-		c.File("./frontend/build/index.html")
-	})
+
+	for _, path := range []string{"/connections/:id", "/pcaps", "/rules", "/services", "/config"} {
+		router.GET(path, func(c *gin.Context) {
+			c.File("./frontend/build/index.html")
+		})
+	}
 
 	router.POST("/setup", func(c *gin.Context) {
 		if applicationContext.IsConfigured {

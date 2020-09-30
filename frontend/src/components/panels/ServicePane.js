@@ -100,7 +100,7 @@ class ServicePane extends Component {
         const service = this.state.currentService;
 
         let services = this.state.services.map(s =>
-            <tr onClick={() => {
+            <tr key={s.port} onClick={() => {
                 this.reset();
                 this.setState({isUpdate: true, currentService: _.cloneDeep(s)});
             }} className={classNames("row-small", "row-clickable", {"row-selected": service.port === s.port })}>

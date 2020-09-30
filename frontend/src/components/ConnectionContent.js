@@ -63,7 +63,7 @@ class ConnectionContent extends Component {
         }
 
         let unrollMap = (obj) => obj == null ? null : Object.entries(obj).map(([key, value]) =>
-            <p><strong>{key}</strong>: {value}</p>
+            <p key={key}><strong>{key}</strong>: {value}</p>
         );
 
         let m = connectionMessage.metadata;

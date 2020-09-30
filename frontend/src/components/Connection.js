@@ -2,8 +2,10 @@ import React, {Component} from 'react';
 import './Connection.scss';
 import {Form, OverlayTrigger, Popover} from "react-bootstrap";
 import backend from "../backend";
-import {durationBetween, formatSize} from "../utils";
+import {dateTimeToTime, durationBetween, formatSize} from "../utils";
 import ButtonField from "./fields/ButtonField";
+
+const classNames = require('classnames');
 
 class Connection extends Component {
 
@@ -60,14 +62,6 @@ class Connection extends Component {
             <span>Closed at {closedAt.toLocaleDateString() + " " + closedAt.toLocaleTimeString()}</span>
         </div>;
 
-        let classes = "connection";
-        if (this.props.selected) {
-            classes += " connection-selected";
-        }
-        if (this.props.containsFlag) {
-            classes += " contains-flag";
-        }
-
         const popoverFor = function (name, content) {
             return <Popover id={`popover-${name}-${conn.id}`} className="connection-popover">
                 <Popover.Content>
@@ -88,7 +82,8 @@ class Connection extends Component {
         </div>;
 
         return (
-            <tr className={classes}>
+            <tr className={classNames("connection", {"connection-selected": this.props.selected},
+                {"has-matched-rules": conn.matched_rules.length > 0})}>
                 <td>
                     <span className="connection-service">
                         <ButtonField small fullSpan color={serviceColor} name={serviceName}
@@ -99,6 +94,7 @@ class Connection extends Component {
                 <td className="clickable" onClick={this.props.onSelected}>{conn.port_src}</td>
                 <td className="clickable" onClick={this.props.onSelected}>{conn.ip_dst}</td>
                 <td className="clickable" onClick={this.props.onSelected}>{conn.port_dst}</td>
+                <td className="clickable" onClick={this.props.onSelected}>{dateTimeToTime(conn.started_at)}</td>
                 <td className="clickable" onClick={this.props.onSelected}>
                     <OverlayTrigger trigger={["focus", "hover"]} placement="right"
                                     overlay={popoverFor("duration", timeInfo)}>
@@ -107,7 +103,7 @@ class Connection extends Component {
                 </td>
                 <td className="clickable" onClick={this.props.onSelected}>{formatSize(conn.client_bytes)}</td>
                 <td className="clickable" onClick={this.props.onSelected}>{formatSize(conn.server_bytes)}</td>
-                <td className="contains-flag">
+                <td>
                     {/*<OverlayTrigger trigger={["focus", "hover"]} placement="right"*/}
                     {/*                overlay={popoverFor("hide", <span>Hide this connection from the list</span>)}>*/}
                     {/*    <span className={"connection-icon" + (conn.hidden ? " icon-enabled" : "")}*/}

@@ -1,5 +1,4 @@
 import React, {Component} from 'react';
-import './Services.scss';
 import {Col, Container, Modal, Row, Table} from "react-bootstrap";
 import {filtersDefinitions, filtersNames} from "../components/filters/FiltersDefinitions";
 import ButtonField from "../components/fields/ButtonField";

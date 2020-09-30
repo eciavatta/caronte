@@ -13,6 +13,7 @@ import ChoiceField from "../fields/ChoiceField";
 import ButtonField from "../fields/ButtonField";
 import validation from "../../validation";
 import LinkPopover from "../objects/LinkPopover";
+import {randomClassName} from "../../utils";
 
 const classNames = require('classnames');
 const _ = require('lodash');
@@ -220,7 +221,7 @@ class RulePane extends Component {
         const pattern = this.state.selectedPattern || this.state.newPattern;
 
         let rules = this.state.rules.map(r =>
-            <tr onClick={() => {
+            <tr key={r.id} onClick={() => {
                 this.reset();
                 this.setState({selectedRule: _.cloneDeep(r)});
             }} className={classNames("row-small", "row-clickable", {"row-selected": rule.id === r.id })}>
@@ -235,7 +236,7 @@ class RulePane extends Component {
             rule.patterns.concat(this.state.newPattern) :
             rule.patterns
         ).map(p => p === pattern ?
-            <tr>
+            <tr key={randomClassName()}>
                 <td style={{"width": "500px"}}>
                     <InputField small active={this.state.patternRegexFocused} value={pattern.regex}
                                 onChange={(v) => {
@@ -272,7 +273,7 @@ class RulePane extends Component {
                 </td>
             </tr>
             :
-            <tr className="row-small">
+            <tr key={"new_pattern"} className="row-small">
                 <td>{p.regex}</td>
                 <td>{p.flags.caseless ? "yes": "no"}</td>
                 <td>{p.flags.dot_all ? "yes": "no"}</td>
@@ -377,7 +378,7 @@ class RulePane extends Component {
                                 <thead>
                                 <tr>
                                     <th>regex</th>
-                                    <th>Aa</th>
+                                    <th>!Aa</th>
                                     <th>.*</th>
                                     <th>\n+</th>
                                     <th>UTF8</th>

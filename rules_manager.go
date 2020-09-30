@@ -106,7 +106,7 @@ func LoadRulesManager(storage Storage, flagRegex string) (RulesManager, error) {
 	if len(rulesManager.rules) == 0 {
 		if _, err := rulesManager.AddRule(context.Background(), Rule{
 			Name:  "flag",
-			Color: "#ff0000",
+			Color: "#E53935",
 			Notes: "Mark connections where the flag is stolen",
 			Patterns: []Pattern{
 				{Regex: flagRegex, Direction: DirectionToClient},

@@ -46,7 +46,7 @@ class Header extends Component {
 
     render() {
         let quickFilters = filtersNames.filter(name => this.state[`${name}_active`])
-            .map(name => filtersDefinitions[name])
+            .map(name => <React.Fragment key={name} >{filtersDefinitions[name]}</React.Fragment>)
             .slice(0, 5);
 
         return (
@@ -78,8 +78,9 @@ class Header extends Component {
                             <Link to="/services">
                                 <ButtonField variant="indigo" name="services" bordered />
                             </Link>
-                            <ButtonField variant="blue" onClick={this.props.onOpenConfig}
-								disabled={false} name="config" bordered />
+                            <Link to="/config">
+                                <ButtonField variant="blue" name="config" bordered />
+                            </Link>
                         </div>
                     </div>
                 </div>

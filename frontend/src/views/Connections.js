@@ -5,6 +5,7 @@ import Table from 'react-bootstrap/Table';
 import {Redirect} from 'react-router';
 import {withRouter} from "react-router-dom";
 import backend from "../backend";
+import ConnectionMatchedRules from "../components/ConnectionMatchedRules";
 
 class Connections extends Component {
 
@@ -62,9 +63,19 @@ class Connections extends Component {
     };
 
     addServicePortFilter = (port) => {
-        let urlParams = new URLSearchParams(this.props.location.search);
+        const urlParams = new URLSearchParams(this.props.location.search);
         urlParams.set("service_port", port);
         this.setState({queryString: "?" + urlParams});
+    };
+
+    addMatchedRulesFilter = (matchedRule) => {
+        const urlParams = new URLSearchParams(this.props.location.search);
+        const oldMatchedRules = urlParams.getAll("matched_rules") || [];
+
+        if (!oldMatchedRules.includes(matchedRule)) {
+            urlParams.append("matched_rules", matchedRule);
+            this.setState({queryString: "?" + urlParams});
+        }
     };
 
     async loadConnections(params) {
@@ -112,20 +123,15 @@ class Connections extends Component {
             }
         }
 
-        let flagRule = this.state.flagRule;
         let rules = this.state.rules;
-        if (flagRule === null) {
+        if (rules === null) {
             rules = (await backend.get("/api/rules")).json;
-            flagRule = rules.filter(rule => {
-                return rule.name === "flag";
-            })[0];
         }
 
         this.setState({
             loading: false,
             connections: connections,
-            rules: res,
-            flagRule: flagRule,
+            rules: rules,
             firstConnection: firstConnection,
             lastConnection: lastConnection
         });
@@ -158,6 +164,7 @@ class Connections extends Component {
                         <th>srcport</th>
                         <th>dstip</th>
                         <th>dstport</th>
+                        <th>started_at</th>
                         <th>duration</th>
                         <th>up</th>
                         <th>down</th>
@@ -166,13 +173,18 @@ class Connections extends Component {
                     </thead>
                     <tbody>
                     {
-                        this.state.connections.map(c =>
-                            <Connection key={c.id} data={c} onSelected={() => this.connectionSelected(c)}
-                                        selected={this.state.selected === c.id} onMarked={marked => c.marked = marked}
-                                        onEnabled={enabled => c.hidden = !enabled}
-                                        containsFlag={this.state.flagRule && c.matched_rules.includes(this.state.flagRule.id)}
-                                        addServicePortFilter={this.addServicePortFilter}/>
-                        )
+                        this.state.connections.flatMap(c => {
+                            return [<Connection key={c.id} data={c} onSelected={() => this.connectionSelected(c)}
+                                                selected={this.state.selected === c.id}
+                                                onMarked={marked => c.marked = marked}
+                                                onEnabled={enabled => c.hidden = !enabled}
+                                                addServicePortFilter={this.addServicePortFilter} />,
+                                c.matched_rules.length > 0 &&
+                                    <ConnectionMatchedRules key={c.id + "_m"} matchedRules={c.matched_rules}
+                                                            rules={this.state.rules}
+                                                            addMatchedRulesFilter={this.addMatchedRulesFilter} />
+                            ];
+                        })
                     }
                     {loading}
                     </tbody>

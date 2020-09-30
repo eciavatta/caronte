@@ -109,7 +109,7 @@ class PcapPane extends Component {
 
     render() {
         let sessions = this.state.sessions.map(s =>
-            <tr className="table-row">
+            <tr key={s.id} className="table-row">
                 <td>{s["id"].substring(0, 8)}</td>
                 <td>{dateTimeToTime(s["started_at"])}</td>
                 <td>{durationBetween(s["started_at"], s["completed_at"])}</td>
@@ -119,8 +119,7 @@ class PcapPane extends Component {
                 <td><LinkPopover text={Object.keys(s["packets_per_service"]).length + " services"}
                                  content={JSON.stringify(s["packets_per_service"])}
                                  placement="left"/></td>
-                <td className="table-cell-action"><a target="_blank" rel="noopener noreferrer"
-                                                     href={"/api/pcap/sessions/" + s["id"] + "/download"}>download</a>
+                <td className="table-cell-action"><a href={"/api/pcap/sessions/" + s["id"] + "/download"}>download</a>
                 </td>
             </tr>
         );
