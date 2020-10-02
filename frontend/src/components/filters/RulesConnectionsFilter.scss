@@ -1,13 +1,13 @@
-@import '../../colors';
+@import "../../colors";
 
 .react-tags {
+  font-size: 12px;
   position: relative;
+  z-index: 10;
   padding: 0 6px;
+  cursor: text;
   border-radius: 4px;
   background-color: $color-primary-2;
-  font-size: 12px;
-  cursor: text;
-  z-index: 10;
 }
 
 .react-tags.is-focused {
@@ -19,20 +19,20 @@
 }
 
 .react-tags__selected-tag {
+  font-size: 11px;
   display: inline-block;
-  border: none;
   margin: 0 6px 6px 0;
   padding: 2px 4px;
+  color: $color-primary-3;
+  border: none;
   border-radius: 2px;
   background: $color-primary-4;
-  color: $color-primary-3;
-  font-size: 11px;
 }
 
 .react-tags__selected-tag::after {
-  content: '\2715';
-  color: $color-primary-3;
   margin-left: 8px;
+  content: "\2715";
+  color: $color-primary-3;
 }
 
 .react-tags__selected-tag:hover,
@@ -42,8 +42,8 @@
 
 .react-tags__search {
   display: inline-block;
-  padding: 7px 10px;
   max-width: 100%;
+  padding: 7px 10px;
 }
 
 @media screen and (min-width: 30em) {
@@ -53,15 +53,15 @@
 }
 
 .react-tags__search-input {
+  font-size: inherit;
+  line-height: inherit;
   max-width: 100%;
   margin: 0;
   padding: 0;
+  color: $color-primary-4;
   border: 0;
   outline: none;
   background-color: $color-primary-2;
-  color: $color-primary-4;
-  font-size: inherit;
-  line-height: inherit;
 }
 
 .react-tags__search-input::-ms-clear {
@@ -82,30 +82,30 @@
 }
 
 .react-tags__suggestions ul {
+  font-size: 12px;
   margin: 4px -1px;
   padding: 0;
   list-style: none;
-  background: $color-primary-4;
-  border-radius: 2px;
   color: $color-primary-1;
-  font-size: 12px;
+  border-radius: 2px;
+  background: $color-primary-4;
 }
 
 .react-tags__suggestions li {
-  border-bottom: 1px solid #ddd;
   padding: 3px 5px;
+  border-bottom: 1px solid #ddd;
 }
 
 .react-tags__suggestions li mark {
+  font-weight: 600;
   text-decoration: underline;
   background: none;
-  font-weight: 600;
 }
 
 .react-tags__suggestions li:hover {
   cursor: pointer;
-  background: $color-primary-0;
   color: $color-primary-4;
+  background: $color-primary-0;
 }
 
 .react-tags__suggestions li.is-active {
@@ -113,6 +113,6 @@
 }
 
 .react-tags__suggestions li.is-disabled {
-  opacity: 0.5;
   cursor: auto;
+  opacity: 0.5;
 }

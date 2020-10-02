@@ -1,4 +1,4 @@
-@import '../../colors.scss';
+@import "../../colors.scss";
 
 .input-field {
   font-size: 0.9em;
@@ -15,13 +15,13 @@
 
     .field-value {
       .file-label {
-        background-color: $color-primary-2;
-        margin: 0;
         width: 100%;
-        color: $color-primary-4;
-        border-radius: 5px;
+        margin: 0;
         padding: 7px 10px;
         cursor: pointer;
+        color: $color-primary-4;
+        border-radius: 5px;
+        background-color: $color-primary-2;
       }
 
       input[type="file"] {
@@ -29,27 +29,27 @@
       }
 
       .file-label:after {
-        content: "Browse";
         position: absolute;
-        right: 0;
         top: 0;
+        right: 0;
         padding: 7px 10px 7px 12px;
-        background-color: $color-primary-1;
-        border-bottom-right-radius: 5px;
+        content: "Browse";
         border-top-right-radius: 5px;
+        border-bottom-right-radius: 5px;
+        background-color: $color-primary-1;
       }
     }
   }
 
   &.field-active {
     &.field-inline .field-name {
-      background-color: $color-primary-4 !important;
       color: $color-primary-3 !important;
+      background-color: $color-primary-4 !important;
     }
 
     .field-value input, .field-value .file-label {
-      background-color: $color-primary-4 !important;
       color: $color-primary-3 !important;
+      background-color: $color-primary-4 !important;
     }
 
     .file-label:after {
@@ -59,13 +59,13 @@
 
   &.field-invalid {
     &.field-inline .field-name {
-      background-color: $color-secondary-2 !important;
       color: $color-primary-4 !important;
+      background-color: $color-secondary-2 !important;
     }
 
     .field-value input, .field-value .file-label {
-      background-color: $color-secondary-2 !important;
       color: $color-primary-4 !important;
+      background-color: $color-secondary-2 !important;
     }
 
     .file-label:after {
@@ -81,19 +81,19 @@
     display: flex;
 
     .field-name {
-      background-color: $color-primary-2;
       padding: 6px 7px;
       border-top-left-radius: 5px;
       border-bottom-left-radius: 5px;
+      background-color: $color-primary-2;
     }
 
     .field-input {
       width: 100%;
 
       input, .file-label {
-        border-bottom-left-radius: 0;
-        border-top-left-radius: 0;
         padding-left: 3px;
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
       }
     }
 
@@ -103,14 +103,14 @@
   }
 
   .field-clear {
-    position: absolute;
-    right: 8px;
-    top: 8px;
-    z-index: 10;
     font-size: 0.9em;
     font-weight: 600;
-    letter-spacing: -0.5px;
+    position: absolute;
+    z-index: 10;
+    top: 8px;
+    right: 8px;
     cursor: pointer;
+    letter-spacing: -0.5px;
   }
 
   &.field-active .field-clear {
@@ -118,8 +118,8 @@
   }
 
   .field-error {
-    padding: 5px 10px;
     font-size: 0.9em;
+    padding: 5px 10px;
     color: $color-secondary-0;
   }
 }

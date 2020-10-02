@@ -1,20 +1,20 @@
-@import '../../colors.scss';
+@import "../../colors.scss";
 
 .pane-container {
-  background-color: $color-primary-3;
-  padding: 10px 10px 0;
   height: 100%;
+  padding: 10px 10px 0;
+  background-color: $color-primary-3;
 
   .pane-section {
     margin-bottom: 10px;
     background-color: $color-primary-0;
 
     .section-header {
-      background-color: $color-primary-2;
-      padding: 5px 10px;
-      font-weight: 500;
       font-size: 0.9em;
+      font-weight: 500;
       display: flex;
+      padding: 5px 10px;
+      background-color: $color-primary-2;
 
       .api-request {
         flex: 1;
@@ -31,8 +31,8 @@
 
       .table-error {
         font-size: 0.8em;
-        color: $color-secondary-0;
         margin-left: 10px;
+        color: $color-secondary-0;
       }
     }
 
@@ -40,18 +40,18 @@
       margin-bottom: 0;
 
       tbody tr {
-        background-color: $color-primary-3;
         border-top: 3px solid $color-primary-0;
         border-bottom: 3px solid $color-primary-0;
+        background-color: $color-primary-3;
       }
 
       th {
-        background-color: $color-primary-2;
         font-size: 0.8em;
         position: sticky;
         top: 0;
         padding: 2px 5px;
         border: none;
+        background-color: $color-primary-2;
       }
 
       .row-small {
@@ -74,9 +74,9 @@
 
   .section-footer {
     display: flex;
+    justify-content: flex-end;
     padding: 10px;
     background-color: $color-primary-0;
-    justify-content: flex-end;
 
     .button-field {
       margin-left: 10px;

@@ -1,4 +1,4 @@
-@import '../../../colors.scss';
+@import "../../../colors.scss";
 
 .color-field {
   .color-input {
@@ -9,8 +9,8 @@
       flex: 1;
 
       input {
-        border-bottom-right-radius: 0 !important;
         border-top-right-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
       }
     }
 
@@ -20,8 +20,8 @@
       .picker-button {
         font-size: 0.8em;
         padding: 8px 15px;
-        border-bottom-right-radius: 5px;
         border-top-right-radius: 5px;
+        border-bottom-right-radius: 5px;
         background-color: $color-primary-1;
       }
     }
@@ -29,8 +29,8 @@
 
   .color-error {
     font-size: 0.8em;
-    color: $color-secondary-0;
     margin-left: 10px;
+    color: $color-secondary-0;
   }
 }
 

@@ -1,12 +1,12 @@
-@import '../../colors.scss';
+@import "../../colors.scss";
 
 .pcap-pane {
   display: flex;
   flex-direction: column;
 
   .pcap-list {
-    flex: 1;
     overflow: hidden;
+    flex: 1;
 
     .section-content {
       height: 100%;
@@ -35,5 +35,4 @@
       font-size: 0.9em;
     }
   }
-
 }

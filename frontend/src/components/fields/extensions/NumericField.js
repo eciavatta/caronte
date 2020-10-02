@@ -21,7 +21,7 @@ class NumericField extends Component {
         value = value.toString().replace(/[^\d]/gi, '');
         let intValue = 0;
         if (value !== "") {
-            intValue = parseInt(value);
+            intValue = parseInt(value, 10);
         }
         const valid =
             (!this.props.validate || (typeof this.props.validate === "function" && this.props.validate(intValue))) &&

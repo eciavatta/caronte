@@ -1,4 +1,4 @@
-@import '../../colors.scss';
+@import "../../colors.scss";
 
 .text-field {
   font-size: 0.9em;
@@ -15,15 +15,15 @@
 
   &.field-active {
     textarea {
-      background-color: $color-primary-4 !important;
       color: $color-primary-3 !important;
+      background-color: $color-primary-4 !important;
     }
   }
 
   &.field-invalid {
     textarea {
-      background-color: $color-secondary-2 !important;
       color: $color-primary-4 !important;
+      background-color: $color-secondary-2 !important;
     }
   }
 
@@ -32,14 +32,14 @@
   }
 
   .field-clear {
-    position: absolute;
-    right: 8px;
-    top: 8px;
-    z-index: 10;
     font-size: 0.9em;
     font-weight: 600;
-    letter-spacing: -0.5px;
+    position: absolute;
+    z-index: 10;
+    top: 8px;
+    right: 8px;
     cursor: pointer;
+    letter-spacing: -0.5px;
   }
 
   &.field-active .field-clear {
@@ -47,8 +47,8 @@
   }
 
   .field-error {
-    padding: 5px 10px;
     font-size: 0.9em;
+    padding: 5px 10px;
     color: $color-secondary-0;
   }
 }

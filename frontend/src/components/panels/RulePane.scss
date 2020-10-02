@@ -4,8 +4,8 @@
   flex-direction: column;
 
   .rules-list {
-    flex: 2 1;
     overflow: hidden;
+    flex: 2 1;
 
     .section-content {
       height: 100%;
@@ -17,8 +17,8 @@
   }
 
   .rule-edit {
-    flex: 3 0;
     display: flex;
+    flex: 3 0;
     flex-direction: column;
 
     .section-content {

@@ -1,9 +1,9 @@
-@import '../colors.scss';
+@import "../colors.scss";
 
 .connection {
-  background-color: $color-primary-0;
   border-top: 3px solid $color-primary-3;
   border-bottom: 3px solid $color-primary-3;
+  background-color: $color-primary-0;
 
   td {
     vertical-align: middle;
@@ -15,14 +15,14 @@
     }
 
     .btn:hover {
-      background-color: $color-primary-1 !important;
       color: $color-primary-4;
+      background-color: $color-primary-1 !important;
     }
   }
 
   .connection-icon {
-    font-weight: 600;
     font-size: 18px;
+    font-weight: 600;
     margin-right: 6px;
     cursor: pointer;
   }
@@ -45,16 +45,16 @@
 }
 
 .connection-popover {
-  background-color: $color-primary-4;
   border: none;
+  background-color: $color-primary-4;
 
   .popover-body {
     color: $color-primary-1;
 
     textarea {
-      background-color: $color-primary-3;
       font-size: 12px;
       width: 200px;
+      background-color: $color-primary-3;
     }
   }
 

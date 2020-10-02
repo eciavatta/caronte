@@ -31,13 +31,13 @@ export function cleanNumber(number) {
 
 export function validateMin(min) {
     return function (value) {
-        return parseInt(value) > min;
+        return parseInt(value, 10) > min;
     };
 }
 
 export function validateMax(max) {
     return function (value) {
-        return parseInt(value) < max;
+        return parseInt(value, 10) < max;
     };
 }
 

@@ -1,4 +1,4 @@
-@import '../../colors.scss';
+@import "../../colors.scss";
 
 .choice-field {
   font-size: 0.9em;
@@ -12,29 +12,29 @@
     margin-top: 5px;
 
     .field-value {
-      background-color: $color-primary-2;
-      border: none;
-      color: $color-primary-4;
-      border-radius: 5px;
       padding: 7px 25px 7px 10px;
       cursor: pointer;
+      color: $color-primary-4;
+      border: none;
+      border-radius: 5px;
+      background-color: $color-primary-2;
 
       &:after {
-        content: "⋎";
         position: absolute;
         right: 10px;
+        content: "⋎";
       }
     }
 
     .field-options {
       position: absolute;
-      top: 35px;
-      width: 100%;
       z-index: 20;
+      top: 35px;
+      display: none;
+      width: 100%;
       border-top: 3px solid $color-primary-0;
       border-radius: 5px;
       background-color: $color-primary-2;
-      display: none;
 
       .field-option {
         display: block;
