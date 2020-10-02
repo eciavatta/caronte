@@ -5,6 +5,7 @@ import MessageAction from "./MessageAction";
 import backend from "../backend";
 import ButtonField from "./fields/ButtonField";
 import ChoiceField from "./fields/ChoiceField";
+import DOMPurify from 'dompurify';
 
 const classNames = require('classnames');
 
@@ -21,7 +22,6 @@ class ConnectionContent extends Component {
         };
 
         this.validFormats = ["default", "hex", "hexdump", "base32", "base64", "ascii", "binary", "decimal", "octal"];
-        this.setFormat = this.setFormat.bind(this);
     }
 
     componentDidMount() {
@@ -33,8 +33,13 @@ class ConnectionContent extends Component {
     componentDidUpdate(prevProps, prevState, snapshot) {
         if (this.props.connection != null && (
             this.props.connection !== prevProps.connection || this.state.format !== prevState.format)) {
+            this.closeRenderWindow();
             this.loadStream();
         }
+    }
+
+    componentWillUnmount() {
+        this.closeRenderWindow();
     }
 
     loadStream = () => {
@@ -48,13 +53,13 @@ class ConnectionContent extends Component {
         });
     };
 
-    setFormat(format) {
+    setFormat = (format) => {
         if (this.validFormats.includes(format)) {
             this.setState({format: format});
         }
-    }
+    };
 
-    tryParseConnectionMessage(connectionMessage) {
+    tryParseConnectionMessage = (connectionMessage) => {
         if (connectionMessage.metadata == null) {
             return connectionMessage.content;
         }
@@ -87,22 +92,52 @@ class ConnectionContent extends Component {
             default:
                 return connectionMessage.content;
         }
-    }
+    };
 
-    connectionsActions(connectionMessage) {
-        if (connectionMessage.metadata == null || connectionMessage.metadata["reproducers"] === undefined) {
+    connectionsActions = (connectionMessage) => {
+        if (connectionMessage.metadata == null) { //} || !connectionMessage.metadata["reproducers"]) {
             return null;
         }
 
-        return Object.entries(connectionMessage.metadata["reproducers"]).map(([actionName, actionValue]) =>
-            <ButtonField small key={actionName + "_button"} name={actionName} onClick={() => {
-                this.setState({
-                    messageActionDialog: <MessageAction actionName={actionName} actionValue={actionValue}
-                                                        onHide={() => this.setState({messageActionDialog: null})}/>
-                });
-            }} />
-        );
-    }
+        const m = connectionMessage.metadata;
+        switch (m.type) {
+            case "http-request" :
+                if (!connectionMessage.metadata["reproducers"]) {
+                    return;
+                }
+                return Object.entries(connectionMessage.metadata["reproducers"]).map(([actionName, actionValue]) =>
+                    <ButtonField small key={actionName + "_button"} name={actionName} onClick={() => {
+                        this.setState({
+                            messageActionDialog: <MessageAction actionName={actionName} actionValue={actionValue}
+                                                                onHide={() => this.setState({messageActionDialog: null})}/>
+                        });
+                    }} />
+                );
+            case "http-response":
+                if (m.headers && m.headers["Content-Type"].includes("text/html")) {
+                    return <ButtonField small name="render_html" onClick={() => {
+                        let w;
+                        if (this.state.renderWindow && !this.state.renderWindow.closed) {
+                            w = this.state.renderWindow;
+                        } else {
+                            w = window.open("", "", "width=900, height=600, scrollbars=yes");
+                            this.setState({renderWindow: w});
+                        }
+                        w.document.body.innerHTML = DOMPurify.sanitize(m.body);
+                        w.focus();
+                    }} />;
+                }
+                break;
+            default:
+                return null;
+        }
+    };
+
+    closeRenderWindow = () => {
+        if (this.state.renderWindow) {
+            this.state.renderWindow.close();
+        }
+    };
 
     render() {
         let content = this.state.connectionContent;
