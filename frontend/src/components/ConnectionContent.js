@@ -6,6 +6,8 @@ import backend from "../backend";
 import ButtonField from "./fields/ButtonField";
 import ChoiceField from "./fields/ChoiceField";
 import DOMPurify from 'dompurify';
+import ReactJson from 'react-json-view'
+import {getHeaderValue} from "../utils";
 
 const classNames = require('classnames');
 
@@ -83,10 +85,21 @@ class ConnectionContent extends Component {
                     {unrollMap(m.trailers)}
                 </span>;
             case "http-response":
+                const contentType = getHeaderValue(m, "Content-Type");
+                let body = m.body;
+                if (contentType && contentType.includes("application/json")) {
+                    try {
+                        const json = JSON.parse(m.body);
+                        body = <ReactJson src={json} theme="grayscale" collapsed={false} displayDataTypes={false} />;
+                    } catch (e) {
+                        console.log(e);
+                    }
+                }
+
                 return <span className="type-http-response">
                     <p style={{"marginBottom": "7px"}}>{m.protocol} <strong>{m.status}</strong></p>
                     {unrollMap(m.headers)}
-                    <div style={{"margin": "20px 0"}}>{m.body}</div>
+                    <div style={{"margin": "20px 0"}}>{body}</div>
                     {unrollMap(m.trailers)}
                 </span>;
             default:
@@ -114,7 +127,9 @@ class ConnectionContent extends Component {
                     }} />
                 );
             case "http-response":
-                if (m.headers && m.headers["Content-Type"].includes("text/html")) {
+                const contentType = getHeaderValue(m, "Content-Type");
+
+                if (contentType && contentType.includes("text/html")) {
                     return <ButtonField small name="render_html" onClick={() => {
                         let w;
                         if (this.state.renderWindow && !this.state.renderWindow.closed) {

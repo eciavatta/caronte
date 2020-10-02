@@ -111,3 +111,10 @@ export function formatSize(size) {
 export function randomClassName() {
     return Math.random().toString(36).slice(2);
 }
+
+export function getHeaderValue(request, key) {
+    if (request && request.headers) {
+        return request.headers[Object.keys(request.headers).find(k => k.toLowerCase() === key.toLowerCase())];
+    }
+    return undefined;
+}

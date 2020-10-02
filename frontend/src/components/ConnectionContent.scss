@@ -48,6 +48,10 @@
 
     .message-content {
       padding: 10px;
+
+      .react-json-view {
+        background-color: inherit !important;
+      }
     }
 
     &:hover .connection-message-actions {
