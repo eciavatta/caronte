@@ -18,6 +18,14 @@ class App extends Component {
 
     componentDidMount() {
         backend.get("/api/services").then(_ => this.setState({configured: true}));
+
+        setInterval(() => {
+            if (document.title.endsWith("❚")) {
+                document.title = document.title.slice(0, -1);
+            } else {
+                document.title += "❚";
+            }
+        }, 500);
     }
 
     render() {

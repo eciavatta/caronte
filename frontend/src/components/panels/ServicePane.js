@@ -25,6 +25,8 @@ class ServicePane extends Component {
             services: [],
             currentService: this.emptyService,
         };
+
+        document.title = "caronte:~/services$";
     }
 
     componentDidMount() {

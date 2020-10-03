@@ -30,6 +30,8 @@ class ConnectionContent extends Component {
         if (this.props.connection != null) {
             this.loadStream();
         }
+
+        document.title = "caronte:~/$";
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {

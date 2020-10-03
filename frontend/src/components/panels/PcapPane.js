@@ -30,6 +30,8 @@ class PcapPane extends Component {
 
     componentDidMount() {
         this.loadSessions();
+
+        document.title = "caronte:~/pcaps$";
     }
 
     loadSessions = () => {

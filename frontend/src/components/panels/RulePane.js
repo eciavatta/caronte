@@ -39,6 +39,8 @@ class RulePane extends Component {
     componentDidMount() {
         this.reset();
         this.loadRules();
+
+        document.title = "caronte:~/rules$";
     }
 
     emptyRule = {
