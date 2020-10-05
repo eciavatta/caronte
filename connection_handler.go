@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/binary"
+	"fmt"
 	"github.com/flier/gohs/hyperscan"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/tcpassembly"
@@ -224,6 +225,31 @@ func (ch *connectionHandlerImpl) Complete(handler *StreamHandler) {
 		} else if int(n) != len(streamsIDs) {
 			log.WithError(err).WithField("connection", connection).Error("failed to update all connections streams")
 		}
+	}
+
+	ch.UpdateStatistics(connection)
+}
+
+func (ch *connectionHandlerImpl) UpdateStatistics(connection Connection) {
+	rangeStart := connection.StartedAt.Unix() / 60 // group statistic records by minutes
+	duration := connection.ClosedAt.Sub(connection.StartedAt)
+	// if one of the two parts doesn't close connection, the duration is +infinity or -infinity
+	if duration.Hours() > 1 || duration.Hours() < -1 {
+		duration = 0
+	}
+	servicePort := connection.DestinationPort
+
+	var results interface{}
+	if _, err := ch.Storage().Update(Statistics).Upsert(&results).
+		Filter(OrderedDocument{{"_id", time.Unix(rangeStart*60, 0)}}).OneComplex(UnorderedDocument{
+		"$inc": UnorderedDocument{
+			fmt.Sprintf("connections_per_service.%d", servicePort):  1,
+			fmt.Sprintf("client_bytes_per_service.%d", servicePort): connection.ClientBytes,
+			fmt.Sprintf("server_bytes_per_service.%d", servicePort): connection.ServerBytes,
+			fmt.Sprintf("duration_per_service.%d", servicePort):     duration.Milliseconds(),
+		},
+	}); err != nil {
+		log.WithError(err).WithField("connection", connection).Error("failed to update connection statistics")
 	}
 }
 

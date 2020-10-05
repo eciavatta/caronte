@@ -17,6 +17,7 @@ const ImportingSessions = "importing_sessions"
 const Rules = "rules"
 const Settings = "settings"
 const Services = "services"
+const Statistics = "statistics"
 
 var ZeroRowID [12]byte
 
@@ -57,6 +58,7 @@ func NewMongoStorage(uri string, port int, database string) (*MongoStorage, erro
 		Rules:             db.Collection(Rules),
 		Settings:          db.Collection(Settings),
 		Services:          db.Collection(Services),
+		Statistics:        db.Collection(Statistics),
 	}
 
 	if _, err := collections[Services].Indexes().CreateOne(ctx, mongo.IndexModel{
@@ -150,6 +152,7 @@ type UpdateOperation interface {
 	Filter(filter OrderedDocument) UpdateOperation
 	Upsert(upsertResults *interface{}) UpdateOperation
 	One(update interface{}) (bool, error)
+	OneComplex(update interface{}) (bool, error)
 	Many(update interface{}) (int64, error)
 }
 
@@ -200,6 +203,22 @@ func (fo MongoUpdateOperation) One(update interface{}) (bool, error) {
 	return result.ModifiedCount == 1, nil
 }
 
+func (fo MongoUpdateOperation) OneComplex(update interface{}) (bool, error) {
+	if fo.err != nil {
+		return false, fo.err
+	}
+
+	result, err := fo.collection.UpdateOne(fo.ctx, fo.filter, update, fo.opt)
+	if err != nil {
+		return false, err
+	}
+
+	if fo.upsertResult != nil {
+		*(fo.upsertResult) = result.UpsertedID
+	}
+	return result.ModifiedCount == 1, nil
+}
+
 func (fo MongoUpdateOperation) Many(update interface{}) (int64, error) {
 	if fo.err != nil {
 		return 0, fo.err
@@ -238,6 +257,7 @@ func (storage *MongoStorage) Update(collectionName string) UpdateOperation {
 type FindOperation interface {
 	Context(ctx context.Context) FindOperation
 	Filter(filter OrderedDocument) FindOperation
+	Projection(filter OrderedDocument) FindOperation
 	Sort(field string, ascending bool) FindOperation
 	Limit(n int64) FindOperation
 	First(result interface{}) error
@@ -247,6 +267,7 @@ type FindOperation interface {
 type MongoFindOperation struct {
 	collection *mongo.Collection
 	filter     OrderedDocument
+	projection OrderedDocument
 	ctx        context.Context
 	optFind    *options.FindOptions
 	optFindOne *options.FindOneOptions
@@ -263,6 +284,15 @@ func (fo MongoFindOperation) Filter(filter OrderedDocument) FindOperation {
 	for _, elem := range filter {
 		fo.filter = append(fo.filter, primitive.E{Key: elem.Key, Value: elem.Value})
 	}
+	return fo
+}
+
+func (fo MongoFindOperation) Projection(projection OrderedDocument) FindOperation {
+	for _, elem := range projection {
+		fo.projection = append(fo.projection, primitive.E{Key: elem.Key, Value: elem.Value})
+	}
+	fo.optFindOne.SetProjection(fo.projection)
+	fo.optFind.SetProjection(fo.projection)
 	return fo
 }
 
@@ -321,6 +351,7 @@ func (storage *MongoStorage) Find(collectionName string) FindOperation {
 	op := MongoFindOperation{
 		collection: collection,
 		filter:     OrderedDocument{},
+		projection: OrderedDocument{},
 		optFind:    options.Find(),
 		optFindOne: options.FindOne(),
 		sorts:      OrderedDocument{},

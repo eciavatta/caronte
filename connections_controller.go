@@ -31,40 +31,40 @@ type Connection struct {
 }
 
 type ConnectionsFilter struct {
-	From          string  `form:"from" binding:"omitempty,hexadecimal,len=24"`
-	To            string  `form:"to" binding:"omitempty,hexadecimal,len=24"`
-	ServicePort   uint16  `form:"service_port"`
-	ClientAddress string  `form:"client_address" binding:"omitempty,ip"`
-	ClientPort    uint16  `form:"client_port"`
-	MinDuration   uint    `form:"min_duration"`
-	MaxDuration   uint    `form:"max_duration" binding:"omitempty,gtefield=MinDuration"`
-	MinBytes      uint    `form:"min_bytes"`
-	MaxBytes      uint    `form:"max_bytes" binding:"omitempty,gtefield=MinBytes"`
-	StartedAfter  int64   `form:"started_after" `
-	StartedBefore int64   `form:"started_before" binding:"omitempty,gtefield=StartedAfter"`
-	ClosedAfter   int64   `form:"closed_after" `
-	ClosedBefore  int64   `form:"closed_before" binding:"omitempty,gtefield=ClosedAfter"`
-	Hidden        bool    `form:"hidden"`
-	Marked        bool    `form:"marked"`
+	From          string   `form:"from" binding:"omitempty,hexadecimal,len=24"`
+	To            string   `form:"to" binding:"omitempty,hexadecimal,len=24"`
+	ServicePort   uint16   `form:"service_port"`
+	ClientAddress string   `form:"client_address" binding:"omitempty,ip"`
+	ClientPort    uint16   `form:"client_port"`
+	MinDuration   uint     `form:"min_duration"`
+	MaxDuration   uint     `form:"max_duration" binding:"omitempty,gtefield=MinDuration"`
+	MinBytes      uint     `form:"min_bytes"`
+	MaxBytes      uint     `form:"max_bytes" binding:"omitempty,gtefield=MinBytes"`
+	StartedAfter  int64    `form:"started_after" `
+	StartedBefore int64    `form:"started_before" binding:"omitempty,gtefield=StartedAfter"`
+	ClosedAfter   int64    `form:"closed_after" `
+	ClosedBefore  int64    `form:"closed_before" binding:"omitempty,gtefield=ClosedAfter"`
+	Hidden        bool     `form:"hidden"`
+	Marked        bool     `form:"marked"`
 	MatchedRules  []string `form:"matched_rules" binding:"dive,hexadecimal,len=24"`
-	Limit         int64   `form:"limit"`
+	Limit         int64    `form:"limit"`
 }
 
 type ConnectionsController struct {
-	storage Storage
+	storage            Storage
 	servicesController *ServicesController
 }
 
 func NewConnectionsController(storage Storage, servicesController *ServicesController) ConnectionsController {
 	return ConnectionsController{
-		storage: storage,
+		storage:            storage,
 		servicesController: servicesController,
 	}
 }
 
 func (cc ConnectionsController) GetConnections(c context.Context, filter ConnectionsFilter) []Connection {
 	var connections []Connection
-	query := cc.storage.Find(Connections).Context(c).Sort("_id", false)
+	query := cc.storage.Find(Connections).Context(c)
 
 	from, _ := RowIDFromHex(filter.From)
 	if !from.IsZero() {
@@ -73,6 +73,8 @@ func (cc ConnectionsController) GetConnections(c context.Context, filter Connect
 	to, _ := RowIDFromHex(filter.To)
 	if !to.IsZero() {
 		query = query.Filter(OrderedDocument{{"_id", UnorderedDocument{"$gt": to}}})
+	} else {
+		query = query.Sort("_id", false)
 	}
 	if filter.ServicePort > 0 {
 		query = query.Filter(OrderedDocument{{"port_dst", filter.ServicePort}})
@@ -146,6 +148,10 @@ func (cc ConnectionsController) GetConnections(c context.Context, filter Connect
 		}
 	}
 
+	if !to.IsZero() {
+		connections = reverseConnections(connections)
+	}
+
 	return connections
 }
 
@@ -177,4 +183,12 @@ func (cc ConnectionsController) setProperty(c context.Context, id RowID, propert
 		log.WithError(err).WithField("id", id).Panic("failed to update a connection property")
 	}
 	return updated
+}
+
+func reverseConnections(connections []Connection) []Connection {
+	for i := 0; i < len(connections)/2; i++ {
+		j := len(connections) - i - 1
+		connections[i], connections[j] = connections[j], connections[i]
+	}
+	return connections
 }

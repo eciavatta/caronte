@@ -1,13 +1,22 @@
 @import "../colors.scss";
 
 .footer {
-  padding: 15px 30px;
+  padding: 15px;
 
-  > .row {
+  .time-line {
+    position: relative;
     background-color: $color-primary-0;
+
+    .metric-selection {
+      font-size: 0.8em;
+      position: absolute;
+      top: 5px;
+      right: 10px;
+    }
   }
 
-  .footer-timeline {
-    height: 100px;
+  svg text {
+    font-family: "Fira Code", monospace !important;
+    fill: $color-primary-4 !important;
   }
 }

@@ -7,17 +7,17 @@ import {BrowserRouter as Router} from "react-router-dom";
 import Filters from "./Filters";
 import backend from "../backend";
 import ConfigurationPane from "../components/panels/ConfigurationPane";
+import log from "../log";
 
 class App extends Component {
 
-    constructor(props) {
-        super(props);
-
-        this.state = {};
-    }
+    state = {};
 
     componentDidMount() {
-        backend.get("/api/services").then(_ => this.setState({configured: true}));
+        backend.get("/api/services").then(_ => {
+            log.debug("Caronte is already configured. Loading main..");
+            this.setState({configured: true});
+        });
 
         setInterval(() => {
             if (document.title.endsWith("❚")) {
@@ -38,11 +38,11 @@ class App extends Component {
             <div className="main">
                 <Router>
                     <div className="main-header">
-                        <Header onOpenFilters={() => this.setState({filterWindowOpen: true})} />
+                        <Header onOpenFilters={() => this.setState({filterWindowOpen: true})}/>
                     </div>
                     <div className="main-content">
-                        {this.state.configured ? <MainPane /> :
-                            <ConfigurationPane onConfigured={() => this.setState({configured: true})} />}
+                        {this.state.configured ? <MainPane/> :
+                            <ConfigurationPane onConfigured={() => this.setState({configured: true})}/>}
                         {modal}
                     </div>
                     <div className="main-footer">

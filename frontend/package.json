@@ -14,8 +14,10 @@
     "classnames": "^2.2.6",
     "dompurify": "^2.1.1",
     "eslint-config-react-app": "^5.2.1",
+    "flux": "^3.1.3",
     "lodash": "^4.17.20",
     "node-sass": "^4.14.0",
+    "pondjs": "^0.9.0",
     "react": "^16.13.1",
     "react-bootstrap": "^1.0.1",
     "react-dom": "^16.13.1",
@@ -25,6 +27,7 @@
     "react-router-dom": "^5.1.2",
     "react-scripts": "3.4.1",
     "react-tag-autocomplete": "^6.0.0-beta.6",
+    "react-timeseries-charts": "^0.16.1",
     "typed.js": "^2.0.11"
   },
   "scripts": {

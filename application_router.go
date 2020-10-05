@@ -119,7 +119,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 			flushAllValue, isPresent := c.GetPostForm("flush_all")
 			flushAll := isPresent && strings.ToLower(flushAllValue) == "true"
 			fileName := fmt.Sprintf("%v-%s", time.Now().UnixNano(), fileHeader.Filename)
-			if err := c.SaveUploadedFile(fileHeader, ProcessingPcapsBasePath + fileName); err != nil {
+			if err := c.SaveUploadedFile(fileHeader, ProcessingPcapsBasePath+fileName); err != nil {
 				log.WithError(err).Panic("failed to save uploaded file")
 			}
 
@@ -147,7 +147,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 			}
 
 			fileName := fmt.Sprintf("%v-%s", time.Now().UnixNano(), filepath.Base(request.File))
-			if err := CopyFile(ProcessingPcapsBasePath + fileName, request.File); err != nil {
+			if err := CopyFile(ProcessingPcapsBasePath+fileName, request.File); err != nil {
 				log.WithError(err).Panic("failed to copy pcap file")
 			}
 			if sessionID, err := applicationContext.PcapImporter.ImportPcap(fileName, request.FlushAll); err != nil {
@@ -179,9 +179,9 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 			sessionID := c.Param("id")
 			if _, isPresent := applicationContext.PcapImporter.GetSession(sessionID); isPresent {
 				if FileExists(PcapsBasePath + sessionID + ".pcap") {
-					c.FileAttachment(PcapsBasePath + sessionID + ".pcap", sessionID[:16] + ".pcap")
+					c.FileAttachment(PcapsBasePath+sessionID+".pcap", sessionID[:16]+".pcap")
 				} else if FileExists(PcapsBasePath + sessionID + ".pcapng") {
-					c.FileAttachment(PcapsBasePath + sessionID + ".pcapng", sessionID[:16] + ".pcapng")
+					c.FileAttachment(PcapsBasePath+sessionID+".pcapng", sessionID[:16]+".pcapng")
 				} else {
 					log.WithField("sessionID", sessionID).Panic("pcap file not exists")
 				}
@@ -289,9 +289,17 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 				unprocessableEntity(c, err)
 			}
 		})
+
+		api.GET("/statistics", func(c *gin.Context) {
+			var filter StatisticsFilter
+			if err := c.ShouldBindQuery(&filter); err != nil {
+				badRequest(c, err)
+				return
+			}
+
+			success(c, applicationContext.StatisticsController.GetStatistics(c, filter))
+		})
 	}
-
-
 
 	return router
 }
@@ -351,4 +359,8 @@ func unprocessableEntity(c *gin.Context, err error) {
 
 func notFound(c *gin.Context, obj interface{}) {
 	c.JSON(http.StatusNotFound, obj)
+}
+
+func serverError(c *gin.Context, err error) {
+	c.JSON(http.StatusInternalServerError, UnorderedDocument{"result": "error", "error": err.Error()})
 }
