@@ -2,27 +2,22 @@
 
 .notifications {
   position: absolute;
-
-  left: 30px;
-  bottom: 50px;
   z-index: 50;
-
-  .notifications-list {
-
-  }
+  bottom: 50px;
+  left: 30px;
 
   .notification {
-    background-color: $color-green;
-    border-left: 5px solid $color-green-dark;
-    padding: 10px;
-    margin: 10px 0;
-    width: 250px;
-    color: $color-green-light;
-    transform: translateX(-300px);
-    transition: all 1s ease;
-    white-space: nowrap;
     overflow: hidden;
+    width: 250px;
+    margin: 10px 0;
+    padding: 10px;
+    transition: all 1s ease;
+    transform: translateX(-300px);
+    white-space: nowrap;
     text-overflow: ellipsis;
+    color: $color-green-light;
+    border-left: 5px solid $color-green-dark;
+    background-color: $color-green;
 
     .notification-title {
       font-size: 0.9em;
@@ -41,8 +36,5 @@
       transform: translateY(-50px);
       opacity: 0;
     }
-
   }
-
-
 }

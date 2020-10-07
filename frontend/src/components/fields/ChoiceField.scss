@@ -19,7 +19,7 @@
       border-radius: 5px;
       background-color: $color-primary-2;
 
-      &:after {
+      &::after {
         position: absolute;
         right: 10px;
         content: "⋎";
@@ -58,7 +58,7 @@
       display: block;
     }
 
-    .field-value:after {
+    .field-value::after {
       content: "⋏";
     }
   }

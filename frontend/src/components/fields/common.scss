@@ -1,7 +1,8 @@
 @import "../../colors.scss";
 
 .field {
-  input, textarea {
+  input,
+  textarea {
     width: 100%;
     padding: 7px 10px;
     color: $color-primary-4;
