@@ -14,34 +14,12 @@ import ButtonField from "../fields/ButtonField";
 import validation from "../../validation";
 import LinkPopover from "../objects/LinkPopover";
 import {randomClassName} from "../../utils";
+import dispatcher from "../../dispatcher";
 
 const classNames = require('classnames');
 const _ = require('lodash');
 
 class RulePane extends Component {
-
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            rules: [],
-            newRule: this.emptyRule,
-            newPattern: this.emptyPattern
-        };
-
-        this.directions = {
-            0: "both",
-            1: "c->s",
-            2: "s->c"
-        };
-    }
-
-    componentDidMount() {
-        this.reset();
-        this.loadRules();
-
-        document.title = "caronte:~/rules$";
-    }
 
     emptyRule = {
         "name": "",
@@ -60,7 +38,6 @@ class RulePane extends Component {
         },
         "version": 0
     };
-
     emptyPattern = {
         "regex": "",
         "flags": {
@@ -74,6 +51,34 @@ class RulePane extends Component {
         "max_occurrences": 0,
         "direction": 0
     };
+    state = {
+        rules: [],
+        newRule: this.emptyRule,
+        newPattern: this.emptyPattern
+    };
+
+    constructor(props) {
+        super(props);
+
+        this.directions = {
+            0: "both",
+            1: "c->s",
+            2: "s->c"
+        };
+    }
+
+    componentDidMount() {
+        this.reset();
+        this.loadRules();
+
+        dispatcher.register("notifications", payload => {
+            if (payload.event === "rules.new" || payload.event === "rules.edit") {
+                this.loadRules();
+            }
+        });
+
+        document.title = "caronte:~/rules$";
+    }
 
     loadRules = () => {
         backend.get("/api/rules").then(res => this.setState({rules: res.json, rulesStatusCode: res.status}))
@@ -226,17 +231,17 @@ class RulePane extends Component {
             <tr key={r.id} onClick={() => {
                 this.reset();
                 this.setState({selectedRule: _.cloneDeep(r)});
-            }} className={classNames("row-small", "row-clickable", {"row-selected": rule.id === r.id })}>
+            }} className={classNames("row-small", "row-clickable", {"row-selected": rule.id === r.id})}>
                 <td>{r["id"].substring(0, 8)}</td>
                 <td>{r["name"]}</td>
-                <td><ButtonField name={r["color"]} color={r["color"]} small /></td>
+                <td><ButtonField name={r["color"]} color={r["color"]} small/></td>
                 <td>{r["notes"]}</td>
             </tr>
         );
 
         let patterns = (this.state.selectedPattern == null && !isUpdate ?
-            rule.patterns.concat(this.state.newPattern) :
-            rule.patterns
+                rule.patterns.concat(this.state.newPattern) :
+                rule.patterns
         ).map(p => p === pattern ?
             <tr key={randomClassName()}>
                 <td style={{"width": "500px"}}>
@@ -244,7 +249,7 @@ class RulePane extends Component {
                                 onChange={(v) => {
                                     this.updateParam(() => pattern.regex = v);
                                     this.setState({patternRegexFocused: pattern.regex === ""});
-                                }} />
+                                }}/>
                 </td>
                 <td><CheckField small checked={pattern.flags.caseless}
                                 onChange={(v) => this.updateParam(() => pattern.flags.caseless = v)}/></td>
@@ -259,34 +264,35 @@ class RulePane extends Component {
                 <td style={{"width": "70px"}}>
                     <NumericField small value={pattern.min_occurrences}
                                   active={this.state.patternOccurrencesFocused}
-                                  onChange={(v) => this.updateParam(() => pattern.min_occurrences = v)} />
+                                  onChange={(v) => this.updateParam(() => pattern.min_occurrences = v)}/>
                 </td>
                 <td style={{"width": "70px"}}>
                     <NumericField small value={pattern.max_occurrences}
                                   active={this.state.patternOccurrencesFocused}
-                                  onChange={(v) => this.updateParam(() => pattern.max_occurrences = v)} />
+                                  onChange={(v) => this.updateParam(() => pattern.max_occurrences = v)}/>
                 </td>
                 <td><ChoiceField inline small keys={[0, 1, 2]} values={["both", "c->s", "s->c"]}
                                  value={this.directions[pattern.direction]}
-                                 onChange={(v) => this.updateParam(() => pattern.direction = v)} /></td>
+                                 onChange={(v) => this.updateParam(() => pattern.direction = v)}/></td>
                 <td>{this.state.selectedPattern == null ?
                     <ButtonField variant="green" small name="add" inline rounded onClick={() => this.addPattern(p)}/> :
-                    <ButtonField variant="green" small name="save" inline rounded onClick={() =>  this.updatePattern(p)}/>}
+                    <ButtonField variant="green" small name="save" inline rounded
+                                 onClick={() => this.updatePattern(p)}/>}
                 </td>
             </tr>
             :
             <tr key={"new_pattern"} className="row-small">
                 <td>{p.regex}</td>
-                <td>{p.flags.caseless ? "yes": "no"}</td>
-                <td>{p.flags.dot_all ? "yes": "no"}</td>
-                <td>{p.flags.multi_line ? "yes": "no"}</td>
-                <td>{p.flags.utf_8_mode ? "yes": "no"}</td>
-                <td>{p.flags.unicode_property ? "yes": "no"}</td>
+                <td>{p.flags.caseless ? "yes" : "no"}</td>
+                <td>{p.flags.dot_all ? "yes" : "no"}</td>
+                <td>{p.flags.multi_line ? "yes" : "no"}</td>
+                <td>{p.flags.utf_8_mode ? "yes" : "no"}</td>
+                <td>{p.flags.unicode_property ? "yes" : "no"}</td>
                 <td>{p.min_occurrences}</td>
                 <td>{p.max_occurrences}</td>
                 <td>{this.directions[p.direction]}</td>
                 {!isUpdate && <td><ButtonField variant="blue" small rounded name="edit"
-                                               onClick={() => this.editPattern(p) }/></td>}
+                                               onClick={() => this.editPattern(p)}/></td>}
             </tr>
         );
 
@@ -296,9 +302,9 @@ class RulePane extends Component {
                     <div className="section-header">
                         <span className="api-request">GET /api/rules</span>
                         {this.state.rulesStatusCode &&
-                            <span className="api-response"><LinkPopover text={this.state.rulesStatusCode}
-                                                                        content={this.state.rulesResponse}
-                                                                        placement="left" /></span>}
+                        <span className="api-response"><LinkPopover text={this.state.rulesStatusCode}
+                                                                    content={this.state.rulesResponse}
+                                                                    placement="left"/></span>}
                     </div>
 
                     <div className="section-content">
@@ -327,7 +333,7 @@ class RulePane extends Component {
                         </span>
                         <span className="api-response"><LinkPopover text={this.state.ruleStatusCode}
                                                                     content={this.state.ruleResponse}
-                                                                    placement="left" /></span>
+                                                                    placement="left"/></span>
                     </div>
 
                     <div className="section-content">
@@ -336,11 +342,11 @@ class RulePane extends Component {
                                 <Col>
                                     <InputField name="name" inline value={rule.name}
                                                 onChange={(v) => this.updateParam((r) => r.name = v)}
-                                                error={this.state.ruleNameError} />
+                                                error={this.state.ruleNameError}/>
                                     <ColorField inline value={rule.color} error={this.state.ruleColorError}
-                                                onChange={(v) => this.updateParam((r) => r.color = v)} />
+                                                onChange={(v) => this.updateParam((r) => r.color = v)}/>
                                     <TextField name="notes" rows={2} value={rule.notes}
-                                               onChange={(v) => this.updateParam((r) => r.notes = v)} />
+                                               onChange={(v) => this.updateParam((r) => r.notes = v)}/>
                                 </Col>
 
                                 <Col style={{"paddingTop": "6px"}}>
@@ -348,29 +354,29 @@ class RulePane extends Component {
                                     <NumericField name="service_port" inline value={rule.filter.service_port}
                                                   onChange={(v) => this.updateParam((r) => r.filter.service_port = v)}
                                                   min={0} max={65565} error={this.state.ruleServicePortError}
-                                                  readonly={isUpdate} />
+                                                  readonly={isUpdate}/>
                                     <NumericField name="client_port" inline value={rule.filter.client_port}
                                                   onChange={(v) => this.updateParam((r) => r.filter.client_port = v)}
                                                   min={0} max={65565} error={this.state.ruleClientPortError}
-                                                  readonly={isUpdate} />
+                                                  readonly={isUpdate}/>
                                     <InputField name="client_address" value={rule.filter.client_address}
                                                 error={this.state.ruleClientAddressError} readonly={isUpdate}
-                                                onChange={(v) => this.updateParam((r) => r.filter.client_address = v)} />
+                                                onChange={(v) => this.updateParam((r) => r.filter.client_address = v)}/>
                                 </Col>
 
                                 <Col style={{"paddingTop": "11px"}}>
                                     <NumericField name="min_duration" inline value={rule.filter.min_duration}
                                                   error={this.state.ruleDurationError} readonly={isUpdate}
-                                                  onChange={(v) => this.updateParam((r) => r.filter.min_duration = v)} />
+                                                  onChange={(v) => this.updateParam((r) => r.filter.min_duration = v)}/>
                                     <NumericField name="max_duration" inline value={rule.filter.max_duration}
                                                   error={this.state.ruleDurationError} readonly={isUpdate}
-                                                  onChange={(v) => this.updateParam((r) => r.filter.max_duration = v)} />
+                                                  onChange={(v) => this.updateParam((r) => r.filter.max_duration = v)}/>
                                     <NumericField name="min_bytes" inline value={rule.filter.min_bytes}
                                                   error={this.state.ruleBytesError} readonly={isUpdate}
-                                                  onChange={(v) => this.updateParam((r) => r.filter.min_bytes = v)} />
+                                                  onChange={(v) => this.updateParam((r) => r.filter.min_bytes = v)}/>
                                     <NumericField name="max_bytes" inline value={rule.filter.max_bytes}
                                                   error={this.state.ruleBytesError} readonly={isUpdate}
-                                                  onChange={(v) => this.updateParam((r) => r.filter.max_bytes = v)} />
+                                                  onChange={(v) => this.updateParam((r) => r.filter.max_bytes = v)}/>
                                 </Col>
                             </Row>
                         </Container>
@@ -388,7 +394,7 @@ class RulePane extends Component {
                                     <th>min</th>
                                     <th>max</th>
                                     <th>direction</th>
-                                    {!isUpdate && <th>actions</th> }
+                                    {!isUpdate && <th>actions</th>}
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -403,7 +409,7 @@ class RulePane extends Component {
                     <div className="section-footer">
                         {<ButtonField variant="red" name="cancel" bordered onClick={this.reset}/>}
                         <ButtonField variant={isUpdate ? "blue" : "green"} name={isUpdate ? "update_rule" : "add_rule"}
-                                     bordered onClick={isUpdate ? this.updateRule : this.addRule} />
+                                     bordered onClick={isUpdate ? this.updateRule : this.addRule}/>
                     </div>
                 </div>
             </div>

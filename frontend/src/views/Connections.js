@@ -6,9 +6,9 @@ import {Redirect} from 'react-router';
 import {withRouter} from "react-router-dom";
 import backend from "../backend";
 import ConnectionMatchedRules from "../components/ConnectionMatchedRules";
-import dispatcher from "../globals";
 import log from "../log";
 import ButtonField from "../components/fields/ButtonField";
+import dispatcher from "../dispatcher";
 
 class Connections extends Component {
 
@@ -17,8 +17,6 @@ class Connections extends Component {
         connections: [],
         firstConnection: null,
         lastConnection: null,
-        flagRule: null,
-        rules: null,
         queryString: null
     };
 
@@ -41,14 +39,24 @@ class Connections extends Component {
             // TODO: scroll to initial connection
         }
 
-        dispatcher.register((payload) => {
-            if (payload.actionType === "timeline-update") {
-                this.connectionsListRef.current.scrollTop = 0;
-                this.loadConnections({
-                    started_after: Math.round(payload.from.getTime() / 1000),
-                    started_before: Math.round(payload.to.getTime() / 1000),
-                    limit: this.maxConnections
-                }).then(() => log.info(`Loading connections between ${payload.from} and ${payload.to}`));
+        dispatcher.register("timeline_updates", payload => {
+            this.connectionsListRef.current.scrollTop = 0;
+            this.loadConnections({
+                started_after: Math.round(payload.from.getTime() / 1000),
+                started_before: Math.round(payload.to.getTime() / 1000),
+                limit: this.maxConnections
+            }).then(() => log.info(`Loading connections between ${payload.from} and ${payload.to}`));
+        });
+
+        dispatcher.register("notifications", payload => {
+            if (payload.event === "rules.new" || payload.event === "rules.edit") {
+                this.loadRules().then(() => log.debug("Loaded connection rules after notification update"));
+            }
+        });
+
+        dispatcher.register("notifications", payload => {
+            if (payload.event === "services.edit") {
+                this.loadServices().then(() => log.debug("Services reloaded after notification update"));
             }
         });
     }
@@ -116,6 +124,13 @@ class Connections extends Component {
         }
 
         this.setState({loading: true});
+        if (!this.state.rules) {
+            await this.loadRules();
+        }
+        if (!this.state.services) {
+            await this.loadServices();
+        }
+
         let res = (await backend.get(`${url}?${urlParams}`)).json;
 
         let connections = this.state.connections;
@@ -154,27 +169,28 @@ class Connections extends Component {
             }
         }
 
-        let rules = this.state.rules;
-        if (rules == null) {
-            rules = (await backend.get("/api/rules")).json;
-        }
-
         this.setState({
             loading: false,
             connections: connections,
-            rules: rules,
             firstConnection: firstConnection,
             lastConnection: lastConnection
         });
 
         if (firstConnection != null && lastConnection != null) {
-            dispatcher.dispatch({
-                actionType: "connections-update",
+            dispatcher.dispatch("connection_updates", {
                 from: new Date(lastConnection["started_at"]),
                 to: new Date(firstConnection["started_at"])
             });
         }
     }
+
+    loadRules = async () => {
+        return backend.get("/api/rules").then(res => this.setState({rules: res.json}));
+    };
+
+    loadServices = async () => {
+        return backend.get("/api/services").then(res => this.setState({services: res.json}));
+    };
 
     render() {
         let redirect;
@@ -222,7 +238,8 @@ class Connections extends Component {
                                                     selected={this.state.selected === c.id}
                                                     onMarked={marked => c.marked = marked}
                                                     onEnabled={enabled => c.hidden = !enabled}
-                                                    addServicePortFilter={this.addServicePortFilter}/>,
+                                                    addServicePortFilter={this.addServicePortFilter}
+                                                    services={this.state.services}/>,
                                     c.matched_rules.length > 0 &&
                                     <ConnectionMatchedRules key={c.id + "_m"} matchedRules={c.matched_rules}
                                                             rules={this.state.rules}

@@ -13,9 +13,9 @@ import {
 import {TimeRange, TimeSeries} from "pondjs";
 import backend from "../backend";
 import ChoiceField from "../components/fields/ChoiceField";
-import dispatcher from "../globals";
 import {withRouter} from "react-router-dom";
 import log from "../log";
+import dispatcher from "../dispatcher";
 
 
 class Footer extends Component {
@@ -39,15 +39,12 @@ class Footer extends Component {
     componentDidMount() {
         const filteredPort = this.filteredPort();
         this.setState({filteredPort});
-        this.loadStatistics(this.state.metric, filteredPort).then(() =>
-            log.debug("Statistics loaded after mount"));
+        this.loadStatistics(this.state.metric, filteredPort).then(() => log.debug("Statistics loaded after mount"));
 
-        dispatcher.register((payload) => {
-            if (payload.actionType === "connections-update") {
-                this.setState({
-                    selection: new TimeRange(payload.from, payload.to),
-                });
-            }
+        dispatcher.register("connection_updates", payload => {
+            this.setState({
+                selection: new TimeRange(payload.from, payload.to),
+            });
         });
     }
 
@@ -109,8 +106,7 @@ class Footer extends Component {
             clearTimeout(this.selectionTimeout);
         }
         this.selectionTimeout = setTimeout(() => {
-            dispatcher.dispatch({
-                actionType: "timeline-update",
+            dispatcher.dispatch("timeline_updates", {
                 from: timeRange.begin(),
                 to: timeRange.end()
             });

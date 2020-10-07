@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"io/ioutil"
 )
 
 func main() {
@@ -22,12 +23,19 @@ func main() {
 		log.WithError(err).WithFields(logFields).Fatal("failed to connect to MongoDB")
 	}
 
-	applicationContext, err := CreateApplicationContext(storage)
+	versionBytes, err := ioutil.ReadFile("VERSION")
+	if err != nil {
+		log.WithError(err).Fatal("failed to load version file")
+	}
+
+	applicationContext, err := CreateApplicationContext(storage, string(versionBytes))
 	if err != nil {
 		log.WithError(err).WithFields(logFields).Fatal("failed to create application context")
 	}
 
-	applicationRouter := CreateApplicationRouter(applicationContext)
+	notificationController := NewNotificationController(applicationContext)
+	go notificationController.Run()
+	applicationRouter := CreateApplicationRouter(applicationContext, notificationController)
 	if applicationRouter.Run(fmt.Sprintf("%s:%v", *bindAddress, *bindPort)) != nil {
 		log.WithError(err).WithFields(logFields).Fatal("failed to create the server")
 	}

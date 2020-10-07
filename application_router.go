@@ -13,7 +13,8 @@ import (
 	"time"
 )
 
-func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine {
+func CreateApplicationRouter(applicationContext *ApplicationContext,
+	notificationController *NotificationController) *gin.Engine {
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
@@ -47,6 +48,13 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 		applicationContext.SetAccounts(settings.Accounts)
 
 		c.JSON(http.StatusAccepted, gin.H{})
+		notificationController.Notify("setup", InsertNotification, gin.H{})
+	})
+
+	router.GET("/ws", func(c *gin.Context) {
+		if err := notificationController.NotificationHandler(c.Writer, c.Request); err != nil {
+			serverError(c, err)
+		}
 	})
 
 	api := router.Group("/api")
@@ -68,7 +76,9 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 			if id, err := applicationContext.RulesManager.AddRule(c, rule); err != nil {
 				unprocessableEntity(c, err)
 			} else {
-				success(c, UnorderedDocument{"id": id})
+				response := UnorderedDocument{"id": id}
+				success(c, response)
+				notificationController.Notify("rules.new", InsertNotification, response)
 			}
 		})
 
@@ -107,6 +117,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 				notFound(c, UnorderedDocument{"id": id})
 			} else {
 				success(c, rule)
+				notificationController.Notify("rules.edit", UpdateNotification, rule)
 			}
 		})
 
@@ -126,7 +137,9 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 			if sessionID, err := applicationContext.PcapImporter.ImportPcap(fileName, flushAll); err != nil {
 				unprocessableEntity(c, err)
 			} else {
-				c.JSON(http.StatusAccepted, gin.H{"session": sessionID})
+				response := gin.H{"session": sessionID}
+				c.JSON(http.StatusAccepted, response)
+				notificationController.Notify("pcap.upload", InsertNotification, response)
 			}
 		})
 
@@ -158,7 +171,9 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 				}
 				unprocessableEntity(c, err)
 			} else {
-				c.JSON(http.StatusAccepted, gin.H{"session": sessionID})
+				response := gin.H{"session": sessionID}
+				c.JSON(http.StatusAccepted, response)
+				notificationController.Notify("pcap.file", InsertNotification, response)
 			}
 		})
 
@@ -195,6 +210,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 			session := gin.H{"session": sessionID}
 			if cancelled := applicationContext.PcapImporter.CancelSession(sessionID); cancelled {
 				c.JSON(http.StatusAccepted, session)
+				notificationController.Notify("sessions.delete", DeleteNotification, session)
 			} else {
 				notFound(c, session)
 			}
@@ -254,6 +270,8 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 
 			if result {
 				c.Status(http.StatusAccepted)
+				notificationController.Notify("connections.action", UpdateNotification,
+					gin.H{"connection_id": c.Param("id"), "action": c.Param("action")})
 			} else {
 				notFound(c, gin.H{"connection": id})
 			}
@@ -285,6 +303,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 			}
 			if err := applicationContext.ServicesController.SetService(c, service); err == nil {
 				success(c, service)
+				notificationController.Notify("services.edit", UpdateNotification, service)
 			} else {
 				unprocessableEntity(c, err)
 			}

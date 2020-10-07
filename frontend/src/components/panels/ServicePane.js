@@ -12,27 +12,12 @@ import ButtonField from "../fields/ButtonField";
 import validation from "../../validation";
 import LinkPopover from "../objects/LinkPopover";
 import {createCurlCommand} from "../../utils";
+import dispatcher from "../../dispatcher";
 
 const classNames = require('classnames');
 const _ = require('lodash');
 
 class ServicePane extends Component {
-
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            services: [],
-            currentService: this.emptyService,
-        };
-
-        document.title = "caronte:~/services$";
-    }
-
-    componentDidMount() {
-        this.reset();
-        this.loadServices();
-    }
 
     emptyService = {
         "port": 0,
@@ -40,6 +25,24 @@ class ServicePane extends Component {
         "color": "",
         "notes": ""
     };
+
+    state = {
+        services: [],
+        currentService: this.emptyService,
+    };
+
+    componentDidMount() {
+        this.reset();
+        this.loadServices();
+
+        dispatcher.register("notifications", payload => {
+            if (payload.event === "services.edit") {
+                this.loadServices();
+            }
+        });
+
+        document.title = "caronte:~/services$";
+    }
 
     loadServices = () => {
         backend.get("/api/services")

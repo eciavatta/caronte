@@ -1,4 +1,3 @@
-
 async function json(method, url, data, json, headers) {
     const options = {
         method: method,
@@ -28,7 +27,7 @@ async function json(method, url, data, json, headers) {
 
 const backend = {
     get: (url = "", headers = null) =>
-        json("GET", url, null,null, headers),
+        json("GET", url, null, null, headers),
     post: (url = "", data = null, headers = null) =>
         json("POST", url, null, data, headers),
     put: (url = "", data = null, headers = null) =>

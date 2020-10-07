@@ -9,27 +9,30 @@ import CheckField from "../fields/CheckField";
 import TextField from "../fields/TextField";
 import ButtonField from "../fields/ButtonField";
 import LinkPopover from "../objects/LinkPopover";
+import dispatcher from "../../dispatcher";
 
 class PcapPane extends Component {
 
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            sessions: [],
-            isUploadFileValid: true,
-            isUploadFileFocused: false,
-            uploadFlushAll: false,
-            isFileValid: true,
-            isFileFocused: false,
-            fileValue: "",
-            processFlushAll: false,
-            deleteOriginalFile: false
-        };
-    }
+    state = {
+        sessions: [],
+        isUploadFileValid: true,
+        isUploadFileFocused: false,
+        uploadFlushAll: false,
+        isFileValid: true,
+        isFileFocused: false,
+        fileValue: "",
+        processFlushAll: false,
+        deleteOriginalFile: false
+    };
 
     componentDidMount() {
         this.loadSessions();
+
+        dispatcher.register("notifications", payload => {
+            if (payload.event === "pcap.upload" || payload.event === "pcap.file") {
+                this.loadSessions();
+            }
+        });
 
         document.title = "caronte:~/pcaps$";
     }

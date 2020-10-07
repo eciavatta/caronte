@@ -1,0 +1,48 @@
+@import "../colors.scss";
+
+.notifications {
+  position: absolute;
+
+  left: 30px;
+  bottom: 50px;
+  z-index: 50;
+
+  .notifications-list {
+
+  }
+
+  .notification {
+    background-color: $color-green;
+    border-left: 5px solid $color-green-dark;
+    padding: 10px;
+    margin: 10px 0;
+    width: 250px;
+    color: $color-green-light;
+    transform: translateX(-300px);
+    transition: all 1s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    .notification-title {
+      font-size: 0.9em;
+      margin: 0;
+    }
+
+    .notification-description {
+      font-size: 0.8em;
+    }
+
+    &.notification-open {
+      transform: translateX(0px);
+    }
+
+    &.notification-closed {
+      transform: translateY(-50px);
+      opacity: 0;
+    }
+
+  }
+
+
+}

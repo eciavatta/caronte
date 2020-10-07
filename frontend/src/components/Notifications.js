@@ -1,0 +1,60 @@
+import React, {Component} from 'react';
+import './Notifications.scss';
+import dispatcher from "../dispatcher";
+
+const _ = require('lodash');
+const classNames = require('classnames');
+
+class Notifications extends Component {
+
+    state = {
+        notifications: [],
+        closedNotifications: [],
+    };
+
+    componentDidMount() {
+        dispatcher.register("notifications", notification => {
+            const notifications = this.state.notifications;
+            notifications.push(notification);
+            this.setState({notifications});
+
+            setTimeout(() => {
+                const notifications = this.state.notifications;
+                notification.open = true;
+                this.setState({notifications});
+            }, 100);
+
+            setTimeout(() => {
+                const notifications = _.without(this.state.notifications, notification);
+                const closedNotifications = this.state.closedNotifications.concat([notification]);
+                notification.closed = true;
+                this.setState({notifications, closedNotifications});
+            }, 5000);
+
+            setTimeout(() => {
+                const closedNotifications = _.without(this.state.closedNotifications, notification);
+                this.setState({closedNotifications});
+            }, 6000);
+        });
+    }
+
+    render() {
+        return (
+            <div className="notifications">
+                <div className="notifications-list">
+                    {
+                        this.state.closedNotifications.concat(this.state.notifications).map(n =>
+                            <div className={classNames("notification", {"notification-closed": n.closed},
+                                {"notification-open": n.open})}>
+                                <h3 className="notification-title">{n.event}</h3>
+                                <span className="notification-description">{JSON.stringify(n.message)}</span>
+                            </div>
+                        )
+                    }
+                </div>
+            </div>
+        );
+    }
+}
+
+export default Notifications;

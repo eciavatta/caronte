@@ -10,7 +10,7 @@ func TestCreateApplicationContext(t *testing.T) {
 	wrapper := NewTestStorageWrapper(t)
 	wrapper.AddCollection(Settings)
 
-	appContext, err := CreateApplicationContext(wrapper.Storage)
+	appContext, err := CreateApplicationContext(wrapper.Storage, "test")
 	assert.NoError(t, err)
 	assert.False(t, appContext.IsConfigured)
 	assert.Zero(t, appContext.Config)
@@ -39,7 +39,7 @@ func TestCreateApplicationContext(t *testing.T) {
 	appContext.SetConfig(config)
 	appContext.SetAccounts(accounts)
 
-	checkAppContext, err := CreateApplicationContext(wrapper.Storage)
+	checkAppContext, err := CreateApplicationContext(wrapper.Storage, "test")
 	assert.NoError(t, err)
 	assert.True(t, checkAppContext.IsConfigured)
 	assert.Equal(t, checkAppContext.Config, config)

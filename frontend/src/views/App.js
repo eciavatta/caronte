@@ -5,18 +5,22 @@ import MainPane from "../components/panels/MainPane";
 import Footer from "./Footer";
 import {BrowserRouter as Router} from "react-router-dom";
 import Filters from "./Filters";
-import backend from "../backend";
 import ConfigurationPane from "../components/panels/ConfigurationPane";
-import log from "../log";
+import Notifications from "../components/Notifications";
+import dispatcher from "../dispatcher";
 
 class App extends Component {
 
     state = {};
 
     componentDidMount() {
-        backend.get("/api/services").then(_ => {
-            log.debug("Caronte is already configured. Loading main..");
-            this.setState({configured: true});
+        dispatcher.register("notifications", payload => {
+            if (payload.event === "connected") {
+                this.setState({
+                    connected: true,
+                    configured: payload.message["is_configured"]
+                });
+            }
         });
 
         setInterval(() => {
@@ -36,19 +40,22 @@ class App extends Component {
 
         return (
             <div className="main">
-                <Router>
-                    <div className="main-header">
-                        <Header onOpenFilters={() => this.setState({filterWindowOpen: true})}/>
-                    </div>
-                    <div className="main-content">
-                        {this.state.configured ? <MainPane/> :
-                            <ConfigurationPane onConfigured={() => this.setState({configured: true})}/>}
-                        {modal}
-                    </div>
-                    <div className="main-footer">
-                        {this.state.configured && <Footer/>}
-                    </div>
-                </Router>
+                <Notifications/>
+                {this.state.connected &&
+                    <Router>
+                        <div className="main-header">
+                            <Header onOpenFilters={() => this.setState({filterWindowOpen: true})}/>
+                        </div>
+                        <div className="main-content">
+                            {this.state.configured ? <MainPane/> :
+                                <ConfigurationPane onConfigured={() => this.setState({configured: true})}/>}
+                            {modal}
+                        </div>
+                        <div className="main-footer">
+                            {this.state.configured && <Footer/>}
+                        </div>
+                    </Router>
+                }
             </div>
         );
     }

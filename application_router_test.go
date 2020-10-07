@@ -148,10 +148,12 @@ func NewRouterTestToolkit(t *testing.T, withSetup bool) *RouterTestToolkit {
 	wrapper := NewTestStorageWrapper(t)
 	wrapper.AddCollection(Settings)
 
-	appContext, err := CreateApplicationContext(wrapper.Storage)
+	appContext, err := CreateApplicationContext(wrapper.Storage, "test")
 	require.NoError(t, err)
 	gin.SetMode(gin.ReleaseMode)
-	router := CreateApplicationRouter(appContext)
+	notificationController := NewNotificationController(appContext)
+	go notificationController.Run()
+	router := CreateApplicationRouter(appContext, notificationController)
 
 	toolkit := RouterTestToolkit{
 		appContext: appContext,

@@ -48,10 +48,11 @@ class Connection extends Component {
     render() {
         let conn = this.props.data;
         let serviceName = "/dev/null";
-        let serviceColor = "#0F192E";
-        if (conn.service.port !== 0) {
-            serviceName = conn.service.name;
-            serviceColor = conn.service.color;
+        let serviceColor = "#0f192e";
+        if (this.props.services[conn["port_dst"]]) {
+            const service = this.props.services[conn["port_dst"]];
+            serviceName = service.name;
+            serviceColor = service.color;
         }
         let startedAt = new Date(conn.started_at);
         let closedAt = new Date(conn.closed_at);
@@ -87,7 +88,7 @@ class Connection extends Component {
                 <td>
                     <span className="connection-service">
                         <ButtonField small fullSpan color={serviceColor} name={serviceName}
-                                     onClick={() => this.props.addServicePortFilter(conn.port_dst)} />
+                                     onClick={() => this.props.addServicePortFilter(conn.port_dst)}/>
                     </span>
                 </td>
                 <td className="clickable" onClick={this.props.onSelected}>{conn.ip_src}</td>

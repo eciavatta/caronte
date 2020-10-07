@@ -19,7 +19,6 @@ import (
 const PcapsBasePath = "pcaps/"
 const ProcessingPcapsBasePath = PcapsBasePath + "processing/"
 const initialAssemblerPoolSize = 16
-const flushOlderThan = 5 * time.Minute
 const importUpdateProgressInterval = 100 * time.Millisecond
 
 type PcapImporter struct {
@@ -201,8 +200,8 @@ func (pi *PcapImporter) parsePcap(session ImportingSession, fileName string, flu
 			var servicePort uint16
 			var index int
 
-			isDstServer :=  pi.serverNet.Contains(packet.NetworkLayer().NetworkFlow().Dst().Raw())
-			isSrcServer :=  pi.serverNet.Contains(packet.NetworkLayer().NetworkFlow().Src().Raw())
+			isDstServer := pi.serverNet.Contains(packet.NetworkLayer().NetworkFlow().Dst().Raw())
+			isSrcServer := pi.serverNet.Contains(packet.NetworkLayer().NetworkFlow().Src().Raw())
 			if isDstServer && !isSrcServer {
 				servicePort = uint16(tcp.DstPort)
 				index = 0
@@ -284,7 +283,7 @@ func deleteProcessingFile(fileName string) {
 }
 
 func moveProcessingFile(sessionID string, fileName string) {
-	if err := os.Rename(ProcessingPcapsBasePath + fileName, PcapsBasePath + sessionID + path.Ext(fileName)); err != nil {
+	if err := os.Rename(ProcessingPcapsBasePath+fileName, PcapsBasePath+sessionID+path.Ext(fileName)); err != nil {
 		log.WithError(err).Error("failed to move processed file")
 	}
 }

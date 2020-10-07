@@ -22,9 +22,10 @@ type ApplicationContext struct {
 	ConnectionStreamsController ConnectionStreamsController
 	StatisticsController        StatisticsController
 	IsConfigured                bool
+	Version                     string
 }
 
-func CreateApplicationContext(storage Storage) (*ApplicationContext, error) {
+func CreateApplicationContext(storage Storage, version string) (*ApplicationContext, error) {
 	var configWrapper struct {
 		Config Config
 	}
@@ -45,9 +46,10 @@ func CreateApplicationContext(storage Storage) (*ApplicationContext, error) {
 	}
 
 	applicationContext := &ApplicationContext{
-		Storage:  storage,
-		Config:   configWrapper.Config,
-		Accounts: accountsWrapper.Accounts,
+		Storage:                storage,
+		Config:                 configWrapper.Config,
+		Accounts:               accountsWrapper.Accounts,
+		Version:                version,
 	}
 
 	applicationContext.configure()

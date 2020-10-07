@@ -2,7 +2,6 @@
 
 .connection-content {
   height: 100%;
-  padding: 10px 10px 0;
   background-color: $color-primary-0;
 
   pre {
@@ -91,12 +90,12 @@
   .connection-content-header {
     height: 33px;
     padding: 0;
-    background-color: $color-primary-2;
+    background-color: $color-primary-3;
 
     .header-info {
       font-size: 12px;
       padding-top: 7px;
-      padding-left: 20px;
+      padding-left: 25px;
     }
 
     .header-actions {
@@ -104,6 +103,10 @@
 
       .choice-field {
         margin-top: -5px;
+
+        .field-value {
+          background-color: $color-primary-3;
+        }
       }
     }
   }

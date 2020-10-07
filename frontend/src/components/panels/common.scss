@@ -2,11 +2,9 @@
 
 .pane-container {
   height: 100%;
-  padding: 10px 10px 0;
   background-color: $color-primary-3;
 
   .pane-section {
-    margin-bottom: 10px;
     background-color: $color-primary-0;
 
     .section-header {
@@ -14,7 +12,7 @@
       font-weight: 500;
       display: flex;
       padding: 5px 10px;
-      background-color: $color-primary-2;
+      background-color: $color-primary-3;
 
       .api-request {
         flex: 1;
