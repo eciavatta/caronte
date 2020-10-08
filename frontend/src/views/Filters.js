@@ -1,3 +1,20 @@
+/*
+ * This file is part of caronte (https://github.com/eciavatta/caronte).
+ * Copyright (c) 2020 Emiliano Ciavatta.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 import React, {Component} from 'react';
 import {Col, Container, Modal, Row, Table} from "react-bootstrap";
 import {filtersDefinitions, filtersNames} from "../components/filters/FiltersDefinitions";
@@ -31,7 +48,7 @@ class Filters extends Component {
             <tr key={name}>
                 <td><input type="checkbox"
                            checked={this.state[`${name}_active`]}
-                           onChange={event => this.checkboxChangesHandler(name, event)} /></td>
+                           onChange={event => this.checkboxChangesHandler(name, event)}/></td>
                 <td>{filtersDefinitions[name]}</td>
             </tr>
         );
@@ -89,7 +106,7 @@ class Filters extends Component {
                     </Container>
                 </Modal.Body>
                 <Modal.Footer className="dialog-footer">
-                    <ButtonField variant="red" bordered onClick={this.props.onHide} name="close" />
+                    <ButtonField variant="red" bordered onClick={this.props.onHide} name="close"/>
                 </Modal.Footer>
             </Modal>
         );
