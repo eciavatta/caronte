@@ -7,7 +7,8 @@ import ButtonField from "./fields/ButtonField";
 import ChoiceField from "./fields/ChoiceField";
 import DOMPurify from 'dompurify';
 import ReactJson from 'react-json-view'
-import {getHeaderValue} from "../utils";
+import {downloadBlob, getHeaderValue} from "../utils";
+import log from "../log";
 
 const classNames = require('classnames');
 
@@ -92,7 +93,7 @@ class ConnectionContent extends Component {
                 if (contentType && contentType.includes("application/json")) {
                     try {
                         const json = JSON.parse(m.body);
-                        body = <ReactJson src={json} theme="grayscale" collapsed={false} displayDataTypes={false} />;
+                        body = <ReactJson src={json} theme="grayscale" collapsed={false} displayDataTypes={false}/>;
                     } catch (e) {
                         console.log(e);
                     }
@@ -126,7 +127,7 @@ class ConnectionContent extends Component {
                             messageActionDialog: <MessageAction actionName={actionName} actionValue={actionValue}
                                                                 onHide={() => this.setState({messageActionDialog: null})}/>
                         });
-                    }} />
+                    }}/>
                 );
             case "http-response":
                 const contentType = getHeaderValue(m, "Content-Type");
@@ -142,12 +143,18 @@ class ConnectionContent extends Component {
                         }
                         w.document.body.innerHTML = DOMPurify.sanitize(m.body);
                         w.focus();
-                    }} />;
+                    }}/>;
                 }
                 break;
             default:
                 return null;
         }
+    };
+
+    downloadStreamRaw = (value) => {
+        backend.download(`/api/streams/${this.props.connection.id}/download?format=${this.state.format}&type=${value}`)
+            .then(res => downloadBlob(res.blob, `${this.props.connection.id}-${value}-${this.state.format}.txt`))
+            .catch(_ => log.error("Failed to download stream messages"));
     };
 
     closeRenderWindow = () => {
@@ -157,7 +164,8 @@ class ConnectionContent extends Component {
     };
 
     render() {
-        let content = this.state.connectionContent;
+        const conn = this.props.connection;
+        const content = this.state.connectionContent;
 
         if (content == null) {
             return <div>select a connection to view</div>;
@@ -165,7 +173,7 @@ class ConnectionContent extends Component {
 
         let payload = content.map((c, i) =>
             <div key={`content-${i}`}
-                 className={classNames("connection-message", c.from_client ? "from-client" : "from-server")}>
+                 className={classNames("connection-message", c["from_client"] ? "from-client" : "from-server")}>
                 <div className="connection-message-header container-fluid">
                     <div className="row">
                         <div className="connection-message-info col">
@@ -175,9 +183,9 @@ class ConnectionContent extends Component {
                         <div className="connection-message-actions col-auto">{this.connectionsActions(c)}</div>
                     </div>
                 </div>
-                <div className="connection-message-label">{c.from_client ? "client" : "server"}</div>
+                <div className="connection-message-label">{c["from_client"] ? "client" : "server"}</div>
                 <div
-                    className={classNames("message-content", this.state.decoded ? "message-parsed" : "message-original")}>
+                    className="message-content">
                     {this.state.tryParse && this.state.format === "default" ? this.tryParseConnectionMessage(c) : c.content}
                 </div>
             </div>
@@ -188,20 +196,20 @@ class ConnectionContent extends Component {
                 <div className="connection-content-header container-fluid">
                     <Row>
                         <div className="header-info col">
-                            <span><strong>flow</strong>: {this.props.connection.ip_src}:{this.props.connection.port_src} -> {this.props.connection.ip_dst}:{this.props.connection.port_dst}</span>
-                            <span> | <strong>timestamp</strong>: {this.props.connection.started_at}</span>
+                            <span><strong>flow</strong>: {conn["ip_src"]}:{conn["port_src"]} -> {conn["ip_dst"]}:{conn["port_dst"]}</span>
+                            <span> | <strong>timestamp</strong>: {conn["started_at"]}</span>
                         </div>
                         <div className="header-actions col-auto">
                             <ChoiceField name="format" inline small onlyName
                                          keys={["default", "hex", "hexdump", "base32", "base64", "ascii", "binary", "decimal", "octal"]}
                                          values={["plain", "hex", "hexdump", "base32", "base64", "ascii", "binary", "decimal", "octal"]}
-                                         onChange={this.setFormat} value={this.state.value} />
+                                         onChange={this.setFormat} value={this.state.value}/>
 
-                             <ChoiceField name="view_as" inline small onlyName keys={["default"]} values={["default"]} />
+                            <ChoiceField name="view_as" inline small onlyName keys={["default"]} values={["default"]}/>
 
-                            <ChoiceField name="download_as" inline small onlyName
-                                         keys={["nl_separated", "only_client", "only_server"]}
-                                         values={["nl_separated", "only_client", "only_server"]} />
+                            <ChoiceField name="download_as" inline small onlyName onChange={this.downloadStreamRaw}
+                                         keys={["nl_separated", "only_client", "only_server", "pwntools"]}
+                                         values={["nl_separated", "only_client", "only_server", "pwntools"]}/>
                         </div>
                     </Row>
                 </div>

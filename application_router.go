@@ -283,12 +283,36 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 				badRequest(c, err)
 				return
 			}
-			var format QueryFormat
+			var format GetMessageFormat
 			if err := c.ShouldBindQuery(&format); err != nil {
 				badRequest(c, err)
 				return
 			}
-			success(c, applicationContext.ConnectionStreamsController.GetConnectionPayload(c, id, format))
+
+			if messages, found := applicationContext.ConnectionStreamsController.GetConnectionMessages(c, id, format); !found {
+				notFound(c, gin.H{"connection": id})
+			} else {
+				success(c, messages)
+			}
+		})
+
+		api.GET("/streams/:id/download", func(c *gin.Context) {
+			id, err := RowIDFromHex(c.Param("id"))
+			if err != nil {
+				badRequest(c, err)
+				return
+			}
+			var format DownloadMessageFormat
+			if err := c.ShouldBindQuery(&format); err != nil {
+				badRequest(c, err)
+				return
+			}
+
+			if blob, found := applicationContext.ConnectionStreamsController.DownloadConnectionMessages(c, id, format); !found {
+				notFound(c, gin.H{"connection": id})
+			} else {
+				c.String(http.StatusOK, blob)
+			}
 		})
 
 		api.GET("/services", func(c *gin.Context) {

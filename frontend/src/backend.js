@@ -25,6 +25,30 @@ async function json(method, url, data, json, headers) {
     }
 }
 
+async function download(url, headers) {
+
+    const options = {
+        mode: "cors",
+        cache: "no-cache",
+        credentials: "same-origin",
+        headers: headers || {},
+        redirect: "follow",
+        referrerPolicy: "no-referrer",
+    };
+    const response = await fetch(url, options);
+    const result = {
+        statusCode: response.status,
+        status: `${response.status} ${response.statusText}`,
+        blob: await response.blob()
+    };
+
+    if (response.status >= 200 && response.status < 300) {
+        return result;
+    } else {
+        return Promise.reject(result);
+    }
+}
+
 const backend = {
     get: (url = "", headers = null) =>
         json("GET", url, null, null, headers),
@@ -35,7 +59,9 @@ const backend = {
     delete: (url = "", data = null, headers = null) =>
         json("DELETE", url, null, data, headers),
     postFile: (url = "", data = null, headers = {}) =>
-        json("POST", url, data, null, headers)
+        json("POST", url, data, null, headers),
+    download: (url = "", headers = null) =>
+        download(url, headers)
 };
 
 export default backend;
