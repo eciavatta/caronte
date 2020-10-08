@@ -35,7 +35,11 @@ func main() {
 
 	notificationController := NewNotificationController(applicationContext)
 	go notificationController.Run()
-	applicationRouter := CreateApplicationRouter(applicationContext, notificationController)
+
+	resourcesController := NewResourcesController(notificationController)
+	go resourcesController.Run()
+
+	applicationRouter := CreateApplicationRouter(applicationContext, notificationController, resourcesController)
 	if applicationRouter.Run(fmt.Sprintf("%s:%v", *bindAddress, *bindPort)) != nil {
 		log.WithError(err).WithFields(logFields).Fatal("failed to create the server")
 	}

@@ -14,7 +14,7 @@ import (
 )
 
 func CreateApplicationRouter(applicationContext *ApplicationContext,
-	notificationController *NotificationController) *gin.Engine {
+	notificationController *NotificationController, resourcesController *ResourcesController) *gin.Engine {
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
@@ -341,6 +341,14 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 			}
 
 			success(c, applicationContext.StatisticsController.GetStatistics(c, filter))
+		})
+
+		api.GET("/resources/system", func(c *gin.Context) {
+			success(c, resourcesController.GetSystemStats(c))
+		})
+
+		api.GET("/resources/process", func(c *gin.Context) {
+			success(c, resourcesController.GetProcessStats(c))
 		})
 	}
 

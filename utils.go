@@ -151,3 +151,11 @@ func ParseIPNet(address string) *net.IPNet {
 
 	return network
 }
+
+func Average(array []float64) float64 {
+	var sum float64
+	for _, f := range array {
+		sum += f
+	}
+	return sum / float64(len(array))
+}
