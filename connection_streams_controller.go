@@ -28,8 +28,7 @@ import (
 )
 
 const (
-	initialPayloadsSize     = 1024
-	defaultQueryFormatLimit = 8024
+	initialMessagesSize     = 1024
 	initialRegexSlicesCount = 8
 	pwntoolsMaxServerBytes  = 20
 )
@@ -66,8 +65,6 @@ type RegexSlice struct {
 
 type GetMessageFormat struct {
 	Format string `form:"format"`
-	Skip   uint64 `form:"skip"`
-	Limit  uint64 `form:"limit"`
 }
 
 type DownloadMessageFormat struct {
@@ -92,12 +89,8 @@ func (csc ConnectionStreamsController) GetConnectionMessages(c context.Context, 
 		return nil, false
 	}
 
-	payloads := make([]*Message, 0, initialPayloadsSize)
-	var clientIndex, serverIndex, globalIndex uint64
-
-	if format.Limit <= 0 {
-		format.Limit = defaultQueryFormatLimit
-	}
+	messages := make([]*Message, 0, initialMessagesSize)
+	var clientIndex, serverIndex uint64
 
 	var clientBlocksIndex, serverBlocksIndex int
 	var clientDocumentIndex, serverDocumentIndex int
@@ -111,8 +104,8 @@ func (csc ConnectionStreamsController) GetConnectionMessages(c context.Context, 
 		return serverBlocksIndex < len(serverStream.BlocksIndexes)
 	}
 
-	var payload *Message
-	payloadsBuffer := make([]*Message, 0, 16)
+	var message *Message
+	messagesBuffer := make([]*Message, 0, 16)
 	contentChunkBuffer := new(bytes.Buffer)
 	var lastContentSlice []byte
 	var sideChanged, lastClient, lastServer bool
@@ -129,7 +122,7 @@ func (csc ConnectionStreamsController) GetConnectionMessages(c context.Context, 
 			}
 			size := uint64(end - start)
 
-			payload = &Message{
+			message = &Message{
 				FromClient:      true,
 				Content:         DecodeBytes(clientStream.Payload[start:end], format.Format),
 				Index:           start,
@@ -138,7 +131,6 @@ func (csc ConnectionStreamsController) GetConnectionMessages(c context.Context, 
 				RegexMatches:    findMatchesBetween(clientStream.PatternMatches, clientIndex, clientIndex+size),
 			}
 			clientIndex += size
-			globalIndex += size
 			clientBlocksIndex++
 
 			lastContentSlice = clientStream.Payload[start:end]
@@ -153,7 +145,7 @@ func (csc ConnectionStreamsController) GetConnectionMessages(c context.Context, 
 			}
 			size := uint64(end - start)
 
-			payload = &Message{
+			message = &Message{
 				FromClient:      false,
 				Content:         DecodeBytes(serverStream.Payload[start:end], format.Format),
 				Index:           start,
@@ -162,7 +154,6 @@ func (csc ConnectionStreamsController) GetConnectionMessages(c context.Context, 
 				RegexMatches:    findMatchesBetween(serverStream.PatternMatches, serverIndex, serverIndex+size),
 			}
 			serverIndex += size
-			globalIndex += size
 			serverBlocksIndex++
 
 			lastContentSlice = serverStream.Payload[start:end]
@@ -172,49 +163,43 @@ func (csc ConnectionStreamsController) GetConnectionMessages(c context.Context, 
 		if !hasClientBlocks() {
 			clientDocumentIndex++
 			clientBlocksIndex = 0
+			clientIndex = 0
 			clientStream = csc.getConnectionStream(c, connectionID, true, clientDocumentIndex)
 		}
 		if !hasServerBlocks() {
 			serverDocumentIndex++
 			serverBlocksIndex = 0
+			serverIndex = 0
 			serverStream = csc.getConnectionStream(c, connectionID, false, serverDocumentIndex)
 		}
 
 		updateMetadata := func() {
 			metadata := parsers.Parse(contentChunkBuffer.Bytes())
 			var isMetadataContinuation bool
-			for _, elem := range payloadsBuffer {
+			for _, elem := range messagesBuffer {
 				elem.Metadata = metadata
 				elem.IsMetadataContinuation = isMetadataContinuation
 				isMetadataContinuation = true
 			}
 
-			payloadsBuffer = payloadsBuffer[:0]
+			messagesBuffer = messagesBuffer[:0]
 			contentChunkBuffer.Reset()
 		}
 
 		if sideChanged {
 			updateMetadata()
 		}
-		payloadsBuffer = append(payloadsBuffer, payload)
+		messagesBuffer = append(messagesBuffer, message)
 		contentChunkBuffer.Write(lastContentSlice)
 
 		if clientStream.ID.IsZero() && serverStream.ID.IsZero() {
 			updateMetadata()
 		}
 
-		if globalIndex > format.Skip {
-			// problem: waste of time if the payload is discarded
-			payloads = append(payloads, payload)
-		}
-		if globalIndex > format.Skip+format.Limit {
-			// problem: the last chunk is not parsed, but can be ok because it is not finished
-			updateMetadata()
-			return payloads, true
-		}
+		messages = append(messages, message)
 	}
 
-	return payloads, true
+	return messages, true
 }
 
 func (csc ConnectionStreamsController) DownloadConnectionMessages(c context.Context, connectionID RowID,
@@ -345,7 +330,6 @@ func findMatchesBetween(patternMatches map[uint][]PatternSlice, from, to uint64)
 				continue
 			}
 
-			log.Info(slice[0], slice[1], from, to)
 			var start, end uint64
 			if from > slice[0] {
 				start = 0

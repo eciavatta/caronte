@@ -17,7 +17,7 @@
 
 import React, {Component} from 'react';
 import './ConnectionMatchedRules.scss';
-import ButtonField from "./fields/ButtonField";
+import ButtonField from "../fields/ButtonField";
 
 class ConnectionMatchedRules extends Component {
 

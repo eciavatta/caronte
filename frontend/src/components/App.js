@@ -16,15 +16,11 @@
  */
 
 import React, {Component} from 'react';
-import './App.scss';
-import Header from "./Header";
-import MainPane from "../components/panels/MainPane";
-import Timeline from "./Timeline";
-import {BrowserRouter as Router} from "react-router-dom";
-import Filters from "./Filters";
-import ConfigurationPane from "../components/panels/ConfigurationPane";
-import Notifications from "../components/Notifications";
+import ConfigurationPage from "./pages/ConfigurationPage";
+import Notifications from "./Notifications";
 import dispatcher from "../dispatcher";
+import MainPage from "./pages/MainPage";
+import ServiceUnavailablePage from "./pages/ServiceUnavailablePage";
 
 class App extends Component {
 
@@ -50,30 +46,15 @@ class App extends Component {
     }
 
     render() {
-        let modal;
-        if (this.state.filterWindowOpen && this.state.configured) {
-            modal = <Filters onHide={() => this.setState({filterWindowOpen: false})}/>;
-        }
-
         return (
-            <div className="main">
+            <>
                 <Notifications/>
-                {this.state.connected &&
-                    <Router>
-                        <div className="main-header">
-                            <Header onOpenFilters={() => this.setState({filterWindowOpen: true})}/>
-                        </div>
-                        <div className="main-content">
-                            {this.state.configured ? <MainPane/> :
-                                <ConfigurationPane onConfigured={() => this.setState({configured: true})}/>}
-                            {modal}
-                        </div>
-                        <div className="main-footer">
-                            {this.state.configured && <Timeline/>}
-                        </div>
-                    </Router>
+                {this.state.connected ?
+                    (this.state.configured ? <MainPage/> :
+                        <ConfigurationPage onConfigured={() => this.setState({configured: true})}/>) :
+                    <ServiceUnavailablePage/>
                 }
-            </div>
+            </>
         );
     }
 }

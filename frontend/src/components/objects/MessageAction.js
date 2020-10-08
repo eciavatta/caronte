@@ -18,8 +18,8 @@
 import React, {Component} from 'react';
 import './MessageAction.scss';
 import {Modal} from "react-bootstrap";
-import TextField from "./fields/TextField";
-import ButtonField from "./fields/ButtonField";
+import TextField from "../fields/TextField";
+import ButtonField from "../fields/ButtonField";
 
 class MessageAction extends Component {
 

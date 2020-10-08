@@ -18,10 +18,10 @@
 import React, {Component} from 'react';
 import './Connection.scss';
 import {Form, OverlayTrigger, Popover} from "react-bootstrap";
-import backend from "../backend";
-import {dateTimeToTime, durationBetween, formatSize} from "../utils";
-import ButtonField from "./fields/ButtonField";
-import LinkPopover from "./objects/LinkPopover";
+import backend from "../../backend";
+import {dateTimeToTime, durationBetween, formatSize} from "../../utils";
+import ButtonField from "../fields/ButtonField";
+import LinkPopover from "./LinkPopover";
 
 const classNames = require('classnames');
 

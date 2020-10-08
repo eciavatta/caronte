@@ -29,7 +29,7 @@ import {
 } from "react-timeseries-charts";
 import {TimeRange, TimeSeries} from "pondjs";
 import backend from "../backend";
-import ChoiceField from "../components/fields/ChoiceField";
+import ChoiceField from "./fields/ChoiceField";
 import {withRouter} from "react-router-dom";
 import log from "../log";
 import dispatcher from "../dispatcher";

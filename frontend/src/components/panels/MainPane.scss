@@ -1,22 +1,5 @@
 @import "../../colors";
 
 .main-pane {
-  display: flex;
-  height: 100%;
-  padding: 0 15px;
-  background-color: $color-primary-2;
 
-  .pane {
-    flex: 1;
-  }
-
-  .connections-pane {
-    flex: 1 0;
-    margin-right: 7.5px;
-  }
-
-  .details-pane {
-    flex: 1 1;
-    margin-left: 7.5px;
-  }
 }

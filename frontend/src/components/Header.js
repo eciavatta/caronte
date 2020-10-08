@@ -18,9 +18,9 @@
 import React, {Component} from 'react';
 import Typed from 'typed.js';
 import './Header.scss';
-import {filtersDefinitions, filtersNames} from "../components/filters/FiltersDefinitions";
+import {filtersDefinitions, filtersNames} from "./filters/FiltersDefinitions";
 import {Link, withRouter} from "react-router-dom";
-import ButtonField from "../components/fields/ButtonField";
+import ButtonField from "./fields/ButtonField";
 
 class Header extends Component {
 
@@ -71,9 +71,11 @@ class Header extends Component {
                 <div className="row">
                     <div className="col-auto">
                         <h1 className="header-title type-wrap">
-                            <span style={{whiteSpace: 'pre'}} ref={(el) => {
-                                this.el = el;
-                            }}/>
+                            <Link to="/">
+                                <span style={{whiteSpace: 'pre'}} ref={(el) => {
+                                    this.el = el;
+                                }}/>
+                            </Link>
                         </h1>
                     </div>
 

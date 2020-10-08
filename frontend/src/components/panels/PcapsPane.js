@@ -16,7 +16,7 @@
  */
 
 import React, {Component} from 'react';
-import './PcapPane.scss';
+import './PcapsPane.scss';
 import './common.scss';
 import Table from "react-bootstrap/Table";
 import backend from "../../backend";
@@ -28,7 +28,7 @@ import ButtonField from "../fields/ButtonField";
 import LinkPopover from "../objects/LinkPopover";
 import dispatcher from "../../dispatcher";
 
-class PcapPane extends Component {
+class PcapsPane extends Component {
 
     state = {
         sessions: [],
@@ -270,4 +270,4 @@ class PcapPane extends Component {
     }
 }
 
-export default PcapPane;
+export default PcapsPane;

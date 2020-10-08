@@ -17,7 +17,7 @@
 
 import React, {Component} from 'react';
 import './common.scss';
-import './RulePane.scss';
+import './RulesPane.scss';
 import Table from "react-bootstrap/Table";
 import {Col, Container, Row} from "react-bootstrap";
 import InputField from "../fields/InputField";
@@ -36,7 +36,7 @@ import dispatcher from "../../dispatcher";
 const classNames = require('classnames');
 const _ = require('lodash');
 
-class RulePane extends Component {
+class RulesPane extends Component {
 
     emptyRule = {
         "name": "",
@@ -435,4 +435,4 @@ class RulePane extends Component {
 
 }
 
-export default RulePane;
+export default RulesPane;

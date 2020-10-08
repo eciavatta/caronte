@@ -17,8 +17,8 @@
 
 import React, {Component} from 'react';
 import {Col, Container, Modal, Row, Table} from "react-bootstrap";
-import {filtersDefinitions, filtersNames} from "../components/filters/FiltersDefinitions";
-import ButtonField from "../components/fields/ButtonField";
+import {filtersDefinitions, filtersNames} from "../filters/FiltersDefinitions";
+import ButtonField from "../fields/ButtonField";
 
 class Filters extends Component {
 

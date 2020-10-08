@@ -16,8 +16,8 @@
  */
 
 import React, {Component} from 'react';
-import './common.scss';
-import './ConfigurationPane.scss';
+import '../panels/common.scss';
+import './ConfigurationPage.scss';
 import LinkPopover from "../objects/LinkPopover";
 import {Col, Container, Row} from "react-bootstrap";
 import InputField from "../fields/InputField";
@@ -29,7 +29,7 @@ import Table from "react-bootstrap/Table";
 import validation from "../../validation";
 import backend from "../../backend";
 
-class ConfigurationPane extends Component {
+class ConfigurationPage extends Component {
 
     constructor(props) {
         super(props);
@@ -114,7 +114,7 @@ class ConfigurationPane extends Component {
         </tr>);
 
         return (
-            <div className="configuration-pane">
+            <div className="configuration-page">
                 <div className="pane">
                     <div className="pane-container">
                         <div className="pane-section">
@@ -176,4 +176,4 @@ class ConfigurationPane extends Component {
     }
 }
 
-export default ConfigurationPane;
+export default ConfigurationPage;

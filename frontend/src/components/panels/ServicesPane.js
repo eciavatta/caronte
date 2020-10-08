@@ -17,7 +17,7 @@
 
 import React, {Component} from 'react';
 import './common.scss';
-import './ServicePane.scss';
+import './ServicesPane.scss';
 import Table from "react-bootstrap/Table";
 import {Col, Container, Row} from "react-bootstrap";
 import InputField from "../fields/InputField";
@@ -34,7 +34,7 @@ import dispatcher from "../../dispatcher";
 const classNames = require('classnames');
 const _ = require('lodash');
 
-class ServicePane extends Component {
+class ServicesPane extends Component {
 
     emptyService = {
         "port": 0,
@@ -209,4 +209,4 @@ class ServicePane extends Component {
 
 }
 
-export default ServicePane;
+export default ServicesPane;

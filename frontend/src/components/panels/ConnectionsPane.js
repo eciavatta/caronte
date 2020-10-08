@@ -16,18 +16,18 @@
  */
 
 import React, {Component} from 'react';
-import './Connections.scss';
-import Connection from "../components/Connection";
+import './ConnectionsPane.scss';
+import Connection from "../objects/Connection";
 import Table from 'react-bootstrap/Table';
 import {Redirect} from 'react-router';
 import {withRouter} from "react-router-dom";
-import backend from "../backend";
-import ConnectionMatchedRules from "../components/ConnectionMatchedRules";
-import log from "../log";
-import ButtonField from "../components/fields/ButtonField";
-import dispatcher from "../dispatcher";
+import backend from "../../backend";
+import ConnectionMatchedRules from "../objects/ConnectionMatchedRules";
+import log from "../../log";
+import ButtonField from "../fields/ButtonField";
+import dispatcher from "../../dispatcher";
 
-class Connections extends Component {
+class ConnectionsPane extends Component {
 
     state = {
         loading: false,
@@ -45,16 +45,21 @@ class Connections extends Component {
         this.queryLimit = 50;
         this.connectionsListRef = React.createRef();
         this.lastScrollPosition = 0;
-        this.doQueryStringRedirect = false;
-        this.doSelectedConnectionRedirect = false;
     }
 
     componentDidMount() {
-        this.loadConnections({limit: this.queryLimit})
-            .then(() => this.setState({loaded: true}));
-        if (this.props.initialConnection) {
-            this.setState({selected: this.props.initialConnection.id});
+        const initialParams = {limit: this.queryLimit};
+
+        const match = this.props.location.pathname.match(/^\/connections\/([a-f0-9]{24})$/);
+        if (match != null) {
+            const id = match[1];
+            initialParams.from = id;
+            backend.get(`/api/connections/${id}`)
+                .then(res => this.connectionSelected(res.json, false))
+                .catch(error => log.error("Error loading initial connection", error));
         }
+
+        this.loadConnections(initialParams, true).then(() => log.debug("Connections loaded"));
 
         dispatcher.register("timeline_updates", payload => {
             this.connectionsListRef.current.scrollTop = 0;
@@ -78,16 +83,17 @@ class Connections extends Component {
         });
     }
 
-    connectionSelected = (c) => {
-        this.doSelectedConnectionRedirect = true;
+    connectionSelected = (c, doRedirect = true) => {
+        this.doSelectedConnectionRedirect = doRedirect;
         this.setState({selected: c.id});
         this.props.onSelected(c);
+        log.debug(`Connection ${c.id} selected`);
     };
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if (this.state.loaded && prevProps.location.search !== this.props.location.search) {
+        if (prevProps.location.search !== this.props.location.search) {
             this.loadConnections({limit: this.queryLimit})
-                .then(() => log.info("Connections reloaded after query string update"));
+                .then(() => log.info("ConnectionsPane reloaded after query string update"));
         }
     }
 
@@ -140,8 +146,7 @@ class Connections extends Component {
         }
     };
 
-    async loadConnections(params) {
-        let url = "/api/connections";
+    async loadConnections(params, isInitial = false) {
         const urlParams = new URLSearchParams(this.props.location.search);
         for (const [name, value] of Object.entries(params)) {
             urlParams.set(name, value);
@@ -155,7 +160,7 @@ class Connections extends Component {
             await this.loadServices();
         }
 
-        let res = (await backend.get(`${url}?${urlParams}`)).json;
+        let res = (await backend.get(`/api/connections?${urlParams}`)).json;
 
         let connections = this.state.connections;
         let firstConnection = this.state.firstConnection;
@@ -163,8 +168,14 @@ class Connections extends Component {
 
         if (params !== undefined && params.from !== undefined && params.to === undefined) {
             if (res.length > 0) {
-                connections = this.state.connections.concat(res.slice(1));
+                if (!isInitial) {
+                    res = res.slice(1);
+                }
+                connections = this.state.connections.concat(res);
                 lastConnection = connections[connections.length - 1];
+                if (isInitial) {
+                    firstConnection = connections[0];
+                }
                 if (connections.length > this.maxConnections) {
                     connections = connections.slice(connections.length - this.maxConnections,
                         connections.length - 1);
@@ -228,7 +239,7 @@ class Connections extends Component {
         let loading = null;
         if (this.state.loading) {
             loading = <tr>
-                <td colSpan={9}>Loading...</td>
+                <td colSpan={10}>Loading...</td>
             </tr>;
         }
 
@@ -290,4 +301,4 @@ class Connections extends Component {
 
 }
 
-export default withRouter(Connections);
+export default withRouter(ConnectionsPane);

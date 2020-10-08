@@ -16,47 +16,47 @@
  */
 
 import React, {Component} from 'react';
-import './ConnectionContent.scss';
+import './StreamsPane.scss';
 import {Row} from 'react-bootstrap';
-import MessageAction from "./MessageAction";
-import backend from "../backend";
-import ButtonField from "./fields/ButtonField";
-import ChoiceField from "./fields/ChoiceField";
+import MessageAction from "../objects/MessageAction";
+import backend from "../../backend";
+import ButtonField from "../fields/ButtonField";
+import ChoiceField from "../fields/ChoiceField";
 import DOMPurify from 'dompurify';
 import ReactJson from 'react-json-view'
-import {downloadBlob, getHeaderValue} from "../utils";
-import log from "../log";
+import {downloadBlob, getHeaderValue} from "../../utils";
+import log from "../../log";
 
 const classNames = require('classnames');
 
-class ConnectionContent extends Component {
+class StreamsPane extends Component {
+
+    state = {
+        messages: [],
+        format: "default",
+        tryParse: true
+    };
 
     constructor(props) {
         super(props);
-        this.state = {
-            loading: false,
-            connectionContent: null,
-            format: "default",
-            tryParse: true,
-            messageActionDialog: null
-        };
 
         this.validFormats = ["default", "hex", "hexdump", "base32", "base64", "ascii", "binary", "decimal", "octal"];
     }
 
     componentDidMount() {
-        if (this.props.connection != null) {
-            this.loadStream();
+        if (this.props.connection && this.state.currentId !== this.props.connection.id) {
+            this.setState({currentId: this.props.connection.id});
+            this.loadStream(this.props.connection.id);
         }
 
         document.title = "caronte:~/$";
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if (this.props.connection != null && (
+        if (this.props.connection && (
             this.props.connection !== prevProps.connection || this.state.format !== prevState.format)) {
             this.closeRenderWindow();
-            this.loadStream();
+            this.loadStream(this.props.connection.id);
         }
     }
 
@@ -64,15 +64,10 @@ class ConnectionContent extends Component {
         this.closeRenderWindow();
     }
 
-    loadStream = () => {
-        this.setState({loading: true});
-        // TODO: limit workaround.
-        backend.get(`/api/streams/${this.props.connection.id}?format=${this.state.format}&limit=999999`).then(res => {
-            this.setState({
-                connectionContent: res.json,
-                loading: false
-            });
-        });
+    loadStream = (connectionId) => {
+        this.setState({messages: []});
+        backend.get(`/api/streams/${connectionId}?format=${this.state.format}`)
+            .then(res => this.setState({messages: res.json}));
     };
 
     setFormat = (format) => {
@@ -128,7 +123,7 @@ class ConnectionContent extends Component {
     };
 
     connectionsActions = (connectionMessage) => {
-        if (connectionMessage.metadata == null) { //} || !connectionMessage.metadata["reproducers"]) {
+        if (!connectionMessage.metadata) {
             return null;
         }
 
@@ -169,9 +164,11 @@ class ConnectionContent extends Component {
     };
 
     downloadStreamRaw = (value) => {
-        backend.download(`/api/streams/${this.props.connection.id}/download?format=${this.state.format}&type=${value}`)
-            .then(res => downloadBlob(res.blob, `${this.props.connection.id}-${value}-${this.state.format}.txt`))
-            .catch(_ => log.error("Failed to download stream messages"));
+        if (this.state.currentId) {
+            backend.download(`/api/streams/${this.props.connection.id}/download?format=${this.state.format}&type=${value}`)
+                .then(res => downloadBlob(res.blob, `${this.state.currentId}-${value}-${this.state.format}.txt`))
+                .catch(_ => log.error("Failed to download stream messages"));
+        }
     };
 
     closeRenderWindow = () => {
@@ -181,12 +178,14 @@ class ConnectionContent extends Component {
     };
 
     render() {
-        const conn = this.props.connection;
-        const content = this.state.connectionContent;
-
-        if (content == null) {
-            return <div>select a connection to view</div>;
-        }
+        const conn = this.props.connection || {
+            "ip_src": "0.0.0.0",
+            "ip_dst": "0.0.0.0",
+            "port_src": "0",
+            "port_dst": "0",
+            "started_at": new Date().toISOString(),
+        };
+        const content = this.state.messages || [];
 
         let payload = content.map((c, i) =>
             <div key={`content-${i}`}
@@ -240,4 +239,4 @@ class ConnectionContent extends Component {
 }
 
 
-export default ConnectionContent;
+export default StreamsPane;

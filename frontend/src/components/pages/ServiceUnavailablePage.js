@@ -16,23 +16,19 @@
  */
 
 import React, {Component} from 'react';
-import './common.scss';
-import './ServicesPane.scss';
+import './MainPage.scss';
 
-class MainPane extends Component {
+class ServiceUnavailablePage extends Component {
 
     state = {};
 
     render() {
         return (
-            <div className="pane-container main-pane">
-                <div className="pane-section">
-                    MainPane
-                </div>
+            <div className="main-page">
+
             </div>
         );
     }
-
 }
 
-export default MainPane;
+export default ServiceUnavailablePage;
