@@ -170,7 +170,8 @@ func NewRouterTestToolkit(t *testing.T, withSetup bool) *RouterTestToolkit {
 	gin.SetMode(gin.ReleaseMode)
 	notificationController := NewNotificationController(appContext)
 	go notificationController.Run()
-	router := CreateApplicationRouter(appContext, notificationController)
+	resourcesController := NewResourcesController(notificationController)
+	router := CreateApplicationRouter(appContext, notificationController, resourcesController)
 
 	toolkit := RouterTestToolkit{
 		appContext: appContext,
