@@ -17,24 +17,30 @@ class Notifications extends Component {
             const notifications = this.state.notifications;
             notifications.push(notification);
             this.setState({notifications});
-
             setTimeout(() => {
                 const notifications = this.state.notifications;
                 notification.open = true;
                 this.setState({notifications});
             }, 100);
 
-            setTimeout(() => {
+            const hideHandle = setTimeout(() => {
                 const notifications = _.without(this.state.notifications, notification);
                 const closedNotifications = this.state.closedNotifications.concat([notification]);
                 notification.closed = true;
                 this.setState({notifications, closedNotifications});
             }, 5000);
 
-            setTimeout(() => {
+            const removeHandle = setTimeout(() => {
                 const closedNotifications = _.without(this.state.closedNotifications, notification);
                 this.setState({closedNotifications});
             }, 6000);
+
+            notification.onClick = () => {
+                clearTimeout(hideHandle);
+                clearTimeout(removeHandle);
+                const notifications = _.without(this.state.notifications, notification);
+                this.setState({notifications});
+            };
         });
     }
 
@@ -45,7 +51,7 @@ class Notifications extends Component {
                     {
                         this.state.closedNotifications.concat(this.state.notifications).map(n =>
                             <div className={classNames("notification", {"notification-closed": n.closed},
-                                {"notification-open": n.open})}>
+                                {"notification-open": n.open})} onClick={n.onClick}>
                                 <h3 className="notification-title">{n.event}</h3>
                                 <span className="notification-description">{JSON.stringify(n.message)}</span>
                             </div>

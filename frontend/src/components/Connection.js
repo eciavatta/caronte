@@ -4,6 +4,7 @@ import {Form, OverlayTrigger, Popover} from "react-bootstrap";
 import backend from "../backend";
 import {dateTimeToTime, durationBetween, formatSize} from "../utils";
 import ButtonField from "./fields/ButtonField";
+import LinkPopover from "./objects/LinkPopover";
 
 const classNames = require('classnames');
 
@@ -54,9 +55,9 @@ class Connection extends Component {
             serviceName = service.name;
             serviceColor = service.color;
         }
-        let startedAt = new Date(conn.started_at);
-        let closedAt = new Date(conn.closed_at);
-        let processedAt = new Date(conn.processed_at);
+        let startedAt = new Date(conn["started_at"]);
+        let closedAt = new Date(conn["closed_at"]);
+        let processedAt = new Date(conn["processed_at"]);
         let timeInfo = <div>
             <span>Started at {startedAt.toLocaleDateString() + " " + startedAt.toLocaleTimeString()}</span><br/>
             <span>Processed at {processedAt.toLocaleDateString() + " " + processedAt.toLocaleTimeString()}</span><br/>
@@ -88,28 +89,20 @@ class Connection extends Component {
                 <td>
                     <span className="connection-service">
                         <ButtonField small fullSpan color={serviceColor} name={serviceName}
-                                     onClick={() => this.props.addServicePortFilter(conn.port_dst)}/>
+                                     onClick={() => this.props.addServicePortFilter(conn["port_dst"])}/>
                     </span>
                 </td>
-                <td className="clickable" onClick={this.props.onSelected}>{conn.ip_src}</td>
-                <td className="clickable" onClick={this.props.onSelected}>{conn.port_src}</td>
-                <td className="clickable" onClick={this.props.onSelected}>{conn.ip_dst}</td>
-                <td className="clickable" onClick={this.props.onSelected}>{conn.port_dst}</td>
-                <td className="clickable" onClick={this.props.onSelected}>{dateTimeToTime(conn.started_at)}</td>
+                <td className="clickable" onClick={this.props.onSelected}>{conn["ip_src"]}</td>
+                <td className="clickable" onClick={this.props.onSelected}>{conn["port_src"]}</td>
+                <td className="clickable" onClick={this.props.onSelected}>{conn["ip_dst"]}</td>
+                <td className="clickable" onClick={this.props.onSelected}>{conn["port_dst"]}</td>
                 <td className="clickable" onClick={this.props.onSelected}>
-                    <OverlayTrigger trigger={["focus", "hover"]} placement="right"
-                                    overlay={popoverFor("duration", timeInfo)}>
-                        <span className="test-tooltip">{durationBetween(startedAt, closedAt)}</span>
-                    </OverlayTrigger>
+                    <LinkPopover text={dateTimeToTime(conn["started_at"])} content={timeInfo} placement="right"/>
                 </td>
-                <td className="clickable" onClick={this.props.onSelected}>{formatSize(conn.client_bytes)}</td>
-                <td className="clickable" onClick={this.props.onSelected}>{formatSize(conn.server_bytes)}</td>
+                <td className="clickable" onClick={this.props.onSelected}>{durationBetween(startedAt, closedAt)}</td>
+                <td className="clickable" onClick={this.props.onSelected}>{formatSize(conn["client_bytes"])}</td>
+                <td className="clickable" onClick={this.props.onSelected}>{formatSize(conn["server_bytes"])}</td>
                 <td>
-                    {/*<OverlayTrigger trigger={["focus", "hover"]} placement="right"*/}
-                    {/*                overlay={popoverFor("hide", <span>Hide this connection from the list</span>)}>*/}
-                    {/*    <span className={"connection-icon" + (conn.hidden ? " icon-enabled" : "")}*/}
-                    {/*          onClick={() => this.handleAction("hide")}>%</span>*/}
-                    {/*</OverlayTrigger>*/}
                     <OverlayTrigger trigger={["focus", "hover"]} placement="right"
                                     overlay={popoverFor("hide", <span>Mark this connection</span>)}>
                         <span className={"connection-icon" + (conn.marked ? " icon-enabled" : "")}

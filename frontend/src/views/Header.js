@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import Typed from 'typed.js';
 import './Header.scss';
 import {filtersDefinitions, filtersNames} from "../components/filters/FiltersDefinitions";
-import {Link} from "react-router-dom";
+import {Link, withRouter} from "react-router-dom";
 import ButtonField from "../components/fields/ButtonField";
 
 class Header extends Component {
@@ -46,7 +46,7 @@ class Header extends Component {
 
     render() {
         let quickFilters = filtersNames.filter(name => this.state[`${name}_active`])
-            .map(name => <React.Fragment key={name} >{filtersDefinitions[name]}</React.Fragment>)
+            .map(name => <React.Fragment key={name}>{filtersDefinitions[name]}</React.Fragment>)
             .slice(0, 5);
 
         return (
@@ -68,18 +68,18 @@ class Header extends Component {
 
                     <div className="col">
                         <div className="header-buttons">
-                            <ButtonField variant="pink" onClick={this.props.onOpenFilters} name="filters" bordered />
-                            <Link to="/pcaps">
-                                <ButtonField variant="purple" name="pcaps" bordered />
+                            <ButtonField variant="pink" onClick={this.props.onOpenFilters} name="filters" bordered/>
+                            <Link to={"/pcaps" + this.props.location.search}>
+                                <ButtonField variant="purple" name="pcaps" bordered/>
                             </Link>
-                            <Link to="/rules">
-                                <ButtonField variant="deep-purple" name="rules" bordered />
+                            <Link to={"/rules" + this.props.location.search}>
+                                <ButtonField variant="deep-purple" name="rules" bordered/>
                             </Link>
-                            <Link to="/services">
-                                <ButtonField variant="indigo" name="services" bordered />
+                            <Link to={"/services" + this.props.location.search}>
+                                <ButtonField variant="indigo" name="services" bordered/>
                             </Link>
-                            <Link to="/config">
-                                <ButtonField variant="blue" name="config" bordered />
+                            <Link to={"/config" + this.props.location.search}>
+                                <ButtonField variant="blue" name="config" bordered/>
                             </Link>
                         </div>
                     </div>
@@ -89,4 +89,4 @@ class Header extends Component {
     }
 }
 
-export default Header;
+export default withRouter(Header);

@@ -68,11 +68,11 @@ func (cc ConnectionsController) GetConnections(c context.Context, filter Connect
 
 	from, _ := RowIDFromHex(filter.From)
 	if !from.IsZero() {
-		query = query.Filter(OrderedDocument{{"_id", UnorderedDocument{"$lt": from}}})
+		query = query.Filter(OrderedDocument{{"_id", UnorderedDocument{"$lte": from}}})
 	}
 	to, _ := RowIDFromHex(filter.To)
 	if !to.IsZero() {
-		query = query.Filter(OrderedDocument{{"_id", UnorderedDocument{"$gt": to}}})
+		query = query.Filter(OrderedDocument{{"_id", UnorderedDocument{"$gte": to}}})
 	} else {
 		query = query.Sort("_id", false)
 	}

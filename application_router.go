@@ -269,9 +269,9 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 			}
 
 			if result {
-				c.Status(http.StatusAccepted)
-				notificationController.Notify("connections.action", UpdateNotification,
-					gin.H{"connection_id": c.Param("id"), "action": c.Param("action")})
+				response := gin.H{"connection_id": c.Param("id"), "action": c.Param("action")}
+				success(c, response)
+				notificationController.Notify("connections.action", UpdateNotification, response)
 			} else {
 				notFound(c, gin.H{"connection": id})
 			}

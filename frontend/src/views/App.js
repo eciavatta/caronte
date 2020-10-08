@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import './App.scss';
 import Header from "./Header";
 import MainPane from "../components/panels/MainPane";
-import Footer from "./Footer";
+import Timeline from "./Timeline";
 import {BrowserRouter as Router} from "react-router-dom";
 import Filters from "./Filters";
 import ConfigurationPane from "../components/panels/ConfigurationPane";
@@ -52,7 +52,7 @@ class App extends Component {
                             {modal}
                         </div>
                         <div className="main-footer">
-                            {this.state.configured && <Footer/>}
+                            {this.state.configured && <Timeline/>}
                         </div>
                     </Router>
                 }

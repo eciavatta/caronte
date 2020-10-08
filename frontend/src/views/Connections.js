@@ -17,7 +17,6 @@ class Connections extends Component {
         connections: [],
         firstConnection: null,
         lastConnection: null,
-        queryString: null
     };
 
     constructor(props) {
@@ -29,14 +28,15 @@ class Connections extends Component {
         this.queryLimit = 50;
         this.connectionsListRef = React.createRef();
         this.lastScrollPosition = 0;
+        this.doQueryStringRedirect = false;
+        this.doSelectedConnectionRedirect = false;
     }
 
     componentDidMount() {
         this.loadConnections({limit: this.queryLimit})
             .then(() => this.setState({loaded: true}));
-        if (this.props.initialConnection != null) {
+        if (this.props.initialConnection) {
             this.setState({selected: this.props.initialConnection.id});
-            // TODO: scroll to initial connection
         }
 
         dispatcher.register("timeline_updates", payload => {
@@ -62,19 +62,24 @@ class Connections extends Component {
     }
 
     connectionSelected = (c) => {
+        this.doSelectedConnectionRedirect = true;
         this.setState({selected: c.id});
         this.props.onSelected(c);
     };
 
     componentDidUpdate(prevProps, prevState, snapshot) {
         if (this.state.loaded && prevProps.location.search !== this.props.location.search) {
-            this.setState({queryString: this.props.location.search});
             this.loadConnections({limit: this.queryLimit})
                 .then(() => log.info("Connections reloaded after query string update"));
         }
     }
 
     handleScroll = (e) => {
+        if (this.disableScrollHandler) {
+            this.lastScrollPosition = e.currentTarget.scrollTop;
+            return;
+        }
+
         let relativeScroll = e.currentTarget.scrollTop / (e.currentTarget.scrollHeight - e.currentTarget.clientHeight);
         if (!this.state.loading && relativeScroll > this.scrollBottomThreashold) {
             this.loadConnections({from: this.state.lastConnection.id, limit: this.queryLimit,})
@@ -103,7 +108,8 @@ class Connections extends Component {
     addServicePortFilter = (port) => {
         const urlParams = new URLSearchParams(this.props.location.search);
         urlParams.set("service_port", port);
-        this.setState({queryString: "?" + urlParams});
+        this.doQueryStringRedirect = true;
+        this.setState({queryString: urlParams});
     };
 
     addMatchedRulesFilter = (matchedRule) => {
@@ -112,7 +118,8 @@ class Connections extends Component {
 
         if (!oldMatchedRules.includes(matchedRule)) {
             urlParams.append("matched_rules", matchedRule);
-            this.setState({queryString: "?" + urlParams});
+            this.doQueryStringRedirect = true;
+            this.setState({queryString: urlParams});
         }
     };
 
@@ -139,7 +146,7 @@ class Connections extends Component {
 
         if (params !== undefined && params.from !== undefined && params.to === undefined) {
             if (res.length > 0) {
-                connections = this.state.connections.concat(res);
+                connections = this.state.connections.concat(res.slice(1));
                 lastConnection = connections[connections.length - 1];
                 if (connections.length > this.maxConnections) {
                     connections = connections.slice(connections.length - this.maxConnections,
@@ -149,7 +156,7 @@ class Connections extends Component {
             }
         } else if (params !== undefined && params.to !== undefined && params.from === undefined) {
             if (res.length > 0) {
-                connections = res.concat(this.state.connections);
+                connections = res.slice(0, res.length - 1).concat(this.state.connections);
                 firstConnection = connections[0];
                 if (connections.length > this.maxConnections) {
                     connections = connections.slice(0, this.maxConnections);
@@ -157,7 +164,6 @@ class Connections extends Component {
                 }
             }
         } else {
-            this.connectionsListRef.current.scrollTop = 0;
             if (res.length > 0) {
                 connections = res;
                 firstConnection = connections[0];
@@ -194,9 +200,12 @@ class Connections extends Component {
 
     render() {
         let redirect;
-        let queryString = this.state.queryString !== null ? this.state.queryString : "";
-        if (this.state.selected) {
-            redirect = <Redirect push to={`/connections/${this.state.selected}${queryString}`}/>;
+        if (this.doSelectedConnectionRedirect) {
+            redirect = <Redirect push to={`/connections/${this.state.selected}${this.props.location.search}`}/>;
+            this.doSelectedConnectionRedirect = false;
+        } else if (this.doQueryStringRedirect) {
+            redirect = <Redirect push to={`${this.props.location.pathname}?${this.state.queryString}`}/>;
+            this.doQueryStringRedirect = false;
         }
 
         let loading = null;
@@ -209,10 +218,15 @@ class Connections extends Component {
         return (
             <div className="connections-container">
                 {this.state.showMoreRecentButton && <div className="most-recent-button">
-                    <ButtonField name="most_recent" variant="green" onClick={() =>
+                    <ButtonField name="most_recent" variant="green" onClick={() => {
+                        this.disableScrollHandler = true;
+                        this.connectionsListRef.current.scrollTop = 0;
                         this.loadConnections({limit: this.queryLimit})
-                            .then(() => log.info("Most recent connections loaded"))
-                    }/>
+                            .then(() => {
+                                this.disableScrollHandler = false;
+                                log.info("Most recent connections loaded");
+                            });
+                    }}/>
                 </div>}
 
                 <div className="connections" onScroll={this.handleScroll} ref={this.connectionsListRef}>
