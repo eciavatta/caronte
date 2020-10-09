@@ -17,11 +17,12 @@
 
 import React, {Component} from 'react';
 import './Connection.scss';
-import {Form, OverlayTrigger, Popover} from "react-bootstrap";
+import {Form} from "react-bootstrap";
 import backend from "../../backend";
 import {dateTimeToTime, durationBetween, formatSize} from "../../utils";
 import ButtonField from "../fields/ButtonField";
 import LinkPopover from "./LinkPopover";
+import TextField from "../fields/TextField";
 
 const classNames = require('classnames');
 
@@ -81,14 +82,6 @@ class Connection extends Component {
             <span>Closed at {closedAt.toLocaleDateString() + " " + closedAt.toLocaleTimeString()}</span>
         </div>;
 
-        const popoverFor = function (name, content) {
-            return <Popover id={`popover-${name}-${conn.id}`} className="connection-popover">
-                <Popover.Content>
-                    {content}
-                </Popover.Content>
-            </Popover>;
-        };
-
         const commentPopoverContent = <div>
             <span>Click to <strong>{conn.comment.length > 0 ? "edit" : "add"}</strong> comment</span>
             {conn.comment && <Form.Control as="textarea" readOnly={true} rows={2} defaultValue={conn.comment}/>}
@@ -97,7 +90,7 @@ class Connection extends Component {
         const copyPopoverContent = <div>
             {this.state.copiedMessage ? <span><strong>Copied!</strong></span> :
                 <span>Click to <strong>copy</strong> the connection id</span>}
-            <Form.Control as="textarea" readOnly={true} rows={1} defaultValue={conn.id} ref={this.copyTextarea}/>
+            <TextField readonly rows={1} value={conn.id} textRef={this.copyTextarea}/>
         </div>;
 
         return (
@@ -119,22 +112,16 @@ class Connection extends Component {
                 <td className="clickable" onClick={this.props.onSelected}>{durationBetween(startedAt, closedAt)}</td>
                 <td className="clickable" onClick={this.props.onSelected}>{formatSize(conn["client_bytes"])}</td>
                 <td className="clickable" onClick={this.props.onSelected}>{formatSize(conn["server_bytes"])}</td>
-                <td>
-                    <OverlayTrigger trigger={["focus", "hover"]} placement="right"
-                                    overlay={popoverFor("hide", <span>Mark this connection</span>)}>
-                        <span className={"connection-icon" + (conn.marked ? " icon-enabled" : "")}
-                              onClick={() => this.handleAction("mark")}>!!</span>
-                    </OverlayTrigger>
-                    <OverlayTrigger trigger={["focus", "hover"]} placement="right"
-                                    overlay={popoverFor("comment", commentPopoverContent)}>
-                        <span className={"connection-icon" + (conn.comment ? " icon-enabled" : "")}
-                              onClick={() => this.handleAction("comment")}>@</span>
-                    </OverlayTrigger>
-                    <OverlayTrigger trigger={["focus", "hover"]} placement="right"
-                                    overlay={popoverFor("copy", copyPopoverContent)}>
-                        <span className="connection-icon"
-                              onClick={() => this.handleAction("copy")}>#</span>
-                    </OverlayTrigger>
+                <td className="connection-actions">
+                    <LinkPopover text={<span className={classNames("connection-icon", {"icon-enabled": conn.marked})}
+                                             onClick={() => this.handleAction("mark")}>!!</span>}
+                                 content={<span>Mark this connection</span>} placement="right"/>
+                    <LinkPopover text={<span className={classNames("connection-icon", {"icon-enabled": conn.comment})}
+                                             onClick={() => this.handleAction("comment")}>@</span>}
+                                 content={commentPopoverContent} placement="right"/>
+                    <LinkPopover text={<span className={classNames("connection-icon", {"icon-enabled": conn.hidden})}
+                                             onClick={() => this.handleAction("copy")}>#</span>}
+                                 content={copyPopoverContent} placement="right"/>
                 </td>
             </tr>
         );

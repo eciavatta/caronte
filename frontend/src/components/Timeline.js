@@ -35,6 +35,7 @@ import log from "../log";
 import dispatcher from "../dispatcher";
 
 const minutes = 60 * 1000;
+const classNames = require('classnames');
 
 class Timeline extends Component {
 
@@ -69,6 +70,11 @@ class Timeline extends Component {
             if (payload.event === "services.edit") {
                 this.loadServices().then(() => log.debug("Services reloaded after notification update"));
             }
+        });
+
+        dispatcher.register("pulse_timeline", payload => {
+            this.setState({pulseTimeline: true});
+            setTimeout(() => this.setState({pulseTimeline: false}), payload.duration);
         });
     }
 
@@ -183,7 +189,7 @@ class Timeline extends Component {
 
         return (
             <footer className="footer">
-                <div className="time-line">
+                <div className={classNames("time-line", {"pulse-timeline": this.state.pulseTimeline})}>
                     <Resizable>
                         <ChartContainer timeRange={this.state.timeRange} enableDragZoom={false}
                                         paddingTop={5} minDuration={60000}

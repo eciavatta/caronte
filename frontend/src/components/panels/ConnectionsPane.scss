@@ -33,6 +33,9 @@
     z-index: 20;
     top: 45px;
     left: calc(50% - 50px);
-    background-color: red;
+  }
+
+  .connections-pulse {
+    animation: pulse 2s infinite;
   }
 }

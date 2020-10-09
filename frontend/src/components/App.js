@@ -31,7 +31,8 @@ class App extends Component {
             if (payload.event === "connected") {
                 this.setState({
                     connected: true,
-                    configured: payload.message["is_configured"]
+                    configured: payload.message["is_configured"],
+                    version: payload.message["version"]
                 });
             }
         });
@@ -50,7 +51,7 @@ class App extends Component {
             <>
                 <Notifications/>
                 {this.state.connected ?
-                    (this.state.configured ? <MainPage/> :
+                    (this.state.configured ? <MainPage version={this.state.version}/> :
                         <ConfigurationPage onConfigured={() => this.setState({configured: true})}/>) :
                     <ServiceUnavailablePage/>
                 }

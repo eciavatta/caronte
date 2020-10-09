@@ -1,5 +1,30 @@
 @import "../../colors";
 
-.main-pane {
+.pane-container {
+  background-color: $color-primary-0;
 
+  .main-pane {
+    position: absolute;
+    z-index: 50;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+
+    .tutorial {
+      flex-basis: 100%;
+      padding: 5px 10px;
+      text-align: center;
+      background-color: $color-primary-2;
+    }
+  }
+
+  .background-pane {
+    height: 100%;
+    opacity: 0.4;
+  }
 }

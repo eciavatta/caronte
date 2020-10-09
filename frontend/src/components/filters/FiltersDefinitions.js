@@ -22,8 +22,7 @@ import RulesConnectionsFilter from "./RulesConnectionsFilter";
 import BooleanConnectionsFilter from "./BooleanConnectionsFilter";
 
 export const filtersNames = ["service_port", "matched_rules", "client_address", "client_port",
-    "min_duration", "max_duration", "min_bytes", "max_bytes", "started_after",
-    "started_before", "closed_after", "closed_before", "marked", "hidden"];
+    "min_duration", "max_duration", "min_bytes", "max_bytes", "marked"];
 
 export const filtersDefinitions = {
     service_port: <StringConnectionsFilter filterName="service_port"
@@ -66,34 +65,9 @@ export const filtersDefinitions = {
                                         replaceFunc={cleanNumber}
                                         key="max_bytes_filter"
                                         width={200}/>,
-    // started_after: <StringConnectionsFilter filterName="started_after"
-    //                                         defaultFilterValue="00:00:00"
-    //                                         validateFunc={validate24HourTime}
-    //                                         encodeFunc={timeToTimestamp}
-    //                                         decodeFunc={timestampToTime}
-    //                                         key="started_after_filter"
-    //                                         width={230} />,
-    // started_before: <StringConnectionsFilter filterName="started_before"
-    //                                          defaultFilterValue="00:00:00"
-    //                                          validateFunc={validate24HourTime}
-    //                                          encodeFunc={timeToTimestamp}
-    //                                          decodeFunc={timestampToTime}
-    //                                          key="started_before_filter"
-    //                                          width={230} />,
-    // closed_after: <StringConnectionsFilter filterName="closed_after"
-    //                                        defaultFilterValue="00:00:00"
-    //                                        validateFunc={validate24HourTime}
-    //                                        encodeFunc={timeToTimestamp}
-    //                                        decodeFunc={timestampToTime}
-    //                                        key="closed_after_filter"
-    //                                        width={230} />,
-    // closed_before: <StringConnectionsFilter filterName="closed_before"
-    //                                         defaultFilterValue="00:00:00"
-    //                                         validateFunc={validate24HourTime}
-    //                                         encodeFunc={timeToTimestamp}
-    //                                         decodeFunc={timestampToTime}
-    //                                         key="closed_before_filter"
-    //                                         width={230} />,
-    marked: <BooleanConnectionsFilter filterName={"marked"}/>,
-    // hidden: <BooleanConnectionsFilter filterName={"hidden"} />
+    contains_string: <StringConnectionsFilter filterName="contains_string"
+                                              defaultFilterValue=""
+                                              key="contains_string_filter"
+                                              width={320}/>,
+    marked: <BooleanConnectionsFilter filterName={"marked"}/>
 };

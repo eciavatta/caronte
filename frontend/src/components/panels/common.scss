@@ -32,6 +32,10 @@
         margin-left: 10px;
         color: $color-secondary-0;
       }
+
+      &:hover::-webkit-scrollbar-thumb {
+        background: $color-secondary-2;
+      }
     }
 
     table {
@@ -95,5 +99,9 @@
     .pane-section:nth-child(2) {
       margin-left: 5px;
     }
+  }
+
+  &:hover::-webkit-scrollbar-thumb {
+    background: $color-secondary-2;
   }
 }

@@ -208,8 +208,8 @@ class StreamsPane extends Component {
         );
 
         return (
-            <div className="connection-content">
-                <div className="connection-content-header container-fluid">
+            <div className="pane-container stream-pane">
+                <div className="stream-pane-header container-fluid">
                     <Row>
                         <div className="header-info col">
                             <span><strong>flow</strong>: {conn["ip_src"]}:{conn["port_src"]} -> {conn["ip_dst"]}:{conn["port_dst"]}</span>
@@ -235,7 +235,6 @@ class StreamsPane extends Component {
             </div>
         );
     }
-
 }
 
 

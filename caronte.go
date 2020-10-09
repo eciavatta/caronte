@@ -21,8 +21,9 @@ import (
 	"flag"
 	"fmt"
 	log "github.com/sirupsen/logrus"
-	"io/ioutil"
 )
+
+var Version string
 
 func main() {
 	mongoHost := flag.String("mongo-host", "localhost", "address of MongoDB")
@@ -40,12 +41,10 @@ func main() {
 		log.WithError(err).WithFields(logFields).Fatal("failed to connect to MongoDB")
 	}
 
-	versionBytes, err := ioutil.ReadFile("VERSION")
-	if err != nil {
-		log.WithError(err).Fatal("failed to load version file")
+	if Version == "" {
+		Version = "undefined"
 	}
-
-	applicationContext, err := CreateApplicationContext(storage, string(versionBytes))
+	applicationContext, err := CreateApplicationContext(storage, Version)
 	if err != nil {
 		log.WithError(err).WithFields(logFields).Fatal("failed to create application context")
 	}

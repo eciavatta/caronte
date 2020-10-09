@@ -65,7 +65,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 		applicationContext.SetAccounts(settings.Accounts)
 
 		c.JSON(http.StatusAccepted, gin.H{})
-		notificationController.Notify("setup", InsertNotification, gin.H{})
+		notificationController.Notify("setup", gin.H{})
 	})
 
 	router.GET("/ws", func(c *gin.Context) {
@@ -95,7 +95,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 			} else {
 				response := UnorderedDocument{"id": id}
 				success(c, response)
-				notificationController.Notify("rules.new", InsertNotification, response)
+				notificationController.Notify("rules.new", response)
 			}
 		})
 
@@ -134,7 +134,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 				notFound(c, UnorderedDocument{"id": id})
 			} else {
 				success(c, rule)
-				notificationController.Notify("rules.edit", UpdateNotification, rule)
+				notificationController.Notify("rules.edit", rule)
 			}
 		})
 
@@ -156,7 +156,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 			} else {
 				response := gin.H{"session": sessionID}
 				c.JSON(http.StatusAccepted, response)
-				notificationController.Notify("pcap.upload", InsertNotification, response)
+				notificationController.Notify("pcap.upload", response)
 			}
 		})
 
@@ -190,7 +190,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 			} else {
 				response := gin.H{"session": sessionID}
 				c.JSON(http.StatusAccepted, response)
-				notificationController.Notify("pcap.file", InsertNotification, response)
+				notificationController.Notify("pcap.file", response)
 			}
 		})
 
@@ -227,7 +227,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 			session := gin.H{"session": sessionID}
 			if cancelled := applicationContext.PcapImporter.CancelSession(sessionID); cancelled {
 				c.JSON(http.StatusAccepted, session)
-				notificationController.Notify("sessions.delete", DeleteNotification, session)
+				notificationController.Notify("sessions.delete", session)
 			} else {
 				notFound(c, session)
 			}
@@ -288,7 +288,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 			if result {
 				response := gin.H{"connection_id": c.Param("id"), "action": c.Param("action")}
 				success(c, response)
-				notificationController.Notify("connections.action", UpdateNotification, response)
+				notificationController.Notify("connections.action", response)
 			} else {
 				notFound(c, gin.H{"connection": id})
 			}
@@ -344,7 +344,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 			}
 			if err := applicationContext.ServicesController.SetService(c, service); err == nil {
 				success(c, service)
-				notificationController.Notify("services.edit", UpdateNotification, service)
+				notificationController.Notify("services.edit", service)
 			} else {
 				unprocessableEntity(c, err)
 			}

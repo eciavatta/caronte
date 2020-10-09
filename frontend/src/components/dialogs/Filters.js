@@ -81,7 +81,7 @@ class Filters extends Component {
                                     </thead>
                                     <tbody>
                                     {this.generateRows(["service_port", "client_address", "min_duration",
-                                        "min_bytes", "started_after", "closed_after", "marked"])}
+                                        "min_bytes"])}
                                     </tbody>
                                 </Table>
                             </Col>
@@ -95,14 +95,11 @@ class Filters extends Component {
                                     </thead>
                                     <tbody>
                                     {this.generateRows(["matched_rules", "client_port", "max_duration",
-                                        "max_bytes", "started_before", "closed_before", "hidden"])}
+                                        "max_bytes", "marked"])}
                                     </tbody>
                                 </Table>
                             </Col>
-
                         </Row>
-
-
                     </Container>
                 </Modal.Body>
                 <Modal.Footer className="dialog-footer">

@@ -1,7 +1,6 @@
 @import "../../colors";
 
-.connection-content {
-  height: 100%;
+.stream-pane {
   background-color: $color-primary-0;
 
   pre {
@@ -14,6 +13,10 @@
     p {
       margin: 0;
       padding: 0;
+    }
+
+    &:hover::-webkit-scrollbar-thumb {
+      background: $color-secondary-2;
     }
   }
 
@@ -87,7 +90,7 @@
     }
   }
 
-  .connection-content-header {
+  .stream-pane-header {
     height: 33px;
     padding: 0;
     background-color: $color-primary-3;

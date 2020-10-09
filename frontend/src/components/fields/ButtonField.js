@@ -55,8 +55,8 @@ class ButtonField extends Component {
         }
 
         return (
-            <div className={classNames( "field", "button-field", {"field-small": this.props.small})}>
-                <button type="button" className={classNames(classNames(buttonClassnames))}
+            <div className={classNames("field", "button-field", {"field-small": this.props.small})}>
+                <button type="button" className={classNames(buttonClassnames)}
                         onClick={handler} style={buttonStyle}>{this.props.name}</button>
             </div>
         );

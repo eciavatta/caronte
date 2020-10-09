@@ -13,6 +13,10 @@
       top: 5px;
       right: 10px;
     }
+
+    &.pulse-timeline {
+      animation: pulse 2s infinite;
+    }
   }
 
   svg text {

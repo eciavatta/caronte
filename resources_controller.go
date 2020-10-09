@@ -98,7 +98,7 @@ func (csc *ResourcesController) Run() {
 
 		avg := Average(cpuPercent)
 		if avg > averageCPUPercentAlertThreshold && time.Now().Sub(lastAlertTime).Seconds() > averageCPUPercentAlertMinInterval {
-			csc.notificationController.Notify("resources.cpu_alert", "alert", gin.H{
+			csc.notificationController.Notify("resources.cpu_alert", gin.H{
 				"cpu_percent": cpuPercent,
 			})
 			log.WithField("cpu_percent", cpuPercent).Warn("cpu percent usage has exceeded the limit threshold")

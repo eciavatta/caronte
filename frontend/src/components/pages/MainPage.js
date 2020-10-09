@@ -57,7 +57,7 @@ class MainPage extends Component {
                                 <Route path="/services" children={<ServicesPane/>}/>
                                 <Route exact path="/connections/:id"
                                        children={<StreamsPane connection={this.state.selectedConnection}/>}/>
-                                <Route children={<MainPane/>}/>
+                                <Route children={<MainPane version={this.props.version}/>}/>
                             </Switch>
                         </div>
 

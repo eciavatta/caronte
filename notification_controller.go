@@ -27,10 +27,6 @@ import (
 )
 
 const (
-	InsertNotification = "insert"
-	UpdateNotification = "update"
-	DeleteNotification = "delete"
-
 	writeWait      = 10 * time.Second
 	pongWait       = 60 * time.Second
 	pingPeriod     = (pongWait * 9) / 10
@@ -122,8 +118,8 @@ func (wc *NotificationController) Run() {
 	}
 }
 
-func (wc *NotificationController) Notify(event string, eventType string, message interface{}) {
-	wc.broadcast <- gin.H{"event": event, "event_type": eventType, "message": message}
+func (wc *NotificationController) Notify(event string, message interface{}) {
+	wc.broadcast <- gin.H{"event": event, "message": message}
 }
 
 func (c *client) readPump() {

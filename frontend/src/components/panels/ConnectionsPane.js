@@ -27,6 +27,8 @@ import log from "../../log";
 import ButtonField from "../fields/ButtonField";
 import dispatcher from "../../dispatcher";
 
+const classNames = require('classnames');
+
 class ConnectionsPane extends Component {
 
     state = {
@@ -80,6 +82,11 @@ class ConnectionsPane extends Component {
             if (payload.event === "services.edit") {
                 this.loadServices().then(() => log.debug("Services reloaded after notification update"));
             }
+        });
+
+        dispatcher.register("pulse_connections_view", payload => {
+            this.setState({pulseConnectionsView: true});
+            setTimeout(() => this.setState({pulseConnectionsView: false}), payload.duration);
         });
     }
 
@@ -246,7 +253,7 @@ class ConnectionsPane extends Component {
         return (
             <div className="connections-container">
                 {this.state.showMoreRecentButton && <div className="most-recent-button">
-                    <ButtonField name="most_recent" variant="green" onClick={() => {
+                    <ButtonField name="most_recent" variant="green" bordered onClick={() => {
                         this.disableScrollHandler = true;
                         this.connectionsListRef.current.scrollTop = 0;
                         this.loadConnections({limit: this.queryLimit})
@@ -257,7 +264,8 @@ class ConnectionsPane extends Component {
                     }}/>
                 </div>}
 
-                <div className="connections" onScroll={this.handleScroll} ref={this.connectionsListRef}>
+                <div className={classNames("connections", {"connections-pulse": this.state.pulseConnectionsView})}
+                     onScroll={this.handleScroll} ref={this.connectionsListRef}>
                     <Table borderless size="sm">
                         <thead>
                         <tr>
