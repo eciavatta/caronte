@@ -37,6 +37,7 @@ type ApplicationContext struct {
 	ConnectionsController       ConnectionsController
 	ServicesController          *ServicesController
 	ConnectionStreamsController ConnectionStreamsController
+	SearchController            *SearchController
 	StatisticsController        StatisticsController
 	IsConfigured                bool
 	Version                     string
@@ -113,6 +114,7 @@ func (sm *ApplicationContext) configure() {
 	sm.ServicesController = NewServicesController(sm.Storage)
 	sm.ConnectionsController = NewConnectionsController(sm.Storage, sm.ServicesController)
 	sm.ConnectionStreamsController = NewConnectionStreamsController(sm.Storage)
+	sm.SearchController = NewSearchController(sm.Storage)
 	sm.StatisticsController = NewStatisticsController(sm.Storage)
 	sm.IsConfigured = true
 }

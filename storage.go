@@ -25,16 +25,20 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"time"
 )
 
 // Collections names
-const Connections = "connections"
-const ConnectionStreams = "connection_streams"
-const ImportingSessions = "importing_sessions"
-const Rules = "rules"
-const Settings = "settings"
-const Services = "services"
-const Statistics = "statistics"
+const (
+	Connections       = "connections"
+	ConnectionStreams = "connection_streams"
+	ImportingSessions = "importing_sessions"
+	Rules             = "rules"
+	Searches          = "searches"
+	Settings          = "settings"
+	Services          = "services"
+	Statistics        = "statistics"
+)
 
 var ZeroRowID [12]byte
 
@@ -73,6 +77,7 @@ func NewMongoStorage(uri string, port int, database string) (*MongoStorage, erro
 		ConnectionStreams: db.Collection(ConnectionStreams),
 		ImportingSessions: db.Collection(ImportingSessions),
 		Rules:             db.Collection(Rules),
+		Searches:          db.Collection(Services),
 		Settings:          db.Collection(Settings),
 		Services:          db.Collection(Services),
 		Statistics:        db.Collection(Statistics),
@@ -85,9 +90,13 @@ func NewMongoStorage(uri string, port int, database string) (*MongoStorage, erro
 		return nil, err
 	}
 
-	if _, err := collections[ConnectionStreams].Indexes().CreateOne(ctx, mongo.IndexModel{
-		Keys:    bson.D{{"connection_id", -1}}, // descending
-		Options: options.Index(),
+	if _, err := collections[ConnectionStreams].Indexes().CreateMany(ctx, []mongo.IndexModel{
+		{
+			Keys: bson.D{{"connection_id", -1}}, // descending
+		},
+		{
+			Keys: bson.D{{"payload_string", "text"}},
+		},
 	}); err != nil {
 		return nil, err
 	}
@@ -277,6 +286,8 @@ type FindOperation interface {
 	Projection(filter OrderedDocument) FindOperation
 	Sort(field string, ascending bool) FindOperation
 	Limit(n int64) FindOperation
+	Skip(n int64) FindOperation
+	MaxTime(duration time.Duration) FindOperation
 	First(result interface{}) error
 	All(results interface{}) error
 }
@@ -315,6 +326,16 @@ func (fo MongoFindOperation) Projection(projection OrderedDocument) FindOperatio
 
 func (fo MongoFindOperation) Limit(n int64) FindOperation {
 	fo.optFind.SetLimit(n)
+	return fo
+}
+
+func (fo MongoFindOperation) Skip(n int64) FindOperation {
+	fo.optFind.SetSkip(n)
+	return fo
+}
+
+func (fo MongoFindOperation) MaxTime(duration time.Duration) FindOperation {
+	fo.optFind.SetMaxTime(duration)
 	return fo
 }
 

@@ -26,10 +26,10 @@ import (
 
 type StatisticRecord struct {
 	RangeStart            time.Time        `json:"range_start" bson:"_id"`
-	ConnectionsPerService map[uint16]int   `json:"connections_per_service" bson:"connections_per_service"`
-	ClientBytesPerService map[uint16]int   `json:"client_bytes_per_service" bson:"client_bytes_per_service"`
-	ServerBytesPerService map[uint16]int   `json:"server_bytes_per_service" bson:"server_bytes_per_service"`
-	DurationPerService    map[uint16]int64 `json:"duration_per_service" bson:"duration_per_service"`
+	ConnectionsPerService map[uint16]int   `json:"connections_per_service,omitempty" bson:"connections_per_service"`
+	ClientBytesPerService map[uint16]int   `json:"client_bytes_per_service,omitempty" bson:"client_bytes_per_service"`
+	ServerBytesPerService map[uint16]int   `json:"server_bytes_per_service,omitempty" bson:"server_bytes_per_service"`
+	DurationPerService    map[uint16]int64 `json:"duration_per_service,omitempty" bson:"duration_per_service"`
 }
 
 type StatisticsFilter struct {

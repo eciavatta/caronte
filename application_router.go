@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"os"
@@ -292,6 +294,74 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 			} else {
 				notFound(c, gin.H{"connection": id})
 			}
+		})
+
+		api.GET("/searches", func(c *gin.Context) {
+			success(c, applicationContext.SearchController.PerformedSearches())
+		})
+
+		api.POST("/searches/perform", func(c *gin.Context) {
+			var options SearchOptions
+
+
+			parentIsZero := func (fl validator.FieldLevel) bool {
+				log.Println(fl.FieldName())
+				log.Println("noooooo")
+				return fl.Parent().IsZero()
+			}
+			eitherWith := func (fl validator.FieldLevel) bool {
+				otherField := fl.Parent().FieldByName(fl.Param())
+				log.Println(fl.Param())
+				log.Println("bbbbbbbbbb")
+				return (fl.Field().IsZero() && !otherField.IsZero()) || (!fl.Field().IsZero() && otherField.IsZero())
+			}
+			aaa := func (fl validator.FieldLevel) bool {
+
+				log.Println("awww")
+				return fl.Field().IsZero()
+			}
+
+			bbb := func (fl validator.FieldLevel) bool {
+
+				log.Println("iiiii")
+				return true
+			}
+
+			if validate, ok := binding.Validator.Engine().(*validator.Validate); ok {
+				if err := validate.RegisterValidation("parent_is_zero", parentIsZero); err != nil {
+					log.WithError(err).Panic("cannot register 'topzero' validator")
+				}
+				if err := validate.RegisterValidation("either_with", eitherWith); err != nil {
+					log.WithError(err).Panic("cannot register 'either_with' validator")
+				}
+				if err := validate.RegisterValidation("aaa", aaa); err != nil {
+					log.WithError(err).Panic("cannot register 'either_with' validator")
+				}
+				if err := validate.RegisterValidation("bbb", bbb); err != nil {
+					log.WithError(err).Panic("cannot register 'either_with' validator")
+				}
+			} else {
+				log.Panic("cannot ")
+			}
+
+
+			if err := c.ShouldBindJSON(&options); err != nil {
+				badRequest(c, err)
+				return
+			}
+
+			log.Println(options)
+
+
+			success(c, "ok")
+
+
+
+
+
+
+
+			//success(c, applicationContext.SearchController.PerformSearch(c, options))
 		})
 
 		api.GET("/streams/:id", func(c *gin.Context) {

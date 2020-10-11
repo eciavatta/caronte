@@ -39,6 +39,7 @@ type ConnectionStream struct {
 	FromClient       bool                    `bson:"from_client"`
 	DocumentIndex    int                     `bson:"document_index"`
 	Payload          []byte                  `bson:"payload"`
+	PayloadString    string                  `bson:"payload_string"`
 	BlocksIndexes    []int                   `bson:"blocks_indexes"`
 	BlocksTimestamps []time.Time             `bson:"blocks_timestamps"`
 	BlocksLoss       []bool                  `bson:"blocks_loss"`

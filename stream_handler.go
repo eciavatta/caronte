@@ -22,6 +22,7 @@ import (
 	"github.com/flier/gohs/hyperscan"
 	"github.com/google/gopacket/tcpassembly"
 	log "github.com/sirupsen/logrus"
+	"strings"
 	"time"
 )
 
@@ -176,6 +177,7 @@ func (sh *StreamHandler) storageCurrentDocument() {
 			ConnectionID:     ZeroRowID,
 			DocumentIndex:    len(sh.documentsIDs),
 			Payload:          sh.buffer.Bytes(),
+			PayloadString: 	  strings.ToValidUTF8(string(sh.buffer.Bytes()), ""),
 			BlocksIndexes:    sh.indexes,
 			BlocksTimestamps: sh.timestamps,
 			BlocksLoss:       sh.lossBlocks,
