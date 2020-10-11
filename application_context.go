@@ -112,9 +112,9 @@ func (sm *ApplicationContext) configure() {
 	sm.RulesManager = rulesManager
 	sm.PcapImporter = NewPcapImporter(sm.Storage, *serverNet, sm.RulesManager)
 	sm.ServicesController = NewServicesController(sm.Storage)
-	sm.ConnectionsController = NewConnectionsController(sm.Storage, sm.ServicesController)
-	sm.ConnectionStreamsController = NewConnectionStreamsController(sm.Storage)
 	sm.SearchController = NewSearchController(sm.Storage)
+	sm.ConnectionsController = NewConnectionsController(sm.Storage, sm.SearchController, sm.ServicesController)
+	sm.ConnectionStreamsController = NewConnectionStreamsController(sm.Storage)
 	sm.StatisticsController = NewStatisticsController(sm.Storage)
 	sm.IsConfigured = true
 }

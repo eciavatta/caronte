@@ -26,14 +26,15 @@ import (
 )
 
 const (
-	secondsToNano    = 1000 * 1000 * 1000
-	maxSearchTimeout = 60 * secondsToNano
+	secondsToNano     = 1000 * 1000 * 1000
+	maxSearchTimeout  = 10 * secondsToNano
+	maxRecentSearches = 200
 )
 
 type PerformedSearch struct {
 	ID                       RowID         `bson:"_id" json:"id"`
 	SearchOptions            SearchOptions `bson:"search_options" json:"search_options"`
-	AffectedConnections      []RowID       `bson:"affected_connections" json:"affected_connections,omitempty"`
+	AffectedConnections      []RowID       `bson:"affected_connections" json:"-"`
 	AffectedConnectionsCount int           `bson:"affected_connections_count" json:"affected_connections_count"`
 	StartedAt                time.Time     `bson:"started_at" json:"started_at"`
 	FinishedAt               time.Time     `bson:"finished_at" json:"finished_at"`
@@ -42,21 +43,21 @@ type PerformedSearch struct {
 }
 
 type SearchOptions struct {
-	TextSearch  TextSearch    `bson:"text_search" json:"text_search" validate:"either_with=RegexSearch"`
-	RegexSearch RegexSearch   `bson:"regex_search" json:"regex_search" validate:"either_with=TextSearch"`
+	TextSearch  TextSearch    `bson:"text_search" json:"text_search"`
+	RegexSearch RegexSearch   `bson:"regex_search" json:"regex_search"`
 	Timeout     time.Duration `bson:"timeout" json:"timeout" binding:"max=60"`
 }
 
 type TextSearch struct {
-	Terms         []string `bson:"terms" json:"terms" binding:"parent_is_zero|either_with=ExactPhrase,isdefault|min=1,dive,min=3"`
-	ExcludedTerms []string `bson:"excluded_terms" json:"excluded_terms" binding:"required_with=Terms,dive,isdefault|min=1"`
-	ExactPhrase   string   `bson:"exact_phrase" json:"exact_phrase" binding:"isdefault|min=3,parent_is_zero|either_with=Terms"`
+	Terms         []string `bson:"terms" json:"terms" binding:"isdefault|min=1,dive,min=3"`
+	ExcludedTerms []string `bson:"excluded_terms" json:"excluded_terms" binding:"isdefault|min=1,dive,min=3"`
+	ExactPhrase   string   `bson:"exact_phrase" json:"exact_phrase" binding:"isdefault|min=3"`
 	CaseSensitive bool     `bson:"case_sensitive" json:"case_sensitive"`
 }
 
 type RegexSearch struct {
-	Pattern           string `bson:"pattern" json:"pattern" binding:"parent_is_zero|either_with=NotPattern,isdefault|min=3"`
-	NotPattern        string `bson:"not_pattern" json:"not_pattern" binding:"parent_is_zero|either_with=Pattern,isdefault|min=3"`
+	Pattern           string `bson:"pattern" json:"pattern" binding:"isdefault|min=3"`
+	NotPattern        string `bson:"not_pattern" json:"not_pattern" binding:"isdefault|min=3"`
 	CaseInsensitive   bool   `bson:"case_insensitive" json:"case_insensitive"`
 	MultiLine         bool   `bson:"multi_line" json:"multi_line"`
 	IgnoreWhitespaces bool   `bson:"ignore_whitespaces" json:"ignore_whitespaces"`
@@ -71,8 +72,8 @@ type SearchController struct {
 
 func NewSearchController(storage Storage) *SearchController {
 	var searches []PerformedSearch
-	if err := storage.Find(Searches).All(&searches); err != nil {
-		// log.WithError(err).Panic("failed to retrieve performed searches")
+	if err := storage.Find(Searches).Limit(maxRecentSearches).All(&searches); err != nil {
+		log.WithError(err).Panic("failed to retrieve performed searches")
 	}
 
 	return &SearchController{
@@ -81,11 +82,25 @@ func NewSearchController(storage Storage) *SearchController {
 	}
 }
 
-func (sc *SearchController) PerformedSearches() []PerformedSearch {
+func (sc *SearchController) GetPerformedSearches() []PerformedSearch {
 	sc.mutex.Lock()
 	defer sc.mutex.Unlock()
 
 	return sc.performedSearches
+}
+
+func (sc *SearchController) GetPerformedSearch(id RowID) PerformedSearch {
+	sc.mutex.Lock()
+	defer sc.mutex.Unlock()
+
+	var performedSearch PerformedSearch
+	for _, search := range sc.performedSearches {
+		if search.ID == id {
+			performedSearch = search
+		}
+	}
+
+	return performedSearch
 }
 
 func (sc *SearchController) PerformSearch(c context.Context, options SearchOptions) PerformedSearch {
@@ -163,6 +178,9 @@ func (sc *SearchController) PerformSearch(c context.Context, options SearchOptio
 
 	sc.mutex.Lock()
 	sc.performedSearches = append([]PerformedSearch{performedSearch}, sc.performedSearches...)
+	if len(sc.performedSearches) > maxRecentSearches {
+		sc.performedSearches = sc.performedSearches[:200]
+	}
 	sc.mutex.Unlock()
 
 	return performedSearch

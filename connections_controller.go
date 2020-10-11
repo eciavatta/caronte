@@ -48,33 +48,37 @@ type Connection struct {
 }
 
 type ConnectionsFilter struct {
-	From          string   `form:"from" binding:"omitempty,hexadecimal,len=24"`
-	To            string   `form:"to" binding:"omitempty,hexadecimal,len=24"`
-	ServicePort   uint16   `form:"service_port"`
-	ClientAddress string   `form:"client_address" binding:"omitempty,ip"`
-	ClientPort    uint16   `form:"client_port"`
-	MinDuration   uint     `form:"min_duration"`
-	MaxDuration   uint     `form:"max_duration" binding:"omitempty,gtefield=MinDuration"`
-	MinBytes      uint     `form:"min_bytes"`
-	MaxBytes      uint     `form:"max_bytes" binding:"omitempty,gtefield=MinBytes"`
-	StartedAfter  int64    `form:"started_after" `
-	StartedBefore int64    `form:"started_before" binding:"omitempty,gtefield=StartedAfter"`
-	ClosedAfter   int64    `form:"closed_after" `
-	ClosedBefore  int64    `form:"closed_before" binding:"omitempty,gtefield=ClosedAfter"`
-	Hidden        bool     `form:"hidden"`
-	Marked        bool     `form:"marked"`
-	MatchedRules  []string `form:"matched_rules" binding:"dive,hexadecimal,len=24"`
-	Limit         int64    `form:"limit"`
+	From            string   `form:"from" binding:"omitempty,hexadecimal,len=24"`
+	To              string   `form:"to" binding:"omitempty,hexadecimal,len=24"`
+	ServicePort     uint16   `form:"service_port"`
+	ClientAddress   string   `form:"client_address" binding:"omitempty,ip"`
+	ClientPort      uint16   `form:"client_port"`
+	MinDuration     uint     `form:"min_duration"`
+	MaxDuration     uint     `form:"max_duration" binding:"omitempty,gtefield=MinDuration"`
+	MinBytes        uint     `form:"min_bytes"`
+	MaxBytes        uint     `form:"max_bytes" binding:"omitempty,gtefield=MinBytes"`
+	StartedAfter    int64    `form:"started_after" `
+	StartedBefore   int64    `form:"started_before" binding:"omitempty,gtefield=StartedAfter"`
+	ClosedAfter     int64    `form:"closed_after" `
+	ClosedBefore    int64    `form:"closed_before" binding:"omitempty,gtefield=ClosedAfter"`
+	Hidden          bool     `form:"hidden"`
+	Marked          bool     `form:"marked"`
+	MatchedRules    []string `form:"matched_rules" binding:"dive,hexadecimal,len=24"`
+	PerformedSearch string   `form:"performed_search" binding:"omitempty,hexadecimal,len=24"`
+	Limit           int64    `form:"limit"`
 }
 
 type ConnectionsController struct {
 	storage            Storage
+	searchController   *SearchController
 	servicesController *ServicesController
 }
 
-func NewConnectionsController(storage Storage, servicesController *ServicesController) ConnectionsController {
+func NewConnectionsController(storage Storage, searchesController *SearchController,
+	servicesController *ServicesController) ConnectionsController {
 	return ConnectionsController{
 		storage:            storage,
+		searchController:   searchesController,
 		servicesController: servicesController,
 	}
 }
@@ -143,6 +147,13 @@ func (cc ConnectionsController) GetConnections(c context.Context, filter Connect
 		}
 
 		query = query.Filter(OrderedDocument{{"matched_rules", UnorderedDocument{"$all": matchedRules}}})
+	}
+	performedSearchID, _ := RowIDFromHex(filter.PerformedSearch)
+	if !performedSearchID.IsZero() {
+		performedSearch := cc.searchController.GetPerformedSearch(performedSearchID)
+		if !performedSearch.ID.IsZero() {
+			query = query.Filter(OrderedDocument{{"_id", UnorderedDocument{"$in": performedSearch.AffectedConnections}}})
+		}
 	}
 	if filter.Limit > 0 && filter.Limit <= MaxQueryLimit {
 		query = query.Limit(filter.Limit)

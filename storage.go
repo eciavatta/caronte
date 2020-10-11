@@ -77,7 +77,7 @@ func NewMongoStorage(uri string, port int, database string) (*MongoStorage, erro
 		ConnectionStreams: db.Collection(ConnectionStreams),
 		ImportingSessions: db.Collection(ImportingSessions),
 		Rules:             db.Collection(Rules),
-		Searches:          db.Collection(Services),
+		Searches:          db.Collection(Searches),
 		Settings:          db.Collection(Settings),
 		Services:          db.Collection(Services),
 		Statistics:        db.Collection(Statistics),
