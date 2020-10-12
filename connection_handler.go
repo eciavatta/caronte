@@ -256,16 +256,22 @@ func (ch *connectionHandlerImpl) UpdateStatistics(connection Connection) {
 	}
 	servicePort := connection.DestinationPort
 
+	updateDocument := UnorderedDocument{
+		fmt.Sprintf("connections_per_service.%d", servicePort):  1,
+		fmt.Sprintf("client_bytes_per_service.%d", servicePort): connection.ClientBytes,
+		fmt.Sprintf("server_bytes_per_service.%d", servicePort): connection.ServerBytes,
+		fmt.Sprintf("total_bytes_per_service.%d", servicePort):  connection.ClientBytes + connection.ServerBytes,
+		fmt.Sprintf("duration_per_service.%d", servicePort):     duration.Milliseconds(),
+	}
+
+	for _, ruleID := range connection.MatchedRules {
+		updateDocument[fmt.Sprintf("matched_rules.%s", ruleID.Hex())] = 1
+	}
+
 	var results interface{}
 	if _, err := ch.Storage().Update(Statistics).Upsert(&results).
-		Filter(OrderedDocument{{"_id", time.Unix(rangeStart*60, 0)}}).OneComplex(UnorderedDocument{
-		"$inc": UnorderedDocument{
-			fmt.Sprintf("connections_per_service.%d", servicePort):  1,
-			fmt.Sprintf("client_bytes_per_service.%d", servicePort): connection.ClientBytes,
-			fmt.Sprintf("server_bytes_per_service.%d", servicePort): connection.ServerBytes,
-			fmt.Sprintf("duration_per_service.%d", servicePort):     duration.Milliseconds(),
-		},
-	}); err != nil {
+		Filter(OrderedDocument{{"_id", time.Unix(rangeStart*60, 0)}}).
+		OneComplex(UnorderedDocument{"$inc": updateDocument}); err != nil {
 		log.WithError(err).WithField("connection", connection).Error("failed to update connection statistics")
 	}
 }

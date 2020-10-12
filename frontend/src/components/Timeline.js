@@ -102,23 +102,24 @@ class Timeline extends Component {
         ports.forEach(s => urlParams.append("ports", s));
 
         const metrics = (await backend.get("/api/statistics?" + urlParams)).json;
+        if (metrics.length === 0) {
+            return;
+        }
+
         const zeroFilledMetrics = [];
         const toTime = m => new Date(m["range_start"]).getTime();
-
-        if (metrics.length > 0) {
-            let i = 0;
-            for (let interval = toTime(metrics[0]); interval <= toTime(metrics[metrics.length - 1]); interval += minutes) {
-                if (interval === toTime(metrics[i])) {
-                    const m = metrics[i++];
-                    m["range_start"] = new Date(m["range_start"]);
-                    zeroFilledMetrics.push(m);
-                } else {
-                    const m = {};
-                    m["range_start"] = new Date(interval);
-                    m[metric] = {};
-                    ports.forEach(p => m[metric][p] = 0);
-                    zeroFilledMetrics.push(m);
-                }
+        let i = 0;
+        for (let interval = toTime(metrics[0]); interval <= toTime(metrics[metrics.length - 1]); interval += minutes) {
+            if (interval === toTime(metrics[i])) {
+                const m = metrics[i++];
+                m["range_start"] = new Date(m["range_start"]);
+                zeroFilledMetrics.push(m);
+            } else {
+                const m = {};
+                m["range_start"] = new Date(interval);
+                m[metric] = {};
+                ports.forEach(p => m[metric][p] = 0);
+                zeroFilledMetrics.push(m);
             }
         }
 
@@ -127,6 +128,7 @@ class Timeline extends Component {
             columns: ["time"].concat(ports),
             points: zeroFilledMetrics.map(m => [m["range_start"]].concat(ports.map(p => m[metric][p] || 0)))
         });
+
         const start = series.range().begin();
         const end = series.range().end();
         start.setTime(start.getTime() - minutes);
