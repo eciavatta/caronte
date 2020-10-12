@@ -28,6 +28,8 @@ import ServicesPane from "../panels/ServicesPane";
 import Header from "../Header";
 import Filters from "../dialogs/Filters";
 import MainPane from "../panels/MainPane";
+import SearchPane from "../panels/SearchPane";
+import FiltersDispatcher from "../filters/FiltersDispatcher";
 
 class MainPage extends Component {
 
@@ -52,6 +54,7 @@ class MainPage extends Component {
                         </div>
                         <div className="pane details-pane">
                             <Switch>
+                                <Route path="/searches" children={<SearchPane/>}/>
                                 <Route path="/pcaps" children={<PcapsPane/>}/>
                                 <Route path="/rules" children={<RulesPane/>}/>
                                 <Route path="/services" children={<ServicesPane/>}/>
@@ -67,6 +70,8 @@ class MainPage extends Component {
                     <div className="page-footer">
                         <Timeline/>
                     </div>
+
+                    <FiltersDispatcher />
                 </Router>
             </div>
         );

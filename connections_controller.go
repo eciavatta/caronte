@@ -151,7 +151,7 @@ func (cc ConnectionsController) GetConnections(c context.Context, filter Connect
 	performedSearchID, _ := RowIDFromHex(filter.PerformedSearch)
 	if !performedSearchID.IsZero() {
 		performedSearch := cc.searchController.GetPerformedSearch(performedSearchID)
-		if !performedSearch.ID.IsZero() {
+		if !performedSearch.ID.IsZero() && len(performedSearch.AffectedConnections) > 0 {
 			query = query.Filter(OrderedDocument{{"_id", UnorderedDocument{"$in": performedSearch.AffectedConnections}}})
 		}
 	}

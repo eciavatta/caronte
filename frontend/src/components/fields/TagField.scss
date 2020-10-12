@@ -1,6 +1,6 @@
-@import "../../colors";
+@import "../../colors.scss";
 
-.filter-rules {
+.tag-field {
   .react-tags {
     font-size: 12px;
     position: relative;
@@ -117,5 +117,4 @@
     cursor: auto;
     opacity: 0.5;
   }
-
 }

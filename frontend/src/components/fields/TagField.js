@@ -1,0 +1,78 @@
+/*
+ * This file is part of caronte (https://github.com/eciavatta/caronte).
+ * Copyright (c) 2020 Emiliano Ciavatta.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+import React, {Component} from 'react';
+import './TagField.scss';
+import './common.scss';
+import {randomClassName} from "../../utils";
+import ReactTags from "react-tag-autocomplete";
+
+const classNames = require('classnames');
+const _ = require('lodash');
+
+class TagField extends Component {
+
+    constructor(props) {
+        super(props);
+
+        this.id = `field-${this.props.name || "noname"}-${randomClassName()}`;
+    }
+
+    state = {
+
+    };
+
+    onAddition = (tag) => {
+        if (typeof this.props.onChange === "function") {
+            const tags = [].concat(this.wrappedTags(), tag);
+            this.props.onChange(tags.map(t => t.name), true, tag); // true == addition
+        }
+    };
+
+    onDelete = (i) => {
+        if (typeof this.props.onChange === "function") {
+            const tags = this.wrappedTags();
+            const tag = tags[i];
+            tags.splice(i, 1);
+            this.props.onChange(tags.map(t => t.name), true, tag);  // false == delete
+        }
+    };
+
+    wrappedTags = () => this.props.tags.map(t => new Object({"name": t}));
+
+    render() {
+        const small = this.props.small || false;
+        const name = this.props.name || null;
+
+        return (
+            <div className={classNames( "field", "tag-field", {"field-small": small})}>
+                { name &&
+                <div className="field-name">
+                    <label>{name}:</label>
+                </div>
+                }
+                <ReactTags tags={this.wrappedTags() || []}
+                           autoresize={false}
+                           allowNew={this.props.allowNew || true}
+                           onDelete={this.onDelete} onAddition={this.onAddition}
+                           minQueryLength={this.props.min} placeholderText={this.props.placeholder || ""} />
+            </div>
+        );
+    }
+}
+
+export default TagField;

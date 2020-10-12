@@ -89,7 +89,7 @@ class RulesConnectionsFilter extends Component {
 
         return (
             <div className={classNames("filter", "d-inline-block", {"filter-active" : this.state.filterActive === "true"})}>
-                <div className="filter-booleanq">
+                <div className="filter-rules">
                     <ReactTags tags={this.state.activeRules} suggestions={this.state.rules}
                         onDelete={this.onDelete.bind(this)} onAddition={this.onAddition.bind(this)}
                                minQueryLength={0} placeholderText="rule_name"

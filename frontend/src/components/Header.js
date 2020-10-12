@@ -21,6 +21,7 @@ import './Header.scss';
 import {filtersDefinitions, filtersNames} from "./filters/FiltersDefinitions";
 import {Link, withRouter} from "react-router-dom";
 import ButtonField from "./fields/ButtonField";
+import ExitSearchFilter from "./filters/ExitSearchFilter";
 
 class Header extends Component {
 
@@ -50,7 +51,7 @@ class Header extends Component {
     componentWillUnmount() {
         this.typed.destroy();
 
-        if (typeof window !== "undefined") {
+        if (typeof window) {
             window.removeEventListener("quick-filters", this.fetchStateFromLocalStorage);
         }
     }
@@ -82,12 +83,16 @@ class Header extends Component {
                     <div className="col-auto">
                         <div className="filters-bar">
                             {quickFilters}
+                            <ExitSearchFilter />
                         </div>
                     </div>
 
                     <div className="col">
                         <div className="header-buttons">
-                            <ButtonField variant="pink" onClick={this.props.onOpenFilters} name="filters" bordered/>
+                            {/*<ButtonField variant="pink" onClick={this.props.onOpenFilters} name="filters" bordered/>*/}
+                            <Link to={"/searches" + this.props.location.search}>
+                                <ButtonField variant="pink" name="searches" bordered/>
+                            </Link>
                             <Link to={"/pcaps" + this.props.location.search}>
                                 <ButtonField variant="purple" name="pcaps" bordered/>
                             </Link>

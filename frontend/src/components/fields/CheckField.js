@@ -35,7 +35,7 @@ class CheckField extends Component {
         const small = this.props.small || false;
         const name = this.props.name || null;
         const handler = () => {
-            if (this.props.onChange) {
+            if (!this.props.readonly && this.props.onChange) {
                 this.props.onChange(!checked);
             }
         };
