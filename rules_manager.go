@@ -121,24 +121,22 @@ func LoadRulesManager(storage Storage, flagRegex string) (RulesManager, error) {
 
 	// if there are no rules in database (e.g. first run), set flagRegex as first rule
 	if len(rulesManager.rules) == 0 {
-		go func() {
-			_, _ = rulesManager.AddRule(context.Background(), Rule{
-				Name:  "flag_out",
-				Color: "#e53935",
-				Notes: "Mark connections where the flags are stolen",
-				Patterns: []Pattern{
-					{Regex: flagRegex, Direction: DirectionToClient, Flags: RegexFlags{Utf8Mode: true}},
-				},
-			})
-			_, _ = rulesManager.AddRule(context.Background(), Rule{
-				Name:  "flag_in",
-				Color: "#43A047",
-				Notes: "Mark connections where the flags are placed",
-				Patterns: []Pattern{
-					{Regex: flagRegex, Direction: DirectionToServer, Flags: RegexFlags{Utf8Mode: true}},
-				},
-			})
-		}()
+		_, _ = rulesManager.AddRule(context.Background(), Rule{
+			Name:  "flag_out",
+			Color: "#e53935",
+			Notes: "Mark connections where the flags are stolen",
+			Patterns: []Pattern{
+				{Regex: flagRegex, Direction: DirectionToClient, Flags: RegexFlags{Utf8Mode: true}},
+			},
+		})
+		_, _ = rulesManager.AddRule(context.Background(), Rule{
+			Name:  "flag_in",
+			Color: "#43A047",
+			Notes: "Mark connections where the flags are placed",
+			Patterns: []Pattern{
+				{Regex: flagRegex, Direction: DirectionToServer, Flags: RegexFlags{Utf8Mode: true}},
+			},
+		})
 	} else {
 		if err := rulesManager.generateDatabase(rules[len(rules)-1].ID); err != nil {
 			return nil, err
@@ -348,11 +346,13 @@ func (rm *rulesManagerImpl) generateDatabase(version RowID) error {
 		return err
 	}
 
-	rm.databaseUpdated <- RulesDatabase{
-		database:     database,
-		databaseSize: len(rm.patterns),
-		version:      version,
-	}
+	go func() {
+		rm.databaseUpdated <- RulesDatabase{
+			database:     database,
+			databaseSize: len(rm.patterns),
+			version:      version,
+		}
+	}()
 
 	return nil
 }

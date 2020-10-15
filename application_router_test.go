@@ -109,7 +109,7 @@ func TestRulesApi(t *testing.T) {
 	var rules []Rule
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &rules))
-	assert.Len(t, rules, 3)
+	assert.Len(t, rules, 4)
 
 	toolkit.wrapper.Destroy(t)
 }
