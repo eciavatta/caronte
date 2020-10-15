@@ -26,50 +26,47 @@ const _ = require('lodash');
 
 class TagField extends Component {
 
+    state = {};
+
     constructor(props) {
         super(props);
 
         this.id = `field-${this.props.name || "noname"}-${randomClassName()}`;
     }
 
-    state = {
-
-    };
-
     onAddition = (tag) => {
         if (typeof this.props.onChange === "function") {
-            const tags = [].concat(this.wrappedTags(), tag);
-            this.props.onChange(tags.map(t => t.name), true, tag); // true == addition
+            this.props.onChange([].concat(this.props.tags, tag), true, tag); // true == addition
         }
     };
 
     onDelete = (i) => {
         if (typeof this.props.onChange === "function") {
-            const tags = this.wrappedTags();
+            const tags = _.clone(this.props.tags);
             const tag = tags[i];
             tags.splice(i, 1);
-            this.props.onChange(tags.map(t => t.name), true, tag);  // false == delete
+            this.props.onChange(tags, true, tag);  // false == delete
         }
     };
 
-    wrappedTags = () => this.props.tags.map(t => new Object({"name": t}));
 
     render() {
         const small = this.props.small || false;
         const name = this.props.name || null;
 
         return (
-            <div className={classNames( "field", "tag-field", {"field-small": small})}>
-                { name &&
+            <div className={classNames("field", "tag-field", {"field-small": small},
+                {"field-inline": this.props.inline})}>
+                {name &&
                 <div className="field-name">
                     <label>{name}:</label>
                 </div>
                 }
-                <ReactTags tags={this.wrappedTags() || []}
-                           autoresize={false}
-                           allowNew={this.props.allowNew || true}
-                           onDelete={this.onDelete} onAddition={this.onAddition}
-                           minQueryLength={this.props.min} placeholderText={this.props.placeholder || ""} />
+                <div className="field-input">
+                    <ReactTags {...this.props} tags={this.props.tags || []} autoresize={false}
+                               onDelete={this.onDelete} onAddition={this.onAddition}
+                               placeholderText={this.props.placeholder || ""}/>
+                </div>
             </div>
         );
     }

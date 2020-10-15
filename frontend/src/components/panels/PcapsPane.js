@@ -131,7 +131,7 @@ class PcapsPane extends Component {
 
     render() {
         let sessions = this.state.sessions.map(s =>
-            <tr key={s.id} className="table-row">
+            <tr key={s.id} className="row-small row-clickable">
                 <td>{s["id"].substring(0, 8)}</td>
                 <td>{dateTimeToTime(s["started_at"])}</td>
                 <td>{durationBetween(s["started_at"], s["completed_at"])}</td>
@@ -166,13 +166,13 @@ class PcapsPane extends Component {
             });
         };
 
-        const uploadCurlCommand = createCurlCommand("pcap/upload", "POST", null, {
+        const uploadCurlCommand = createCurlCommand("/pcap/upload", "POST", null, {
             file: "@" + ((this.state.uploadSelectedFile != null && this.state.isUploadFileValid) ?
                 this.state.uploadSelectedFile.name : "invalid.pcap"),
             flush_all: this.state.uploadFlushAll
         });
 
-        const fileCurlCommand = createCurlCommand("pcap/file", "POST", {
+        const fileCurlCommand = createCurlCommand("/pcap/file", "POST", {
             file: this.state.fileValue,
             flush_all: this.state.processFlushAll,
             delete_original_file: this.state.deleteOriginalFile

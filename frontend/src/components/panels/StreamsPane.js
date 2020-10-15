@@ -65,7 +65,7 @@ class StreamsPane extends Component {
     }
 
     loadStream = (connectionId) => {
-        this.setState({messages: []});
+        this.setState({messages: [], currentId: connectionId});
         backend.get(`/api/streams/${connectionId}?format=${this.state.format}`)
             .then(res => this.setState({messages: res.json}));
     };

@@ -35,7 +35,6 @@ import log from "../log";
 import dispatcher from "../dispatcher";
 
 const minutes = 60 * 1000;
-const _ = require('lodash');
 const classNames = require('classnames');
 
 const leftSelectionPaddingMultiplier = 24;
@@ -54,19 +53,26 @@ class Timeline extends Component {
         this.selectionTimeout = null;
     }
 
-    additionalFilters = () => {
-        const urlParams = new URLSearchParams(this.props.location.search);
-        if (this.state.metric === "matched_rules") {
-            return urlParams.getAll("matched_rules") || [];
-        } else {
-            return urlParams.get("service_port");
-        }
-    };
-
     componentDidMount() {
-        const additionalFilters = this.additionalFilters();
-        this.setState({filters: additionalFilters});
-        this.loadStatistics(this.state.metric, additionalFilters).then(() => log.debug("Statistics loaded after mount"));
+        const urlParams = new URLSearchParams(this.props.location.search);
+        this.setState({
+            servicePortFilter: urlParams.get("service_port") || null,
+            matchedRulesFilter: urlParams.getAll("matched_rules") || null
+        });
+
+        this.loadStatistics(this.state.metric).then(() => log.debug("Statistics loaded after mount"));
+
+        this.connectionsFiltersCallback = payload => {
+            if ("service_port" in payload && this.state.servicePortFilter !== payload["service_port"]) {
+                this.setState({servicePortFilter: payload["service_port"]});
+                this.loadStatistics(this.state.metric).then(() => log.debug("Statistics reloaded after service port changed"));
+            }
+            if ("matched_rules" in payload && this.state.matchedRulesFilter !== payload["matched_rules"]) {
+                this.setState({matchedRulesFilter: payload["matched_rules"]});
+                this.loadStatistics(this.state.metric).then(() => log.debug("Statistics reloaded after matched rules changed"));
+            }
+        };
+        dispatcher.register("connections_filters", this.connectionsFiltersCallback);
 
         dispatcher.register("connection_updates", payload => {
             this.setState({
@@ -76,8 +82,10 @@ class Timeline extends Component {
         });
 
         dispatcher.register("notifications", payload => {
-            if (payload.event === "services.edit") {
-                this.loadServices().then(() => this.adjustSelection());
+            if (payload.event === "services.edit" && this.state.metric !== "matched_rules") {
+                this.loadServices().then(() => log.debug("Statistics reloaded after services updates"));
+            } else if (payload.event.startsWith("rules") && this.state.metric === "matched_rules") {
+                this.loadServices().then(() => log.debug("Statistics reloaded after rules updates"));
             }
         });
 
@@ -87,41 +95,29 @@ class Timeline extends Component {
         });
     }
 
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        const additionalFilters = this.additionalFilters();
-        const updateStatistics = () => {
-            this.setState({filters: additionalFilters});
-            this.loadStatistics(this.state.metric, additionalFilters).then(() =>
-                log.debug("Statistics reloaded after filters changes"));
-        };
-
-        if (this.state.metric === "matched_rules") {
-            if (!Array.isArray(this.state.filters) ||
-                !_.isEqual(_.sortBy(additionalFilters), _.sortBy(this.state.filters))) {
-                updateStatistics();
-            }
-        } else {
-            if (this.state.filters !== additionalFilters) {
-                updateStatistics();
-            }
-        }
+    componentWillUnmount() {
+        dispatcher.unregister(this.connectionsFiltersCallback);
     }
 
-    loadStatistics = async (metric, filters) => {
+    loadStatistics = async (metric) => {
         const urlParams = new URLSearchParams();
         urlParams.set("metric", metric);
 
         let columns = [];
         if (metric === "matched_rules") {
             let rules = await this.loadRules();
-            filters.forEach(id => {
-                urlParams.append("matched_rules", id);
-            });
-            columns = rules.map(r => r.id);
+            if (this.state.matchedRulesFilter.length > 0) {
+                this.state.matchedRulesFilter.forEach(id => {
+                    urlParams.append("rules_ids", id);
+                });
+                columns = this.state.matchedRulesFilter;
+            } else {
+                columns = rules.map(r => r.id);
+            }
         } else {
             let services = await this.loadServices();
-            const filteredPort = filters;
-            if (filteredPort && services[filters]) {
+            const filteredPort = this.state.servicePortFilter;
+            if (filteredPort && services[filteredPort]) {
                 const service = services[filteredPort];
                 services = {};
                 services[filteredPort] = service;
@@ -172,7 +168,6 @@ class Timeline extends Component {
             start,
             end
         });
-        log.debug(`Loaded statistics for metric "${metric}"`);
     };
 
     loadServices = async () => {
@@ -279,7 +274,7 @@ class Timeline extends Component {
                                          "server_bytes_per_service", "duration_per_service", "matched_rules"]}
                                      values={["connections_per_service", "client_bytes_per_service",
                                          "server_bytes_per_service", "duration_per_service", "matched_rules"]}
-                                     onChange={(metric) => this.loadStatistics(metric, this.state.filters)
+                                     onChange={(metric) => this.loadStatistics(metric)
                                          .then(() => log.debug("Statistics loaded after metric changes"))}
                                      value={this.state.metric}/>
                     </div>

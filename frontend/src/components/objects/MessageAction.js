@@ -43,7 +43,7 @@ class MessageAction extends Component {
         return (
             <Modal
                 {...this.props}
-                show="true"
+                show={true}
                 size="lg"
                 aria-labelledby="message-action-dialog"
                 centered

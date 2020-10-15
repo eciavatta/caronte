@@ -17,10 +17,9 @@
 
 import React, {Component} from 'react';
 import {withRouter} from "react-router-dom";
-import './RulesConnectionsFilter.scss';
-import ReactTags from 'react-tag-autocomplete';
 import backend from "../../backend";
 import dispatcher from "../../dispatcher";
+import TagField from "../fields/TagField";
 
 const classNames = require('classnames');
 const _ = require('lodash');
@@ -59,16 +58,8 @@ class RulesConnectionsFilter extends Component {
         dispatcher.unregister(this.connectionsFiltersCallback);
     }
 
-    onDelete = (i) => {
-        const activeRules = _.clone(this.state.activeRules);
-        activeRules.splice(i, 1);
-        this.setState({activeRules});
-        dispatcher.dispatch("connections_filters", {"matched_rules": activeRules.map(r => r.id)});
-    };
-
-    onAddition = (rule) => {
-        if (!this.state.activeRules.includes(rule)) {
-            const activeRules = [].concat(this.state.activeRules, rule);
+    onChange = (activeRules) => {
+        if (!_.isEqual(activeRules.sort(), this.state.activeRules.sort())) {
             this.setState({activeRules});
             dispatcher.dispatch("connections_filters", {"matched_rules": activeRules.map(r => r.id)});
         }
@@ -79,11 +70,9 @@ class RulesConnectionsFilter extends Component {
             <div
                 className={classNames("filter", "d-inline-block", {"filter-active": this.state.filterActive === "true"})}>
                 <div className="filter-rules">
-                    <ReactTags tags={this.state.activeRules} suggestions={this.state.rules}
-                               onDelete={this.onDelete} onAddition={this.onAddition}
-                               minQueryLength={0} placeholderText="rule_name"
-                               suggestionsFilter={(suggestion, query) =>
-                                   suggestion.name.startsWith(query) && !this.state.activeRules.includes(suggestion)}/>
+                    <TagField tags={this.state.activeRules} onChange={this.onChange}
+                              suggestions={_.differenceWith(this.state.rules, this.state.activeRules, _.isEqual)}
+                              minQueryLength={0} name="matched_rules" inline small placeholder="rule_name"/>
                 </div>
             </div>
         );

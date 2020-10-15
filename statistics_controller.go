@@ -31,14 +31,14 @@ type StatisticRecord struct {
 	ServerBytesPerService map[uint16]int   `json:"server_bytes_per_service" bson:"server_bytes_per_service"`
 	TotalBytesPerService  map[uint16]int   `json:"total_bytes_per_service" bson:"total_bytes_per_service"`
 	DurationPerService    map[uint16]int64 `json:"duration_per_service" bson:"duration_per_service"`
-	MatchedRules          map[string]int64  `json:"matched_rules" bson:"matched_rules"`
+	MatchedRules          map[string]int64 `json:"matched_rules" bson:"matched_rules"`
 }
 
 type StatisticsFilter struct {
 	RangeFrom time.Time `form:"range_from"`
 	RangeTo   time.Time `form:"range_to"`
 	Ports     []uint16  `form:"ports"`
-	RulesIDs  []string   `form:"rules_ids"`
+	RulesIDs  []string  `form:"rules_ids"`
 	Metric    string    `form:"metric"`
 }
 
@@ -91,7 +91,6 @@ func (sc *StatisticsController) GetStatistics(context context.Context, filter St
 		}
 	}
 
-	log.Println(query)
 	if err := query.All(&statisticRecords); err != nil {
 		log.WithError(err).WithField("filter", filter).Error("failed to retrieve statistics")
 		return []StatisticRecord{}

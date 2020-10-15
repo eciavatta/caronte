@@ -16,7 +16,7 @@
  */
 
 import React, {Component} from 'react';
-import {Col, Container, Modal, Row} from "react-bootstrap";
+import {Modal} from "react-bootstrap";
 import ButtonField from "../fields/ButtonField";
 import './Filters.scss';
 import {cleanNumber, validateIpAddress, validateMin, validatePort} from "../../utils";

@@ -29,7 +29,6 @@ import dispatcher from "../../dispatcher";
 import TagField from "../fields/TagField";
 import CheckField from "../fields/CheckField";
 
-const classNames = require('classnames');
 const _ = require('lodash');
 
 class SearchPane extends Component {
@@ -161,7 +160,7 @@ class SearchPane extends Component {
         const options = this.state.currentSearchOptions;
 
         let searches = this.state.searches.map(s =>
-            <tr key={s.id} className={classNames("row-small", "row-clickable", {"row-selected": false})}>
+            <tr key={s.id} className="row-small row-clickable">
                 <td>{s.id.substring(0, 8)}</td>
                 <td>{this.extractPattern(s["search_options"])}</td>
                 <td>{s["affected_connections_count"]}</td>
@@ -223,13 +222,14 @@ class SearchPane extends Component {
 
                         <div className="content-row">
                             <div className="text-search">
-                                <TagField tags={options.text_search.terms || []} name="terms" min={3} inline
+                                <TagField tags={(options.text_search.terms || []).map(t => {return {name: t};})}
+                                          name="terms" min={3} inline allowNew={true}
                                           readonly={regexOptionsModified || options.text_search.exact_phrase}
-                                          onChange={(tags) => this.updateParam(s => s.text_search.terms = tags)}/>
-                                <TagField tags={options.text_search.excluded_terms || []} inline
-                                          name="excluded_terms" min={3}
+                                          onChange={(tags) => this.updateParam(s => s.text_search.terms = tags.map(t => t.name))}/>
+                                <TagField tags={(options.text_search.excluded_terms || []).map(t => {return {name: t};})}
+                                          name="excluded_terms" min={3} inline allowNew={true}
                                           readonly={regexOptionsModified || options.text_search.exact_phrase}
-                                          onChange={(tags) => this.updateParam(s => s.text_search.excluded_terms = tags)}/>
+                                          onChange={(tags) => this.updateParam(s => s.text_search.excluded_terms = tags.map(t => t.name))}/>
 
                                 <span className="exclusive-separator">or</span>
 
