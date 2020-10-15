@@ -107,7 +107,7 @@ class StreamsPane extends Component {
                         const json = JSON.parse(m.body);
                         body = <ReactJson src={json} theme="grayscale" collapsed={false} displayDataTypes={false}/>;
                     } catch (e) {
-                        console.log(e);
+                        log.error(e);
                     }
                 }
 

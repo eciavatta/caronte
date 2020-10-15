@@ -17,87 +17,74 @@
 
 import React, {Component} from 'react';
 import {withRouter} from "react-router-dom";
-import {Redirect} from "react-router";
 import './RulesConnectionsFilter.scss';
 import ReactTags from 'react-tag-autocomplete';
 import backend from "../../backend";
+import dispatcher from "../../dispatcher";
 
 const classNames = require('classnames');
+const _ = require('lodash');
 
 class RulesConnectionsFilter extends Component {
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            mounted: false,
-            rules: [],
-            activeRules: []
-        };
-
-        this.needRedirect = false;
-    }
+    state = {
+        rules: [],
+        activeRules: []
+    };
 
     componentDidMount() {
-        let params = new URLSearchParams(this.props.location.search);
+        const params = new URLSearchParams(this.props.location.search);
         let activeRules = params.getAll("matched_rules") || [];
 
         backend.get("/api/rules").then(res => {
             let rules = res.json.flatMap(rule => rule.enabled ? [{id: rule.id, name: rule.name}] : []);
             activeRules = rules.filter(rule => activeRules.some(id => rule.id === id));
-            this.setState({rules, activeRules, mounted: true});
+            this.setState({rules, activeRules});
         });
+
+        this.connectionsFiltersCallback = payload => {
+            if ("matched_rules" in payload && !_.isEqual(payload["matched_rules"].sort(), this.state.activeRules.sort())) {
+                const newRules = this.state.rules.filter(r => payload["matched_rules"].includes(r.id));
+                this.setState({
+                    activeRules: newRules.map(r => {
+                        return {id: r.id, name: r.name};
+                    })
+                });
+            }
+        };
+        dispatcher.register("connections_filters", this.connectionsFiltersCallback);
     }
 
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        let urlParams = new URLSearchParams(this.props.location.search);
-        let externalRules = urlParams.getAll("matched_rules") || [];
-        let activeRules = this.state.activeRules.map(r => r.id);
-        let compareRules = (first, second) => first.sort().join(",") === second.sort().join(",");
-        if (this.state.mounted &&
-            compareRules(prevState.activeRules.map(r => r.id), activeRules) &&
-            !compareRules(externalRules, activeRules)) {
-            this.setState({activeRules: externalRules.map(id => this.state.rules.find(r => r.id === id))});
-        }
+    componentWillUnmount() {
+        dispatcher.unregister(this.connectionsFiltersCallback);
     }
 
-    onDelete(i) {
-        const activeRules = this.state.activeRules.slice(0);
+    onDelete = (i) => {
+        const activeRules = _.clone(this.state.activeRules);
         activeRules.splice(i, 1);
-        this.needRedirect = true;
-        this.setState({ activeRules });
-    }
+        this.setState({activeRules});
+        dispatcher.dispatch("connections_filters", {"matched_rules": activeRules.map(r => r.id)});
+    };
 
-    onAddition(rule) {
+    onAddition = (rule) => {
         if (!this.state.activeRules.includes(rule)) {
             const activeRules = [].concat(this.state.activeRules, rule);
-            this.needRedirect = true;
             this.setState({activeRules});
+            dispatcher.dispatch("connections_filters", {"matched_rules": activeRules.map(r => r.id)});
         }
-    }
+    };
 
     render() {
-        let redirect = null;
-
-        if (this.needRedirect) {
-            let urlParams = new URLSearchParams(this.props.location.search);
-            urlParams.delete("matched_rules");
-            this.state.activeRules.forEach(rule => urlParams.append("matched_rules", rule.id));
-            redirect = <Redirect push to={`${this.props.location.pathname}?${urlParams}`} />;
-
-            this.needRedirect = false;
-        }
-
         return (
-            <div className={classNames("filter", "d-inline-block", {"filter-active" : this.state.filterActive === "true"})}>
+            <div
+                className={classNames("filter", "d-inline-block", {"filter-active": this.state.filterActive === "true"})}>
                 <div className="filter-rules">
                     <ReactTags tags={this.state.activeRules} suggestions={this.state.rules}
-                        onDelete={this.onDelete.bind(this)} onAddition={this.onAddition.bind(this)}
+                               onDelete={this.onDelete} onAddition={this.onAddition}
                                minQueryLength={0} placeholderText="rule_name"
                                suggestionsFilter={(suggestion, query) =>
-                                   suggestion.name.startsWith(query) && !this.state.activeRules.includes(suggestion)} />
+                                   suggestion.name.startsWith(query) && !this.state.activeRules.includes(suggestion)}/>
                 </div>
-
-                {redirect}
             </div>
         );
     }

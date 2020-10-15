@@ -15,6 +15,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+const _ = require('lodash');
+
 class Dispatcher {
 
     constructor() {
@@ -42,6 +44,10 @@ class Dispatcher {
         } else {
             throw new Error("topic must be a string or an array of strings");
         }
+    };
+
+    unregister = (callback) => {
+        this.listeners = _.without(callback);
     };
 
 }

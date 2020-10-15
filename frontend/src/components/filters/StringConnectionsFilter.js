@@ -17,37 +17,36 @@
 
 import React, {Component} from 'react';
 import {withRouter} from "react-router-dom";
-import {Redirect} from "react-router";
 import InputField from "../fields/InputField";
+import dispatcher from "../../dispatcher";
 
 class StringConnectionsFilter extends Component {
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            fieldValue: "",
-            filterValue: null,
-            timeoutHandle: null,
-            invalidValue: false
-        };
-        this.needRedirect = false;
-        this.filterChanged = this.filterChanged.bind(this);
-    }
+    state = {
+        fieldValue: "",
+        filterValue: null,
+        timeoutHandle: null,
+        invalidValue: false
+    };
 
     componentDidMount() {
         let params = new URLSearchParams(this.props.location.search);
         this.updateStateFromFilterValue(params.get(this.props.filterName));
+
+        this.connectionsFiltersCallback = payload => {
+            const name = this.props.filterName;
+            if (name in payload && this.state.filterValue !== payload[name]) {
+                this.updateStateFromFilterValue(payload[name]);
+            }
+        };
+        dispatcher.register("connections_filters", this.connectionsFiltersCallback);
     }
 
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        let urlParams = new URLSearchParams(this.props.location.search);
-        let filterValue = urlParams.get(this.props.filterName);
-        if (prevState.filterValue === this.state.filterValue && this.state.filterValue !== filterValue) {
-            this.updateStateFromFilterValue(filterValue);
-        }
+    componentWillUnmount() {
+        dispatcher.unregister(this.connectionsFiltersCallback);
     }
 
-    updateStateFromFilterValue(filterValue) {
+    updateStateFromFilterValue = (filterValue) => {
         if (filterValue !== null) {
             let fieldValue = filterValue;
             if (typeof this.props.decodeFunc === "function") {
@@ -70,15 +69,21 @@ class StringConnectionsFilter extends Component {
         } else {
             this.setState({fieldValue: "", filterValue: null});
         }
-    }
+    };
 
-    isValueValid(value) {
+    isValueValid = (value) => {
         return typeof this.props.validateFunc !== "function" ||
             (typeof this.props.validateFunc === "function" && this.props.validateFunc(value));
-    }
+    };
 
-    filterChanged(fieldValue) {
-        if (this.state.timeoutHandle !== null) {
+    changeFilterValue = (value) => {
+        const urlParams = {};
+        urlParams[this.props.filterName] = value;
+        dispatcher.dispatch("connections_filters", urlParams);
+    };
+
+    filterChanged = (fieldValue) => {
+        if (this.state.timeoutHandle) {
             clearTimeout(this.state.timeoutHandle);
         }
 
@@ -87,10 +92,11 @@ class StringConnectionsFilter extends Component {
         }
 
         if (fieldValue === "") {
-            this.needRedirect = true;
             this.setState({fieldValue: "", filterValue: null, invalidValue: false});
-            return;
+            return this.changeFilterValue(null);
         }
+
+
 
         if (this.isValueValid(fieldValue)) {
             let filterValue = fieldValue;
@@ -101,40 +107,27 @@ class StringConnectionsFilter extends Component {
             this.setState({
                 fieldValue: fieldValue,
                 timeoutHandle: setTimeout(() => {
-                    this.needRedirect = true;
                     this.setState({filterValue: filterValue});
+                    this.changeFilterValue(filterValue);
                 }, 500),
                 invalidValue: false
             });
         } else {
-            this.needRedirect = true;
             this.setState({
                 fieldValue: fieldValue,
                 invalidValue: true
             });
         }
-    }
+    };
 
     render() {
-        let redirect = null;
-        if (this.needRedirect) {
-            let urlParams = new URLSearchParams(this.props.location.search);
-            if (this.state.filterValue !== null) {
-                urlParams.set(this.props.filterName, this.state.filterValue);
-            } else {
-                urlParams.delete(this.props.filterName);
-            }
-            redirect = <Redirect push to={`${this.props.location.pathname}?${urlParams}`} />;
-            this.needRedirect = false;
-        }
         let active = this.state.filterValue !== null;
 
         return (
             <div className="filter" style={{"width": `${this.props.width}px`}}>
                 <InputField active={active} invalid={this.state.invalidValue} name={this.props.filterName}
                             placeholder={this.props.defaultFilterValue} onChange={this.filterChanged}
-                            value={this.state.fieldValue} inline={true} small={true} />
-                {redirect}
+                            value={this.state.fieldValue} inline={true} small={true}/>
             </div>
         );
     }

@@ -23,6 +23,7 @@ import {dateTimeToTime, durationBetween, formatSize} from "../../utils";
 import ButtonField from "../fields/ButtonField";
 import LinkPopover from "./LinkPopover";
 import TextField from "../fields/TextField";
+import dispatcher from "../../dispatcher";
 
 const classNames = require('classnames');
 
@@ -99,7 +100,8 @@ class Connection extends Component {
                 <td>
                     <span className="connection-service">
                         <ButtonField small fullSpan color={serviceColor} name={serviceName}
-                                     onClick={() => this.props.addServicePortFilter(conn["port_dst"])}/>
+                                     onClick={() => dispatcher.dispatch("connections_filters",
+                                         {"service_port": conn["port_dst"].toString()})}/>
                     </span>
                 </td>
                 <td className="clickable" onClick={this.props.onSelected}>{conn["ip_src"]}</td>

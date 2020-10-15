@@ -18,20 +18,25 @@
 import React, {Component} from 'react';
 import './ConnectionMatchedRules.scss';
 import ButtonField from "../fields/ButtonField";
+import dispatcher from "../../dispatcher";
+import {withRouter} from "react-router-dom";
 
 class ConnectionMatchedRules extends Component {
 
-    constructor(props) {
-        super(props);
-        this.state = {
-        };
-    }
+    onMatchedRulesSelected = (id) => {
+        const params = new URLSearchParams(this.props.location.search);
+        const rules = params.getAll("matched_rules");
+        if (!rules.includes(id)) {
+            rules.push(id);
+            dispatcher.dispatch("connections_filters",{"matched_rules": rules});
+        }
+    };
 
     render() {
         const matchedRules = this.props.matchedRules.map(mr => {
             const rule = this.props.rules.find(r => r.id === mr);
-            return <ButtonField key={mr} onClick={() => this.props.addMatchedRulesFilter(rule.id)} name={rule.name}
-                                color={rule.color} small />;
+            return <ButtonField key={mr} onClick={() => this.onMatchedRulesSelected(rule.id)} name={rule.name}
+                                color={rule.color} small/>;
         });
 
         return (
@@ -43,4 +48,4 @@ class ConnectionMatchedRules extends Component {
     }
 }
 
-export default ConnectionMatchedRules;
+export default withRouter(ConnectionMatchedRules);

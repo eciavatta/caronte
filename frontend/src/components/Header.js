@@ -89,7 +89,7 @@ class Header extends Component {
 
                     <div className="col">
                         <div className="header-buttons">
-                            {/*<ButtonField variant="pink" onClick={this.props.onOpenFilters} name="filters" bordered/>*/}
+                            <ButtonField variant="pink" onClick={this.props.onOpenFilters} name="filters" bordered/>
                             <Link to={"/searches" + this.props.location.search}>
                                 <ButtonField variant="pink" name="searches" bordered/>
                             </Link>

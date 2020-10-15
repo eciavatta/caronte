@@ -29,7 +29,6 @@ import Header from "../Header";
 import Filters from "../dialogs/Filters";
 import MainPane from "../panels/MainPane";
 import SearchPane from "../panels/SearchPane";
-import FiltersDispatcher from "../filters/FiltersDispatcher";
 
 class MainPage extends Component {
 
@@ -70,8 +69,6 @@ class MainPage extends Component {
                     <div className="page-footer">
                         <Timeline/>
                     </div>
-
-                    <FiltersDispatcher />
                 </Router>
             </div>
         );

@@ -19,13 +19,13 @@ import React, {Component} from 'react';
 import './ConnectionsPane.scss';
 import Connection from "../objects/Connection";
 import Table from 'react-bootstrap/Table';
-import {Redirect} from 'react-router';
 import {withRouter} from "react-router-dom";
 import backend from "../../backend";
 import ConnectionMatchedRules from "../objects/ConnectionMatchedRules";
 import log from "../../log";
 import ButtonField from "../fields/ButtonField";
 import dispatcher from "../../dispatcher";
+import {Redirect} from "react-router";
 
 const classNames = require('classnames');
 
@@ -50,59 +50,90 @@ class ConnectionsPane extends Component {
     }
 
     componentDidMount() {
-        const initialParams = {limit: this.queryLimit};
+        let urlParams = new URLSearchParams(this.props.location.search);
+        this.setState({urlParams});
+
+        const additionalParams = {limit: this.queryLimit};
 
         const match = this.props.location.pathname.match(/^\/connections\/([a-f0-9]{24})$/);
         if (match != null) {
             const id = match[1];
-            initialParams.from = id;
+            additionalParams.from = id;
             backend.get(`/api/connections/${id}`)
-                .then(res => this.connectionSelected(res.json, false))
+                .then(res => this.connectionSelected(res.json))
                 .catch(error => log.error("Error loading initial connection", error));
         }
 
-        this.loadConnections(initialParams, true).then(() => log.debug("Connections loaded"));
+        this.loadConnections(additionalParams, urlParams, true).then(() => log.debug("Connections loaded"));
 
-        dispatcher.register("timeline_updates", payload => {
+        this.connectionsFiltersCallback = payload => {
+            const params = this.state.urlParams;
+            const initialParams = params.toString();
+
+            Object.entries(payload).forEach(([key, value]) => {
+                if (value == null) {
+                    params.delete(key);
+                } else if (Array.isArray(value)) {
+                    params.delete(key);
+                    value.forEach(v => params.append(key, v));
+                } else {
+                    params.set(key, value);
+                }
+            });
+
+            if (initialParams === params.toString()) {
+                return;
+            }
+
+            log.debug("Update following url params:", payload);
+            this.queryStringRedirect = true;
+            this.setState({urlParams});
+
+            this.loadConnections({limit: this.queryLimit}, urlParams)
+                .then(() => log.info("ConnectionsPane reloaded after query string update"));
+        };
+        dispatcher.register("connections_filters", this.connectionsFiltersCallback);
+
+        this.timelineUpdatesCallback = payload => {
             this.connectionsListRef.current.scrollTop = 0;
             this.loadConnections({
                 started_after: Math.round(payload.from.getTime() / 1000),
                 started_before: Math.round(payload.to.getTime() / 1000),
                 limit: this.maxConnections
             }).then(() => log.info(`Loading connections between ${payload.from} and ${payload.to}`));
-        });
+        };
+        dispatcher.register("timeline_updates", this.timelineUpdatesCallback);
 
-        dispatcher.register("notifications", payload => {
+        this.notificationsCallback = payload => {
             if (payload.event === "rules.new" || payload.event === "rules.edit") {
                 this.loadRules().then(() => log.debug("Loaded connection rules after notification update"));
             }
-        });
-
-        dispatcher.register("notifications", payload => {
             if (payload.event === "services.edit") {
                 this.loadServices().then(() => log.debug("Services reloaded after notification update"));
             }
-        });
+        };
+        dispatcher.register("notifications", this.notificationsCallback);
 
-        dispatcher.register("pulse_connections_view", payload => {
+        this.pulseConnectionsViewCallback = payload => {
             this.setState({pulseConnectionsView: true});
             setTimeout(() => this.setState({pulseConnectionsView: false}), payload.duration);
-        });
+        };
+        dispatcher.register("pulse_connections_view", this.pulseConnectionsViewCallback);
     }
 
-    connectionSelected = (c, doRedirect = true) => {
-        this.doSelectedConnectionRedirect = doRedirect;
+    componentWillUnmount() {
+        dispatcher.unregister(this.timelineUpdatesCallback);
+        dispatcher.unregister(this.notificationsCallback);
+        dispatcher.unregister(this.pulseConnectionsViewCallback);
+        dispatcher.unregister(this.connectionsFiltersCallback);
+    }
+
+    connectionSelected = (c) => {
+        this.connectionSelectedRedirect = true;
         this.setState({selected: c.id});
         this.props.onSelected(c);
         log.debug(`Connection ${c.id} selected`);
     };
-
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        if (prevProps.location.search !== this.props.location.search) {
-            this.loadConnections({limit: this.queryLimit})
-                .then(() => log.info("ConnectionsPane reloaded after query string update"));
-        }
-    }
 
     handleScroll = (e) => {
         if (this.disableScrollHandler) {
@@ -135,27 +166,12 @@ class ConnectionsPane extends Component {
         this.lastScrollPosition = e.currentTarget.scrollTop;
     };
 
-    addServicePortFilter = (port) => {
-        const urlParams = new URLSearchParams(this.props.location.search);
-        urlParams.set("service_port", port);
-        this.doQueryStringRedirect = true;
-        this.setState({queryString: urlParams});
-    };
-
-    addMatchedRulesFilter = (matchedRule) => {
-        const urlParams = new URLSearchParams(this.props.location.search);
-        const oldMatchedRules = urlParams.getAll("matched_rules") || [];
-
-        if (!oldMatchedRules.includes(matchedRule)) {
-            urlParams.append("matched_rules", matchedRule);
-            this.doQueryStringRedirect = true;
-            this.setState({queryString: urlParams});
+    async loadConnections(additionalParams, initialParams = null, isInitial = false) {
+        if (!initialParams) {
+            initialParams = this.state.urlParams;
         }
-    };
-
-    async loadConnections(params, isInitial = false) {
-        const urlParams = new URLSearchParams(this.props.location.search);
-        for (const [name, value] of Object.entries(params)) {
+        const urlParams = new URLSearchParams(initialParams.toString());
+        for (const [name, value] of Object.entries(additionalParams)) {
             urlParams.set(name, value);
         }
 
@@ -173,7 +189,7 @@ class ConnectionsPane extends Component {
         let firstConnection = this.state.firstConnection;
         let lastConnection = this.state.lastConnection;
 
-        if (params !== undefined && params.from !== undefined && params.to === undefined) {
+        if (additionalParams !== undefined && additionalParams.from !== undefined && additionalParams.to === undefined) {
             if (res.length > 0) {
                 if (!isInitial) {
                     res = res.slice(1);
@@ -189,7 +205,7 @@ class ConnectionsPane extends Component {
                     firstConnection = connections[0];
                 }
             }
-        } else if (params !== undefined && params.to !== undefined && params.from === undefined) {
+        } else if (additionalParams !== undefined && additionalParams.to !== undefined && additionalParams.from === undefined) {
             if (res.length > 0) {
                 connections = res.slice(0, res.length - 1).concat(this.state.connections);
                 firstConnection = connections[0];
@@ -235,12 +251,12 @@ class ConnectionsPane extends Component {
 
     render() {
         let redirect;
-        if (this.doSelectedConnectionRedirect) {
-            redirect = <Redirect push to={`/connections/${this.state.selected}${this.props.location.search}`}/>;
-            this.doSelectedConnectionRedirect = false;
-        } else if (this.doQueryStringRedirect) {
-            redirect = <Redirect push to={`${this.props.location.pathname}?${this.state.queryString}`}/>;
-            this.doQueryStringRedirect = false;
+        if (this.connectionSelectedRedirect) {
+            redirect = <Redirect push to={`/connections/${this.state.selected}?${this.state.urlParams}`}/>;
+            this.connectionSelectedRedirect = false;
+        } else if (this.queryStringRedirect) {
+            redirect = <Redirect push to={`${this.props.location.pathname}?${this.state.urlParams}`}/>;
+            this.queryStringRedirect = false;
         }
 
         let loading = null;
@@ -288,12 +304,10 @@ class ConnectionsPane extends Component {
                                                     selected={this.state.selected === c.id}
                                                     onMarked={marked => c.marked = marked}
                                                     onEnabled={enabled => c.hidden = !enabled}
-                                                    addServicePortFilter={this.addServicePortFilter}
                                                     services={this.state.services}/>,
                                     c.matched_rules.length > 0 &&
                                     <ConnectionMatchedRules key={c.id + "_m"} matchedRules={c.matched_rules}
-                                                            rules={this.state.rules}
-                                                            addMatchedRulesFilter={this.addMatchedRulesFilter}/>
+                                                            rules={this.state.rules}/>
                                 ];
                             })
                         }

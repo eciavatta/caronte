@@ -17,65 +17,49 @@
 
 import React, {Component} from 'react';
 import {withRouter} from "react-router-dom";
-import {Redirect} from "react-router";
 import CheckField from "../fields/CheckField";
+import dispatcher from "../../dispatcher";
 
 class BooleanConnectionsFilter extends Component {
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            filterActive: "false"
-        };
-
-        this.filterChanged = this.filterChanged.bind(this);
-        this.needRedirect = false;
-    }
+    state = {
+        filterActive: "false"
+    };
 
     componentDidMount() {
         let params = new URLSearchParams(this.props.location.search);
         this.setState({filterActive: this.toBoolean(params.get(this.props.filterName)).toString()});
+
+        this.connectionsFiltersCallback = payload => {
+            const name = this.props.filterName;
+            if (name in payload && this.state.filterActive !== payload[name]) {
+                this.setState({filterActive: payload[name]});
+            }
+        };
+        dispatcher.register("connections_filters", this.connectionsFiltersCallback);
     }
 
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        let urlParams = new URLSearchParams(this.props.location.search);
-        let externalActive = this.toBoolean(urlParams.get(this.props.filterName));
-        let filterActive = this.toBoolean(this.state.filterActive);
-        // if the filterActive state is changed by another component (and not by filterChanged func) and
-        // the query string is not equals at the filterActive state, update the state of the component
-        if (this.toBoolean(prevState.filterActive) === filterActive && filterActive !== externalActive) {
-            this.setState({filterActive: externalActive.toString()});
-        }
+    componentWillUnmount() {
+        dispatcher.unregister(this.connectionsFiltersCallback);
     }
 
-    toBoolean(value) {
+    toBoolean = (value) => {
         return value !== null && value.toLowerCase() === "true";
-    }
+    };
 
-    filterChanged() {
-        this.needRedirect = true;
-        this.setState({filterActive: (!this.toBoolean(this.state.filterActive)).toString()});
-    }
+    filterChanged = () => {
+        const newValue = (!this.toBoolean(this.state.filterActive)).toString();
+        const urlParams = {};
+        urlParams[this.props.filterName] = newValue === "true" ? "true" : null;
+        dispatcher.dispatch("connections_filters", urlParams);
+        this.setState({filterActive: newValue});
+    };
 
     render() {
-        let redirect = null;
-        if (this.needRedirect) {
-            let urlParams = new URLSearchParams(this.props.location.search);
-            if (this.toBoolean(this.state.filterActive)) {
-                urlParams.set(this.props.filterName, "true");
-            } else {
-                urlParams.delete(this.props.filterName);
-            }
-            redirect = <Redirect push to={`${this.props.location.pathname}?${urlParams}`} />;
-
-            this.needRedirect = false;
-        }
-
         return (
             <div className="filter" style={{"width": `${this.props.width}px`}}>
                 <CheckField checked={this.toBoolean(this.state.filterActive)} name={this.props.filterName}
-                            onChange={this.filterChanged} />
-                {redirect}
+                            onChange={this.filterChanged}/>
             </div>
         );
     }

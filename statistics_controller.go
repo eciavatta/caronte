@@ -26,19 +26,19 @@ import (
 
 type StatisticRecord struct {
 	RangeStart            time.Time        `json:"range_start" bson:"_id"`
-	ConnectionsPerService map[uint16]int   `json:"connections_per_service,omitempty" bson:"connections_per_service"`
-	ClientBytesPerService map[uint16]int   `json:"client_bytes_per_service,omitempty" bson:"client_bytes_per_service"`
-	ServerBytesPerService map[uint16]int   `json:"server_bytes_per_service,omitempty" bson:"server_bytes_per_service"`
-	TotalBytesPerService  map[uint16]int   `json:"total_bytes_per_service,omitempty" bson:"total_bytes_per_service"`
-	DurationPerService    map[uint16]int64 `json:"duration_per_service,omitempty" bson:"duration_per_service"`
-	MatchedRules          map[RowID]int64  `json:"matched_rules,omitempty" bson:"matched_rules"`
+	ConnectionsPerService map[uint16]int   `json:"connections_per_service" bson:"connections_per_service"`
+	ClientBytesPerService map[uint16]int   `json:"client_bytes_per_service" bson:"client_bytes_per_service"`
+	ServerBytesPerService map[uint16]int   `json:"server_bytes_per_service" bson:"server_bytes_per_service"`
+	TotalBytesPerService  map[uint16]int   `json:"total_bytes_per_service" bson:"total_bytes_per_service"`
+	DurationPerService    map[uint16]int64 `json:"duration_per_service" bson:"duration_per_service"`
+	MatchedRules          map[string]int64  `json:"matched_rules" bson:"matched_rules"`
 }
 
 type StatisticsFilter struct {
 	RangeFrom time.Time `form:"range_from"`
 	RangeTo   time.Time `form:"range_to"`
 	Ports     []uint16  `form:"ports"`
-	RulesIDs  []RowID   `form:"rules_ids"`
+	RulesIDs  []string   `form:"rules_ids"`
 	Metric    string    `form:"metric"`
 }
 
@@ -57,7 +57,7 @@ func NewStatisticsController(storage Storage) StatisticsController {
 
 func (sc *StatisticsController) GetStatistics(context context.Context, filter StatisticsFilter) []StatisticRecord {
 	var statisticRecords []StatisticRecord
-	query := sc.storage.Find(Statistics).Context(context)
+	query := sc.storage.Find(Statistics).Context(context).Sort("_id", true)
 	if !filter.RangeFrom.IsZero() {
 		query = query.Filter(OrderedDocument{{"_id", UnorderedDocument{"$lt": filter.RangeFrom}}})
 	}
@@ -81,7 +81,7 @@ func (sc *StatisticsController) GetStatistics(context context.Context, filter St
 	}
 	for _, ruleID := range filter.RulesIDs {
 		if filter.Metric == "" || filter.Metric == "matched_rules" {
-			query = query.Projection(OrderedDocument{{fmt.Sprintf("matched_rules.%s", ruleID.Hex()), 1}})
+			query = query.Projection(OrderedDocument{{fmt.Sprintf("matched_rules.%s", ruleID), 1}})
 		}
 
 	}
@@ -91,6 +91,7 @@ func (sc *StatisticsController) GetStatistics(context context.Context, filter St
 		}
 	}
 
+	log.Println(query)
 	if err := query.All(&statisticRecords); err != nil {
 		log.WithError(err).WithField("filter", filter).Error("failed to retrieve statistics")
 		return []StatisticRecord{}

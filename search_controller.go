@@ -76,6 +76,10 @@ func NewSearchController(storage Storage) *SearchController {
 		log.WithError(err).Panic("failed to retrieve performed searches")
 	}
 
+	if searches == nil {
+		searches = []PerformedSearch{}
+	}
+
 	return &SearchController{
 		storage:           storage,
 		performedSearches: searches,
