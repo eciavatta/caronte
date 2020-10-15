@@ -47,7 +47,7 @@ class Dispatcher {
     };
 
     unregister = (callback) => {
-        this.listeners = _.without(callback);
+        _.remove(this.listeners, l => l.callback === callback);
     };
 
 }

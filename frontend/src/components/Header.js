@@ -18,20 +18,16 @@
 import React, {Component} from 'react';
 import Typed from 'typed.js';
 import './Header.scss';
-import {filtersDefinitions, filtersNames} from "./filters/FiltersDefinitions";
 import {Link, withRouter} from "react-router-dom";
 import ButtonField from "./fields/ButtonField";
 import ExitSearchFilter from "./filters/ExitSearchFilter";
+import {cleanNumber, validatePort} from "../utils";
+import StringConnectionsFilter from "./filters/StringConnectionsFilter";
+import RulesConnectionsFilter from "./filters/RulesConnectionsFilter";
+import BooleanConnectionsFilter from "./filters/BooleanConnectionsFilter";
+import AdvancedFilters from "./filters/AdvancedFilters";
 
 class Header extends Component {
-
-    constructor(props) {
-        super(props);
-        let newState = {};
-        filtersNames.forEach(elem => newState[`${elem}_active`] = false);
-        this.state = newState;
-        this.fetchStateFromLocalStorage = this.fetchStateFromLocalStorage.bind(this);
-    }
 
     componentDidMount() {
         const options = {
@@ -40,33 +36,13 @@ class Header extends Component {
             cursorChar: "❚"
         };
         this.typed = new Typed(this.el, options);
-
-        this.fetchStateFromLocalStorage();
-
-        if (typeof window !== "undefined") {
-            window.addEventListener("quick-filters", this.fetchStateFromLocalStorage);
-        }
     }
 
     componentWillUnmount() {
         this.typed.destroy();
-
-        if (typeof window) {
-            window.removeEventListener("quick-filters", this.fetchStateFromLocalStorage);
-        }
-    }
-
-    fetchStateFromLocalStorage() {
-        let newState = {};
-        filtersNames.forEach(elem => newState[`${elem}_active`] = localStorage.getItem(`filters.${elem}`) === "true");
-        this.setState(newState);
     }
 
     render() {
-        let quickFilters = filtersNames.filter(name => this.state[`${name}_active`])
-            .map(name => <React.Fragment key={name}>{filtersDefinitions[name]}</React.Fragment>)
-            .slice(0, 5);
-
         return (
             <header className="header container-fluid">
                 <div className="row">
@@ -82,14 +58,21 @@ class Header extends Component {
 
                     <div className="col-auto">
                         <div className="filters-bar">
-                            {quickFilters}
-                            <ExitSearchFilter />
+                            <StringConnectionsFilter filterName="service_port"
+                                                     defaultFilterValue="all_ports"
+                                                     replaceFunc={cleanNumber}
+                                                     validateFunc={validatePort}
+                                                     key="service_port_filter"
+                                                     width={200} small inline/>
+                            <RulesConnectionsFilter/>
+                            <BooleanConnectionsFilter filterName={"marked"}/>
+                            <ExitSearchFilter/>
+                            <AdvancedFilters onClick={this.props.onOpenFilters} />
                         </div>
                     </div>
 
                     <div className="col">
                         <div className="header-buttons">
-                            <ButtonField variant="pink" onClick={this.props.onOpenFilters} name="filters" bordered/>
                             <Link to={"/searches" + this.props.location.search}>
                                 <ButtonField variant="pink" name="searches" bordered/>
                             </Link>

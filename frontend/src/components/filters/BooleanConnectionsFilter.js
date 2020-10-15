@@ -59,7 +59,7 @@ class BooleanConnectionsFilter extends Component {
         return (
             <div className="filter" style={{"width": `${this.props.width}px`}}>
                 <CheckField checked={this.toBoolean(this.state.filterActive)} name={this.props.filterName}
-                            onChange={this.filterChanged}/>
+                            onChange={this.filterChanged} small/>
             </div>
         );
     }

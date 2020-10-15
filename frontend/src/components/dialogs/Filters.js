@@ -16,91 +16,63 @@
  */
 
 import React, {Component} from 'react';
-import {Col, Container, Modal, Row, Table} from "react-bootstrap";
-import {filtersDefinitions, filtersNames} from "../filters/FiltersDefinitions";
+import {Col, Container, Modal, Row} from "react-bootstrap";
 import ButtonField from "../fields/ButtonField";
+import './Filters.scss';
+import {cleanNumber, validateIpAddress, validateMin, validatePort} from "../../utils";
+import StringConnectionsFilter from "../filters/StringConnectionsFilter";
 
 class Filters extends Component {
-
-    constructor(props) {
-        super(props);
-        let newState = {};
-        filtersNames.forEach(elem => newState[`${elem}_active`] = false);
-        this.state = newState;
-    }
-
-    componentDidMount() {
-        let newState = {};
-        filtersNames.forEach(elem => newState[`${elem}_active`] = localStorage.getItem(`filters.${elem}`) === "true");
-        this.setState(newState);
-    }
-
-    checkboxChangesHandler(filterName, event) {
-        this.setState({[`${filterName}_active`]: event.target.checked});
-        localStorage.setItem(`filters.${filterName}`, event.target.checked);
-        if (typeof window !== "undefined") {
-            window.dispatchEvent(new Event("quick-filters"));
-        }
-    }
-
-    generateRows(filtersNames) {
-        return filtersNames.map(name =>
-            <tr key={name}>
-                <td><input type="checkbox"
-                           checked={this.state[`${name}_active`]}
-                           onChange={event => this.checkboxChangesHandler(name, event)}/></td>
-                <td>{filtersDefinitions[name]}</td>
-            </tr>
-        );
-    }
 
     render() {
         return (
             <Modal
                 {...this.props}
-                show="true"
+                show={true}
                 size="lg"
                 aria-labelledby="filters-dialog"
                 centered
             >
                 <Modal.Header>
                     <Modal.Title id="filters-dialog">
-                        ~/filters
+                        ~/advanced_filters
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <Container>
-                        <Row>
-                            <Col md={6}>
-                                <Table borderless size="sm" className="filters-table">
-                                    <thead>
-                                    <tr>
-                                        <th>show</th>
-                                        <th>filter</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {this.generateRows(["service_port", "client_address", "min_duration",
-                                        "min_bytes"])}
-                                    </tbody>
-                                </Table>
-                            </Col>
-                            <Col md={6}>
-                                <Table borderless size="sm" className="filters-table">
-                                    <thead>
-                                    <tr>
-                                        <th>show</th>
-                                        <th>filter</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {this.generateRows(["matched_rules", "client_port", "max_duration",
-                                        "max_bytes", "marked"])}
-                                    </tbody>
-                                </Table>
-                            </Col>
-                        </Row>
-                    </Container>
+                    <div className="advanced-filters d-flex">
+                        <div className="flex-fill">
+                            <StringConnectionsFilter filterName="client_address"
+                                                     defaultFilterValue="all_addresses"
+                                                     validateFunc={validateIpAddress}
+                                                     key="client_address_filter"/>
+                            <StringConnectionsFilter filterName="min_duration"
+                                                     defaultFilterValue="0"
+                                                     replaceFunc={cleanNumber}
+                                                     validateFunc={validateMin(0)}
+                                                     key="min_duration_filter"/>
+                            <StringConnectionsFilter filterName="min_bytes"
+                                                     defaultFilterValue="0"
+                                                     replaceFunc={cleanNumber}
+                                                     validateFunc={validateMin(0)}
+                                                     key="min_bytes_filter"/>
+                        </div>
+
+                        <div className="flex-fill">
+                            <StringConnectionsFilter filterName="client_port"
+                                                     defaultFilterValue="all_ports"
+                                                     replaceFunc={cleanNumber}
+                                                     validateFunc={validatePort}
+                                                     key="client_port_filter"/>
+                            <StringConnectionsFilter filterName="max_duration"
+                                                     defaultFilterValue="∞"
+                                                     replaceFunc={cleanNumber}
+                                                     key="max_duration_filter"/>
+                            <StringConnectionsFilter filterName="max_bytes"
+                                                     defaultFilterValue="∞"
+                                                     replaceFunc={cleanNumber}
+                                                     key="max_bytes_filter"/>
+                        </div>
+                    </div>
                 </Modal.Body>
                 <Modal.Footer className="dialog-footer">
                     <ButtonField variant="red" bordered onClick={this.props.onHide} name="close"/>

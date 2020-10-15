@@ -26,9 +26,16 @@
   .filters-bar {
     padding: 3px 0;
 
-    .filter {
+    .filter,
+    .button-field {
       display: inline-block;
       margin-right: 10px;
+    }
+
+    .button-field button {
+      font-weight: 400;
+      padding: 7px 10px;
+      border-radius: 5px;
     }
   }
 }

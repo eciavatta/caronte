@@ -26,6 +26,7 @@ import log from "../../log";
 import ButtonField from "../fields/ButtonField";
 import dispatcher from "../../dispatcher";
 import {Redirect} from "react-router";
+import {updateParams} from "../../utils";
 
 const classNames = require('classnames');
 
@@ -67,29 +68,16 @@ class ConnectionsPane extends Component {
         this.loadConnections(additionalParams, urlParams, true).then(() => log.debug("Connections loaded"));
 
         this.connectionsFiltersCallback = payload => {
-            const params = this.state.urlParams;
-            const initialParams = params.toString();
-
-            Object.entries(payload).forEach(([key, value]) => {
-                if (value == null) {
-                    params.delete(key);
-                } else if (Array.isArray(value)) {
-                    params.delete(key);
-                    value.forEach(v => params.append(key, v));
-                } else {
-                    params.set(key, value);
-                }
-            });
-
-            if (initialParams === params.toString()) {
+            const newParams = updateParams(this.state.urlParams, payload);
+            if (this.state.urlParams.toString() === newParams.toString()) {
                 return;
             }
 
             log.debug("Update following url params:", payload);
             this.queryStringRedirect = true;
-            this.setState({urlParams});
+            this.setState({urlParams: newParams});
 
-            this.loadConnections({limit: this.queryLimit}, urlParams)
+            this.loadConnections({limit: this.queryLimit}, newParams)
                 .then(() => log.info("ConnectionsPane reloaded after query string update"));
         };
         dispatcher.register("connections_filters", this.connectionsFiltersCallback);

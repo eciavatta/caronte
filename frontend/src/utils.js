@@ -146,3 +146,19 @@ export function downloadBlob(blob, fileName) {
     a.click();
     window.URL.revokeObjectURL(url);
 }
+
+export function updateParams(urlParams, payload) {
+    const params = new URLSearchParams(urlParams.toString());
+    Object.entries(payload).forEach(([key, value]) => {
+        if (value == null) {
+            params.delete(key);
+        } else if (Array.isArray(value)) {
+            params.delete(key);
+            value.forEach(v => params.append(key, v));
+        } else {
+            params.set(key, value);
+        }
+    });
+
+    return params;
+}

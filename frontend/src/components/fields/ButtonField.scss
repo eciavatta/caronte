@@ -15,6 +15,13 @@
     }
   }
 
+  &.field-active {
+    button {
+      color: $color-primary-1;
+      background-color: $color-primary-4;
+    }
+  }
+
   .button-variant-red {
     color: $color-red-light;
     background-color: $color-red;
