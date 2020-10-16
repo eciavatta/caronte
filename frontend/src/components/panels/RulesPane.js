@@ -15,26 +15,26 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
-import './common.scss';
-import './RulesPane.scss';
-import Table from "react-bootstrap/Table";
+import React, {Component} from "react";
 import {Col, Container, Row} from "react-bootstrap";
-import InputField from "../fields/InputField";
-import CheckField from "../fields/CheckField";
-import TextField from "../fields/TextField";
+import Table from "react-bootstrap/Table";
 import backend from "../../backend";
-import NumericField from "../fields/extensions/NumericField";
-import ColorField from "../fields/extensions/ColorField";
-import ChoiceField from "../fields/ChoiceField";
-import ButtonField from "../fields/ButtonField";
-import validation from "../../validation";
-import LinkPopover from "../objects/LinkPopover";
-import {randomClassName} from "../../utils";
 import dispatcher from "../../dispatcher";
+import validation from "../../validation";
+import ButtonField from "../fields/ButtonField";
+import CheckField from "../fields/CheckField";
+import ChoiceField from "../fields/ChoiceField";
+import ColorField from "../fields/extensions/ColorField";
+import NumericField from "../fields/extensions/NumericField";
+import InputField from "../fields/InputField";
+import TextField from "../fields/TextField";
+import CopyLinkPopover from "../objects/CopyLinkPopover";
+import LinkPopover from "../objects/LinkPopover";
+import "./common.scss";
+import "./RulesPane.scss";
 
-const classNames = require('classnames');
-const _ = require('lodash');
+const classNames = require("classnames");
+const _ = require("lodash");
 
 class RulesPane extends Component {
 
@@ -88,14 +88,19 @@ class RulesPane extends Component {
         this.reset();
         this.loadRules();
 
-        dispatcher.register("notifications", payload => {
-            if (payload.event === "rules.new" || payload.event === "rules.edit") {
-                this.loadRules();
-            }
-        });
-
+        dispatcher.register("notifications", this.handleNotifications);
         document.title = "caronte:~/rules$";
     }
+
+    componentWillUnmount() {
+        dispatcher.unregister(this.handleNotifications);
+    }
+
+    handleNotifications = (payload) => {
+        if (payload.event === "rules.new" || payload.event === "rules.edit") {
+            this.loadRules();
+        }
+    };
 
     loadRules = () => {
         backend.get("/api/rules").then(res => this.setState({rules: res.json, rulesStatusCode: res.status}))
@@ -249,7 +254,7 @@ class RulesPane extends Component {
                 this.reset();
                 this.setState({selectedRule: _.cloneDeep(r)});
             }} className={classNames("row-small", "row-clickable", {"row-selected": rule.id === r.id})}>
-                <td>{r["id"].substring(0, 8)}</td>
+                <CopyLinkPopover text={r["id"].substring(0, 8)} value={r["id"]}/>
                 <td>{r["name"]}</td>
                 <td><ButtonField name={r["color"]} color={r["color"]} small/></td>
                 <td>{r["notes"]}</td>
@@ -260,7 +265,7 @@ class RulesPane extends Component {
                 rule.patterns.concat(this.state.newPattern) :
                 rule.patterns
         ).map(p => p === pattern ?
-            <tr key={randomClassName()}>
+            <tr key={"new_pattern"}>
                 <td style={{"width": "500px"}}>
                     <InputField small active={this.state.patternRegexFocused} value={pattern.regex}
                                 onChange={(v) => {

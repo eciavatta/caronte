@@ -58,7 +58,7 @@ class ButtonField extends Component {
             <div className={classNames("field", "button-field", {"field-small": this.props.small},
                 {"field-active": this.props.active})}>
                 <button type="button" className={classNames(buttonClassnames)}
-                        onClick={handler} style={buttonStyle}>{this.props.name}</button>
+                        onClick={handler} style={buttonStyle} disabled={this.props.disabled}>{this.props.name}</button>
             </div>
         );
     }

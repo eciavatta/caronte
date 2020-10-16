@@ -15,24 +15,24 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
-import './common.scss';
-import './ServicesPane.scss';
-import Table from "react-bootstrap/Table";
+import React, {Component} from "react";
 import {Col, Container, Row} from "react-bootstrap";
+import Table from "react-bootstrap/Table";
+import backend from "../../backend";
+import dispatcher from "../../dispatcher";
+import {createCurlCommand} from "../../utils";
+import validation from "../../validation";
+import ButtonField from "../fields/ButtonField";
+import ColorField from "../fields/extensions/ColorField";
+import NumericField from "../fields/extensions/NumericField";
 import InputField from "../fields/InputField";
 import TextField from "../fields/TextField";
-import backend from "../../backend";
-import NumericField from "../fields/extensions/NumericField";
-import ColorField from "../fields/extensions/ColorField";
-import ButtonField from "../fields/ButtonField";
-import validation from "../../validation";
 import LinkPopover from "../objects/LinkPopover";
-import {createCurlCommand} from "../../utils";
-import dispatcher from "../../dispatcher";
+import "./common.scss";
+import "./ServicesPane.scss";
 
-const classNames = require('classnames');
-const _ = require('lodash');
+const classNames = require("classnames");
+const _ = require("lodash");
 
 class ServicesPane extends Component {
 
@@ -52,14 +52,19 @@ class ServicesPane extends Component {
         this.reset();
         this.loadServices();
 
-        dispatcher.register("notifications", payload => {
-            if (payload.event === "services.edit") {
-                this.loadServices();
-            }
-        });
-
+        dispatcher.register("notifications", this.handleNotifications);
         document.title = "caronte:~/services$";
     }
+
+    componentWillUnmount() {
+        dispatcher.unregister(this.handleNotifications);
+    }
+
+    handleNotifications = (payload) => {
+        if (payload.event === "services.edit") {
+            this.loadServices();
+        }
+    };
 
     loadServices = () => {
         backend.get("/api/services")
@@ -125,10 +130,10 @@ class ServicesPane extends Component {
             <tr key={s.port} onClick={() => {
                 this.reset();
                 this.setState({isUpdate: true, currentService: _.cloneDeep(s)});
-            }} className={classNames("row-small", "row-clickable", {"row-selected": service.port === s.port })}>
+            }} className={classNames("row-small", "row-clickable", {"row-selected": service.port === s.port})}>
                 <td>{s["port"]}</td>
                 <td>{s["name"]}</td>
-                <td><ButtonField name={s["color"]} color={s["color"]} small /></td>
+                <td><ButtonField name={s["color"]} color={s["color"]} small/></td>
                 <td>{s["notes"]}</td>
             </tr>
         );
@@ -141,9 +146,9 @@ class ServicesPane extends Component {
                     <div className="section-header">
                         <span className="api-request">GET /api/services</span>
                         {this.state.servicesStatusCode &&
-                            <span className="api-response"><LinkPopover text={this.state.servicesStatusCode}
-                                                                        content={this.state.servicesResponse}
-                                                                        placement="left" /></span>}
+                        <span className="api-response"><LinkPopover text={this.state.servicesStatusCode}
+                                                                    content={this.state.servicesResponse}
+                                                                    placement="left"/></span>}
                     </div>
 
                     <div className="section-content">
@@ -170,7 +175,7 @@ class ServicesPane extends Component {
                         <span className="api-request">PUT /api/services</span>
                         <span className="api-response"><LinkPopover text={this.state.serviceStatusCode}
                                                                     content={this.state.serviceResponse}
-                                                                    placement="left" /></span>
+                                                                    placement="left"/></span>
                     </div>
 
                     <div className="section-content">
@@ -179,17 +184,17 @@ class ServicesPane extends Component {
                                 <Col>
                                     <NumericField name="port" value={service.port}
                                                   onChange={(v) => this.updateParam((s) => s.port = v)}
-                                                  min={0} max={65565} error={this.state.servicePortError} />
+                                                  min={0} max={65565} error={this.state.servicePortError}/>
                                     <InputField name="name" value={service.name}
                                                 onChange={(v) => this.updateParam((s) => s.name = v)}
-                                                error={this.state.serviceNameError} />
+                                                error={this.state.serviceNameError}/>
                                     <ColorField value={service.color} error={this.state.serviceColorError}
-                                                onChange={(v) => this.updateParam((s) => s.color = v)} />
+                                                onChange={(v) => this.updateParam((s) => s.color = v)}/>
                                 </Col>
 
                                 <Col>
                                     <TextField name="notes" rows={7} value={service.notes}
-                                               onChange={(v) => this.updateParam((s) => s.notes = v)} />
+                                               onChange={(v) => this.updateParam((s) => s.notes = v)}/>
                                 </Col>
                             </Row>
                         </Container>
@@ -199,8 +204,9 @@ class ServicesPane extends Component {
 
                     <div className="section-footer">
                         {<ButtonField variant="red" name="cancel" bordered onClick={this.reset}/>}
-                        <ButtonField variant={isUpdate ? "blue" : "green"} name={isUpdate ? "update_service" : "add_service"}
-                                     bordered onClick={this.updateService} />
+                        <ButtonField variant={isUpdate ? "blue" : "green"}
+                                     name={isUpdate ? "update_service" : "add_service"}
+                                     bordered onClick={this.updateService}/>
                     </div>
                 </div>
             </div>

@@ -21,26 +21,19 @@ import backend from "../../backend";
 import dispatcher from "../../dispatcher";
 import {dateTimeToTime, durationBetween, formatSize} from "../../utils";
 import ButtonField from "../fields/ButtonField";
-import TextField from "../fields/TextField";
 import "./Connection.scss";
+import CopyLinkPopover from "./CopyLinkPopover";
 import LinkPopover from "./LinkPopover";
 
 const classNames = require("classnames");
 
 class Connection extends Component {
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            update: false,
-            copiedMessage: false
-        };
+    state = {
+        update: false
+    };
 
-        this.copyTextarea = React.createRef();
-        this.handleAction = this.handleAction.bind(this);
-    }
-
-    handleAction(name) {
+    handleAction = (name) => {
         if (name === "hide") {
             const enabled = !this.props.data.hidden;
             backend.post(`/api/connections/${this.props.data.id}/${enabled ? "hide" : "show"}`)
@@ -57,13 +50,7 @@ class Connection extends Component {
                     this.setState({update: true});
                 });
         }
-        if (name === "copy") {
-            this.copyTextarea.current.select();
-            document.execCommand("copy");
-            this.setState({copiedMessage: true});
-            setTimeout(() => this.setState({copiedMessage: false}), 3000);
-        }
-    }
+    };
 
     render() {
         let conn = this.props.data;
@@ -86,12 +73,6 @@ class Connection extends Component {
         const commentPopoverContent = <div>
             <span>Click to <strong>{conn.comment.length > 0 ? "edit" : "add"}</strong> comment</span>
             {conn.comment && <Form.Control as="textarea" readOnly={true} rows={2} defaultValue={conn.comment}/>}
-        </div>;
-
-        const copyPopoverContent = <div>
-            {this.state.copiedMessage ? <span><strong>Copied!</strong></span> :
-                <span>Click to <strong>copy</strong> the connection id</span>}
-            <TextField readonly rows={1} value={conn.id} textRef={this.copyTextarea}/>
         </div>;
 
         return (
@@ -121,9 +102,8 @@ class Connection extends Component {
                     <LinkPopover text={<span className={classNames("connection-icon", {"icon-enabled": conn.comment})}
                                              onClick={() => this.handleAction("comment")}>@</span>}
                                  content={commentPopoverContent} placement="right"/>
-                    <LinkPopover text={<span className={classNames("connection-icon", {"icon-enabled": conn.hidden})}
-                                             onClick={() => this.handleAction("copy")}>#</span>}
-                                 content={copyPopoverContent} placement="right"/>
+                    <CopyLinkPopover text="#" value={conn.id}
+                                     textClassName={classNames("connection-icon", {"icon-enabled": conn.hidden})}/>
                 </td>
             </tr>
         );

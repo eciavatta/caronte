@@ -15,11 +15,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
-import './MessageAction.scss';
+import React, {Component} from "react";
 import {Modal} from "react-bootstrap";
-import TextField from "../fields/TextField";
 import ButtonField from "../fields/ButtonField";
+import TextField from "../fields/TextField";
+import "./MessageAction.scss";
 
 class MessageAction extends Component {
 
@@ -34,7 +34,7 @@ class MessageAction extends Component {
 
     copyActionValue() {
         this.actionValue.current.select();
-        document.execCommand('copy');
+        document.execCommand("copy");
         this.setState({copyButtonText: "copied!"});
         setTimeout(() => this.setState({copyButtonText: "copy"}), 3000);
     }
@@ -54,11 +54,12 @@ class MessageAction extends Component {
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <TextField readonly value={this.props.actionValue} textRef={this.actionValue} rows={15} />
+                    <TextField readonly value={this.props.actionValue} textRef={this.actionValue} rows={15}/>
                 </Modal.Body>
                 <Modal.Footer className="dialog-footer">
-                    <ButtonField variant="green" bordered onClick={this.copyActionValue} name={this.state.copyButtonText} />
-                    <ButtonField variant="red" bordered onClick={this.props.onHide} name="close" />
+                    <ButtonField variant="green" bordered onClick={this.copyActionValue}
+                                 name={this.state.copyButtonText}/>
+                    <ButtonField variant="red" bordered onClick={this.props.onHide} name="close"/>
                 </Modal.Footer>
             </Modal>
         );

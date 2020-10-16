@@ -60,13 +60,12 @@ class SearchPane extends Component {
         this.reset();
         this.loadSearches();
 
-        dispatcher.register("notifications", payload => {
-            if (payload.event === "searches.new") {
-                this.loadSearches();
-            }
-        });
-
+        dispatcher.register("notifications", this.handleNotification);
         document.title = "caronte:~/searches$";
+    }
+
+    componentWillUnmount() {
+        dispatcher.unregister(this.handleNotification);
     }
 
     loadSearches = () => {
@@ -77,14 +76,18 @@ class SearchPane extends Component {
 
     performSearch = () => {
         const options = this.state.currentSearchOptions;
+        this.setState({loading: true});
         if (this.validateSearch(options)) {
             backend.post("/api/searches/perform", options).then(res => {
                 this.reset();
-                this.setState({searchStatusCode: res.status});
+                this.setState({searchStatusCode: res.status, loading: false});
                 this.loadSearches();
                 this.viewSearch(res.json.id);
             }).catch(res => {
-                this.setState({searchStatusCode: res.status, searchResponse: JSON.stringify(res.json)});
+                this.setState({
+                    searchStatusCode: res.status, searchResponse: JSON.stringify(res.json),
+                    loading: false
+                });
             });
         }
     };
@@ -154,6 +157,12 @@ class SearchPane extends Component {
 
     viewSearch = (searchId) => {
         dispatcher.dispatch("connections_filters", {"performed_search": searchId});
+    };
+
+    handleNotification = (payload) => {
+        if (payload.event === "searches.new") {
+            this.loadSearches();
+        }
     };
 
     render() {
@@ -263,7 +272,8 @@ class SearchPane extends Component {
                                             onChange={v => this.updateParam(s => s["regex_search"]["not_pattern"] = v)}/>
 
                                 <div className="checkbox-line">
-                                    <CheckField checked={options["regex_search"]["case_insensitive"]} name="case_insensitive"
+                                    <CheckField checked={options["regex_search"]["case_insensitive"]}
+                                                name="case_insensitive"
                                                 readonly={textOptionsModified} small
                                                 onChange={(v) => this.updateParam(s => s["regex_search"]["case_insensitive"] = v)}/>
                                     <CheckField checked={options["regex_search"]["multi_line"]} name="multi_line"
@@ -284,8 +294,10 @@ class SearchPane extends Component {
                     </div>
 
                     <div className="section-footer">
-                        <ButtonField variant="red" name="cancel" bordered onClick={this.reset}/>
-                        <ButtonField variant="green" name="perform_search" bordered onClick={this.performSearch}/>
+                        <ButtonField variant="red" name="cancel" bordered disabled={this.state.loading}
+                                     onClick={this.reset}/>
+                        <ButtonField variant="green" name="perform_search" bordered
+                                     disabled={this.state.loading} onClick={this.performSearch}/>
                     </div>
                 </div>
             </div>

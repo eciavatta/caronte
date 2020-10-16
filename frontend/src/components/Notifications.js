@@ -17,6 +17,7 @@
 
 import React, {Component} from "react";
 import dispatcher from "../dispatcher";
+import {randomClassName} from "../utils";
 import "./Notifications.scss";
 
 const _ = require("lodash");
@@ -30,8 +31,14 @@ class Notifications extends Component {
     };
 
     componentDidMount() {
-        dispatcher.register("notifications", n => this.notificationHandler(n));
+        dispatcher.register("notifications", this.handleNotifications);
     }
+
+    componentWillUnmount() {
+        dispatcher.unregister(this.handleNotifications);
+    }
+
+    handleNotifications = (n) => this.notificationHandler(n);
 
     notificationHandler = (n) => {
         switch (n.event) {
@@ -54,6 +61,11 @@ class Notifications extends Component {
                 n.description = `existing rule updated: ${n.message["name"]}`;
                 n.variant = "blue";
                 return this.pushNotification(n);
+            case "pcap.completed":
+                n.title = "new pcap analyzed";
+                n.description = `${n.message["processed_packets"]} packets processed`;
+                n.variant = "blue";
+                return this.pushNotification(n);
             default:
                 return;
         }
@@ -61,6 +73,7 @@ class Notifications extends Component {
 
     pushNotification = (notification) => {
         const notifications = this.state.notifications;
+        notification.id = randomClassName();
         notifications.push(notification);
         this.setState({notifications});
         setTimeout(() => {
@@ -103,7 +116,7 @@ class Notifications extends Component {
                             if (n.variant) {
                                 notificationClassnames[`notification-${n.variant}`] = true;
                             }
-                            return <div className={classNames(notificationClassnames)} onClick={n.onClick}>
+                            return <div key={n.id} className={classNames(notificationClassnames)} onClick={n.onClick}>
                                 <h3 className="notification-title">{n.title}</h3>
                                 <pre className="notification-description">{n.description}</pre>
                             </div>;

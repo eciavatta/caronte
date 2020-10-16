@@ -15,10 +15,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
-import ConfigurationPage from "./pages/ConfigurationPage";
-import Notifications from "./Notifications";
+import React, {Component} from "react";
 import dispatcher from "../dispatcher";
+import Notifications from "./Notifications";
+import ConfigurationPage from "./pages/ConfigurationPage";
 import MainPage from "./pages/MainPage";
 import ServiceUnavailablePage from "./pages/ServiceUnavailablePage";
 

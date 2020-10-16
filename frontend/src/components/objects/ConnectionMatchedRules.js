@@ -15,11 +15,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
-import './ConnectionMatchedRules.scss';
-import ButtonField from "../fields/ButtonField";
-import dispatcher from "../../dispatcher";
+import React, {Component} from "react";
 import {withRouter} from "react-router-dom";
+import dispatcher from "../../dispatcher";
+import ButtonField from "../fields/ButtonField";
+import "./ConnectionMatchedRules.scss";
 
 class ConnectionMatchedRules extends Component {
 
@@ -28,7 +28,7 @@ class ConnectionMatchedRules extends Component {
         const rules = params.getAll("matched_rules");
         if (!rules.includes(id)) {
             rules.push(id);
-            dispatcher.dispatch("connections_filters",{"matched_rules": rules});
+            dispatcher.dispatch("connections_filters", {"matched_rules": rules});
         }
     };
 

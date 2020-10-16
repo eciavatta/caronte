@@ -15,20 +15,20 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
-import './ConnectionsPane.scss';
-import Connection from "../objects/Connection";
-import Table from 'react-bootstrap/Table';
+import React, {Component} from "react";
+import Table from "react-bootstrap/Table";
+import {Redirect} from "react-router";
 import {withRouter} from "react-router-dom";
 import backend from "../../backend";
-import ConnectionMatchedRules from "../objects/ConnectionMatchedRules";
-import log from "../../log";
-import ButtonField from "../fields/ButtonField";
 import dispatcher from "../../dispatcher";
-import {Redirect} from "react-router";
+import log from "../../log";
 import {updateParams} from "../../utils";
+import ButtonField from "../fields/ButtonField";
+import Connection from "../objects/Connection";
+import ConnectionMatchedRules from "../objects/ConnectionMatchedRules";
+import "./ConnectionsPane.scss";
 
-const classNames = require('classnames');
+const classNames = require("classnames");
 
 class ConnectionsPane extends Component {
 
@@ -67,54 +67,55 @@ class ConnectionsPane extends Component {
 
         this.loadConnections(additionalParams, urlParams, true).then(() => log.debug("Connections loaded"));
 
-        this.connectionsFiltersCallback = payload => {
-            const newParams = updateParams(this.state.urlParams, payload);
-            if (this.state.urlParams.toString() === newParams.toString()) {
-                return;
-            }
-
-            log.debug("Update following url params:", payload);
-            this.queryStringRedirect = true;
-            this.setState({urlParams: newParams});
-
-            this.loadConnections({limit: this.queryLimit}, newParams)
-                .then(() => log.info("ConnectionsPane reloaded after query string update"));
-        };
-        dispatcher.register("connections_filters", this.connectionsFiltersCallback);
-
-        this.timelineUpdatesCallback = payload => {
-            this.connectionsListRef.current.scrollTop = 0;
-            this.loadConnections({
-                "started_after": Math.round(payload.from.getTime() / 1000),
-                "started_before": Math.round(payload.to.getTime() / 1000),
-                limit: this.maxConnections
-            }).then(() => log.info(`Loading connections between ${payload.from} and ${payload.to}`));
-        };
-        dispatcher.register("timeline_updates", this.timelineUpdatesCallback);
-
-        this.notificationsCallback = payload => {
-            if (payload.event === "rules.new" || payload.event === "rules.edit") {
-                this.loadRules().then(() => log.debug("Loaded connection rules after notification update"));
-            }
-            if (payload.event === "services.edit") {
-                this.loadServices().then(() => log.debug("Services reloaded after notification update"));
-            }
-        };
-        dispatcher.register("notifications", this.notificationsCallback);
-
-        this.pulseConnectionsViewCallback = payload => {
-            this.setState({pulseConnectionsView: true});
-            setTimeout(() => this.setState({pulseConnectionsView: false}), payload.duration);
-        };
-        dispatcher.register("pulse_connections_view", this.pulseConnectionsViewCallback);
+        dispatcher.register("connections_filters", this.handleConnectionsFilters);
+        dispatcher.register("timeline_updates", this.handleTimelineUpdates);
+        dispatcher.register("notifications", this.handleNotifications);
+        dispatcher.register("pulse_connections_view", this.handlePulseConnectionsView);
     }
 
     componentWillUnmount() {
-        dispatcher.unregister(this.timelineUpdatesCallback);
-        dispatcher.unregister(this.notificationsCallback);
-        dispatcher.unregister(this.pulseConnectionsViewCallback);
-        dispatcher.unregister(this.connectionsFiltersCallback);
+        dispatcher.unregister(this.handleConnectionsFilters);
+        dispatcher.unregister(this.handleTimelineUpdates);
+        dispatcher.unregister(this.handleNotifications);
+        dispatcher.unregister(this.handlePulseConnectionsView);
     }
+
+    handleConnectionsFilters = (payload) => {
+        const newParams = updateParams(this.state.urlParams, payload);
+        if (this.state.urlParams.toString() === newParams.toString()) {
+            return;
+        }
+
+        log.debug("Update following url params:", payload);
+        this.queryStringRedirect = true;
+        this.setState({urlParams: newParams});
+
+        this.loadConnections({limit: this.queryLimit}, newParams)
+            .then(() => log.info("ConnectionsPane reloaded after query string update"));
+    };
+
+    handleTimelineUpdates = (payload) => {
+        this.connectionsListRef.current.scrollTop = 0;
+        this.loadConnections({
+            "started_after": Math.round(payload.from.getTime() / 1000),
+            "started_before": Math.round(payload.to.getTime() / 1000),
+            limit: this.maxConnections
+        }).then(() => log.info(`Loading connections between ${payload.from} and ${payload.to}`));
+    };
+
+    handleNotifications = (payload) => {
+        if (payload.event === "rules.new" || payload.event === "rules.edit") {
+            this.loadRules().then(() => log.debug("Loaded connection rules after notification update"));
+        }
+        if (payload.event === "services.edit") {
+            this.loadServices().then(() => log.debug("Services reloaded after notification update"));
+        }
+    };
+
+    handlePulseConnectionsView = (payload) => {
+        this.setState({pulseConnectionsView: true});
+        setTimeout(() => this.setState({pulseConnectionsView: false}), payload.duration);
+    };
 
     connectionSelected = (c) => {
         this.connectionSelectedRedirect = true;

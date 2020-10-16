@@ -15,8 +15,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
-import './Timeline.scss';
+import {TimeRange, TimeSeries} from "pondjs";
+import React, {Component} from "react";
+import {withRouter} from "react-router-dom";
 import {
     ChartContainer,
     ChartRow,
@@ -27,15 +28,14 @@ import {
     styler,
     YAxis
 } from "react-timeseries-charts";
-import {TimeRange, TimeSeries} from "pondjs";
 import backend from "../backend";
-import ChoiceField from "./fields/ChoiceField";
-import {withRouter} from "react-router-dom";
-import log from "../log";
 import dispatcher from "../dispatcher";
+import log from "../log";
+import ChoiceField from "./fields/ChoiceField";
+import "./Timeline.scss";
 
 const minutes = 60 * 1000;
-const classNames = require('classnames');
+const classNames = require("classnames");
 
 const leftSelectionPaddingMultiplier = 24;
 const rightSelectionPaddingMultiplier = 8;
@@ -61,42 +61,17 @@ class Timeline extends Component {
         });
 
         this.loadStatistics(this.state.metric).then(() => log.debug("Statistics loaded after mount"));
-
-        this.connectionsFiltersCallback = (payload) => {
-            if ("service_port" in payload && this.state.servicePortFilter !== payload["service_port"]) {
-                this.setState({servicePortFilter: payload["service_port"]});
-                this.loadStatistics(this.state.metric).then(() => log.debug("Statistics reloaded after service port changed"));
-            }
-            if ("matched_rules" in payload && this.state.matchedRulesFilter !== payload["matched_rules"]) {
-                this.setState({matchedRulesFilter: payload["matched_rules"]});
-                this.loadStatistics(this.state.metric).then(() => log.debug("Statistics reloaded after matched rules changed"));
-            }
-        };
-        dispatcher.register("connections_filters", this.connectionsFiltersCallback);
-
-        dispatcher.register("connection_updates", (payload) => {
-            this.setState({
-                selection: new TimeRange(payload.from, payload.to),
-            });
-            this.adjustSelection();
-        });
-
-        dispatcher.register("notifications", (payload) => {
-            if (payload.event === "services.edit" && this.state.metric !== "matched_rules") {
-                this.loadStatistics(this.state.metric).then(() => log.debug("Statistics reloaded after services updates"));
-            } else if (payload.event.startsWith("rules") && this.state.metric === "matched_rules") {
-                this.loadStatistics(this.state.metric).then(() => log.debug("Statistics reloaded after rules updates"));
-            }
-        });
-
-        dispatcher.register("pulse_timeline", (payload) => {
-            this.setState({pulseTimeline: true});
-            setTimeout(() => this.setState({pulseTimeline: false}), payload.duration);
-        });
+        dispatcher.register("connections_filters", this.handleConnectionsFiltersCallback);
+        dispatcher.register("connection_updates", this.handleConnectionUpdates);
+        dispatcher.register("notifications", this.handleNotifications);
+        dispatcher.register("pulse_timeline", this.handlePulseTimeline);
     }
 
     componentWillUnmount() {
-        dispatcher.unregister(this.connectionsFiltersCallback);
+        dispatcher.unregister(this.handleConnectionsFiltersCallback);
+        dispatcher.unregister(this.handleConnectionUpdates);
+        dispatcher.unregister(this.handleNotifications);
+        dispatcher.unregister(this.handlePulseTimeline);
     }
 
     loadStatistics = async (metric) => {
@@ -215,6 +190,39 @@ class Timeline extends Component {
             this.selectionTimeout = null;
             this.disableTimeSeriesChanges = false;
         }, 1000);
+    };
+
+    handleConnectionsFiltersCallback = (payload) => {
+        if ("service_port" in payload && this.state.servicePortFilter !== payload["service_port"]) {
+            this.setState({servicePortFilter: payload["service_port"]});
+            this.loadStatistics(this.state.metric).then(() => log.debug("Statistics reloaded after service port changed"));
+        }
+        if ("matched_rules" in payload && this.state.matchedRulesFilter !== payload["matched_rules"]) {
+            this.setState({matchedRulesFilter: payload["matched_rules"]});
+            this.loadStatistics(this.state.metric).then(() => log.debug("Statistics reloaded after matched rules changed"));
+        }
+    };
+
+    handleConnectionUpdates = (payload) => {
+        this.setState({
+            selection: new TimeRange(payload.from, payload.to),
+        });
+        this.adjustSelection();
+    };
+
+    handleNotifications = (payload) => {
+        if (payload.event === "services.edit" && this.state.metric !== "matched_rules") {
+            this.loadStatistics(this.state.metric).then(() => log.debug("Statistics reloaded after services updates"));
+        } else if (payload.event.startsWith("rules") && this.state.metric === "matched_rules") {
+            this.loadStatistics(this.state.metric).then(() => log.debug("Statistics reloaded after rules updates"));
+        } else if (payload.event === "pcap.completed") {
+            this.loadStatistics(this.state.metric).then(() => log.debug("Statistics reloaded after pcap processed"));
+        }
+    };
+
+    handlePulseTimeline = (payload) => {
+        this.setState({pulseTimeline: true});
+        setTimeout(() => this.setState({pulseTimeline: false}), payload.duration);
     };
 
     adjustSelection = () => {

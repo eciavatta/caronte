@@ -39,6 +39,7 @@ type ApplicationContext struct {
 	ConnectionStreamsController ConnectionStreamsController
 	SearchController            *SearchController
 	StatisticsController        StatisticsController
+	NotificationController      *NotificationController
 	IsConfigured                bool
 	Version                     string
 }
@@ -70,13 +71,12 @@ func CreateApplicationContext(storage Storage, version string) (*ApplicationCont
 		Version:                version,
 	}
 
-	applicationContext.configure()
 	return applicationContext, nil
 }
 
 func (sm *ApplicationContext) SetConfig(config Config) {
 	sm.Config = config
-	sm.configure()
+	sm.Configure()
 	var upsertResults interface{}
 	if _, err := sm.Storage.Update(Settings).Upsert(&upsertResults).
 		Filter(OrderedDocument{{"_id", "config"}}).One(UnorderedDocument{"config": config}); err != nil {
@@ -93,7 +93,11 @@ func (sm *ApplicationContext) SetAccounts(accounts gin.Accounts) {
 	}
 }
 
-func (sm *ApplicationContext) configure() {
+func (sm *ApplicationContext) SetNotificationController(notificationController *NotificationController) {
+	sm.NotificationController = notificationController
+}
+
+func (sm *ApplicationContext) Configure() {
 	if sm.IsConfigured {
 		return
 	}
@@ -110,7 +114,7 @@ func (sm *ApplicationContext) configure() {
 		log.WithError(err).Panic("failed to create a RulesManager")
 	}
 	sm.RulesManager = rulesManager
-	sm.PcapImporter = NewPcapImporter(sm.Storage, *serverNet, sm.RulesManager)
+	sm.PcapImporter = NewPcapImporter(sm.Storage, *serverNet, sm.RulesManager, sm.NotificationController)
 	sm.ServicesController = NewServicesController(sm.Storage)
 	sm.SearchController = NewSearchController(sm.Storage)
 	sm.ConnectionsController = NewConnectionsController(sm.Storage, sm.SearchController, sm.ServicesController)

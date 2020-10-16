@@ -82,7 +82,7 @@ func (p HttpRequestParser) TryParse(content []byte) Metadata {
 		Trailer:       JoinArrayMap(request.Trailer),
 		Reproducers: HttpRequestMetadataReproducers{
 			CurlCommand:  curlCommand(content),
-			RequestsCode: requestsCode(request),
+			RequestsCode: requestsCode(request, body),
 			FetchRequest: fetchRequest(request, body),
 		},
 	}
@@ -99,19 +99,15 @@ func curlCommand(content []byte) string {
 	}
 }
 
-func requestsCode(request *http.Request) string {
+func requestsCode(request *http.Request, body string) string {
 	var b strings.Builder
-	var params string
-	if request.Form != nil {
-		params = toJson(JoinArrayMap(request.PostForm))
-	}
 	headers := toJson(JoinArrayMap(request.Header))
 	cookies := toJson(CookiesMap(request.Cookies()))
 
 	b.WriteString("import requests\n\nresponse = requests." + strings.ToLower(request.Method) + "(")
 	b.WriteString("\"" + request.URL.String() + "\"")
-	if params != "" {
-		b.WriteString(", data = " + params)
+	if body != "" {
+		b.WriteString(", data = \"" + strings.Replace(body, "\"", "\\\"", -1) + "\"")
 	}
 	if headers != "" {
 		b.WriteString(", headers = " + headers)

@@ -24,6 +24,7 @@ import ButtonField from "../fields/ButtonField";
 import CheckField from "../fields/CheckField";
 import InputField from "../fields/InputField";
 import TextField from "../fields/TextField";
+import CopyLinkPopover from "../objects/CopyLinkPopover";
 import LinkPopover from "../objects/LinkPopover";
 import "./common.scss";
 import "./PcapsPane.scss";
@@ -44,15 +45,19 @@ class PcapsPane extends Component {
 
     componentDidMount() {
         this.loadSessions();
-
-        dispatcher.register("notifications", (payload) => {
-            if (payload.event === "pcap.upload" || payload.event === "pcap.file") {
-                this.loadSessions();
-            }
-        });
-
+        dispatcher.register("notifications", this.handleNotifications);
         document.title = "caronte:~/pcaps$";
     }
+
+    componentWillUnmount() {
+        dispatcher.unregister(this.handleNotifications);
+    }
+
+    handleNotifications = (payload) => {
+        if (payload.event.startsWith("pcap")) {
+            this.loadSessions();
+        }
+    };
 
     loadSessions = () => {
         backend.get("/api/pcap/sessions")
@@ -130,10 +135,19 @@ class PcapsPane extends Component {
     };
 
     render() {
-        let sessions = this.state.sessions.map((s) =>
-            <tr key={s.id} className="row-small row-clickable">
-                <td>{s["id"].substring(0, 8)}</td>
-                <td>{dateTimeToTime(s["started_at"])}</td>
+        let sessions = this.state.sessions.map((s) => {
+            const startedAt = new Date(s["started_at"]);
+            const completedAt = new Date(s["completed_at"]);
+            let timeInfo = <div>
+                <span>Started at {startedAt.toLocaleDateString() + " " + startedAt.toLocaleTimeString()}</span><br/>
+                <span>Completed at {completedAt.toLocaleDateString() + " " + completedAt.toLocaleTimeString()}</span>
+            </div>;
+
+            return <tr key={s.id} className="row-small row-clickable">
+                <td><CopyLinkPopover text={s["id"].substring(0, 8)} value={s["id"]}/></td>
+                <td>
+                    <LinkPopover text={dateTimeToTime(s["started_at"])} content={timeInfo} placement="right"/>
+                </td>
                 <td>{durationBetween(s["started_at"], s["completed_at"])}</td>
                 <td>{formatSize(s["size"])}</td>
                 <td>{s["processed_packets"]}</td>
@@ -143,8 +157,8 @@ class PcapsPane extends Component {
                                  placement="left"/></td>
                 <td className="table-cell-action"><a href={"/api/pcap/sessions/" + s["id"] + "/download"}>download</a>
                 </td>
-            </tr>
-        );
+            </tr>;
+        });
 
         const handleUploadFileChange = (file) => {
             this.setState({

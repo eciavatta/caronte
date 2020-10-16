@@ -15,12 +15,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
-import './ChoiceField.scss';
-import './common.scss';
+import React, {Component} from "react";
 import {randomClassName} from "../../utils";
+import "./ChoiceField.scss";
+import "./common.scss";
 
-const classNames = require('classnames');
+const classNames = require("classnames");
 
 class ChoiceField extends Component {
 
@@ -67,7 +67,7 @@ class ChoiceField extends Component {
         }
 
         return (
-            <div className={classNames( "field", "choice-field", {"field-inline" : inline},
+            <div className={classNames("field", "choice-field", {"field-inline": inline},
                 {"field-small": this.props.small})}>
                 {!inline && name && <label className="field-name">{name}:</label>}
                 <div className={classNames("field-select", {"select-expanded": this.state.expanded})}
