@@ -24,6 +24,7 @@ import (
 	"github.com/flier/gohs/hyperscan"
 	"github.com/go-playground/validator/v10"
 	log "github.com/sirupsen/logrus"
+	"sort"
 	"sync"
 	"time"
 )
@@ -212,6 +213,10 @@ func (rm *rulesManagerImpl) GetRules() []Rule {
 	for _, rule := range rm.rules {
 		rules = append(rules, rule)
 	}
+
+	sort.Slice(rules, func(i, j int) bool {
+		return rules[i].ID.Timestamp().Before(rules[j].ID.Timestamp())
+	})
 
 	return rules
 }

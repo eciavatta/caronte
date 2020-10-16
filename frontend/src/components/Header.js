@@ -27,6 +27,8 @@ import RulesConnectionsFilter from "./filters/RulesConnectionsFilter";
 import StringConnectionsFilter from "./filters/StringConnectionsFilter";
 import "./Header.scss";
 
+const classNames = require("classnames");
+
 class Header extends Component {
 
     componentDidMount() {
@@ -46,7 +48,7 @@ class Header extends Component {
         return (
             <header className="header container-fluid">
                 <div className="row">
-                    <div className="col-auto">
+                    <div className={classNames({"col-auto": this.props.configured, "col": !this.props.configured})}>
                         <h1 className="header-title type-wrap">
                             <Link to="/">
                                 <span style={{whiteSpace: "pre"}} ref={(el) => {
@@ -56,7 +58,7 @@ class Header extends Component {
                         </h1>
                     </div>
 
-                    <div className="col-auto">
+                    {this.props.configured && <div className="col-auto">
                         <div className="filters-bar">
                             <StringConnectionsFilter filterName="service_port"
                                                      defaultFilterValue="all_ports"
@@ -69,9 +71,9 @@ class Header extends Component {
                             <ExitSearchFilter/>
                             <AdvancedFilters onClick={this.props.onOpenFilters}/>
                         </div>
-                    </div>
+                    </div>}
 
-                    <div className="col">
+                    {this.props.configured && <div className="col">
                         <div className="header-buttons">
                             <Link to={"/searches" + this.props.location.search}>
                                 <ButtonField variant="pink" name="searches" bordered/>
@@ -89,7 +91,7 @@ class Header extends Component {
                                 <ButtonField variant="blue" name="config" bordered/>
                             </Link>
                         </div>
-                    </div>
+                    </div>}
                 </div>
             </header>
         );

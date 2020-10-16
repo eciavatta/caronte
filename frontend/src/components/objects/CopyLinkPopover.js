@@ -37,10 +37,10 @@ class CopyLinkPopover extends Component {
     };
 
     render() {
-        const copyPopoverContent = <div style={{"width": "400px"}}>
+        const copyPopoverContent = <div style={{"width": "250px"}}>
             {this.state.copiedMessage ? <span><strong>Copied!</strong></span> :
                 <span>Click to <strong>copy</strong></span>}
-            <TextField readonly rows={1} value={this.props.value} textRef={this.copyTextarea}/>
+            <TextField readonly rows={2} value={this.props.value} textRef={this.copyTextarea}/>
         </div>;
 
         return (

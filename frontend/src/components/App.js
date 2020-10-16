@@ -16,6 +16,7 @@
  */
 
 import React, {Component} from "react";
+import {BrowserRouter as Router} from "react-router-dom";
 import dispatcher from "../dispatcher";
 import Notifications from "./Notifications";
 import ConfigurationPage from "./pages/ConfigurationPage";
@@ -27,15 +28,7 @@ class App extends Component {
     state = {};
 
     componentDidMount() {
-        dispatcher.register("notifications", (payload) => {
-            if (payload.event === "connected") {
-                this.setState({
-                    connected: true,
-                    configured: payload.message["is_configured"],
-                    version: payload.message["version"]
-                });
-            }
-        });
+        dispatcher.register("notifications", this.handleNotifications);
 
         setInterval(() => {
             if (document.title.endsWith("❚")) {
@@ -46,16 +39,30 @@ class App extends Component {
         }, 500);
     }
 
+    componentWillUnmount() {
+        dispatcher.unregister(this.handleNotifications);
+    }
+
+    handleNotifications = (payload) => {
+        if (payload.event === "connected") {
+            this.setState({
+                connected: true,
+                configured: payload.message["is_configured"],
+                version: payload.message["version"]
+            });
+        }
+    };
+
     render() {
         return (
-            <>
+            <Router>
                 <Notifications/>
                 {this.state.connected ?
                     (this.state.configured ? <MainPage version={this.state.version}/> :
                         <ConfigurationPage onConfigured={() => this.setState({configured: true})}/>) :
                     <ServiceUnavailablePage/>
                 }
-            </>
+            </Router>
         );
     }
 }

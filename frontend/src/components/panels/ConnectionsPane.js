@@ -226,11 +226,11 @@ class ConnectionsPane extends Component {
     }
 
     loadRules = async () => {
-        return backend.get("/api/rules").then(res => this.setState({rules: res.json}));
+        return backend.get("/api/rules").then((res) => this.setState({rules: res.json}));
     };
 
     loadServices = async () => {
-        return backend.get("/api/services").then(res => this.setState({services: res.json}));
+        return backend.get("/api/services").then((res) => this.setState({services: res.json}));
     };
 
     render() {

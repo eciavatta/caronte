@@ -25,8 +25,10 @@ import ButtonField from "../fields/ButtonField";
 import CheckField from "../fields/CheckField";
 import InputField from "../fields/InputField";
 import TextField from "../fields/TextField";
+import Header from "../Header";
 import LinkPopover from "../objects/LinkPopover";
 import "../panels/common.scss";
+import "./common.scss";
 import "./ConfigurationPage.scss";
 
 class ConfigurationPage extends Component {
@@ -113,9 +115,13 @@ class ConfigurationPage extends Component {
         </tr>);
 
         return (
-            <div className="configuration-page">
-                <div className="pane">
-                    <div className="pane-container">
+            <div className="page configuration-page">
+                <div className="page-header">
+                    <Header />
+                </div>
+
+                <div className="page-content">
+                    <div className="pane-container configuration-pane">
                         <div className="pane-section">
                             <div className="section-header">
                                 <span className="api-request">POST /setup</span>

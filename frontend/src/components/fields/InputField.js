@@ -75,7 +75,7 @@ class InputField extends Component {
                                    aria-describedby={this.id} onChange={handler} {...inputProps}
                                    readOnly={this.props.readonly}/>
                         </div>
-                        {type !== "file" && value !== "" &&
+                        {type !== "file" && value !== "" && !this.props.readonly &&
                         <div className="field-clear">
                             <span onClick={() => handler(null)}>del</span>
                         </div>

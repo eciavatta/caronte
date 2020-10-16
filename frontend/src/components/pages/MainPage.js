@@ -16,7 +16,7 @@
  */
 
 import React, {Component} from "react";
-import {BrowserRouter as Router, Route, Switch} from "react-router-dom";
+import {Route, Switch} from "react-router-dom";
 import Filters from "../dialogs/Filters";
 import Header from "../Header";
 import Connections from "../panels/ConnectionsPane";
@@ -42,34 +42,32 @@ class MainPage extends Component {
 
         return (
             <div className="page main-page">
-                <Router>
-                    <div className="page-header">
-                        <Header onOpenFilters={() => this.setState({filterWindowOpen: true})}/>
+                <div className="page-header">
+                    <Header onOpenFilters={() => this.setState({filterWindowOpen: true})} configured={true}/>
+                </div>
+
+                <div className="page-content">
+                    <div className="pane connections-pane">
+                        <Connections onSelected={(c) => this.setState({selectedConnection: c})}/>
+                    </div>
+                    <div className="pane details-pane">
+                        <Switch>
+                            <Route path="/searches" children={<SearchPane/>}/>
+                            <Route path="/pcaps" children={<PcapsPane/>}/>
+                            <Route path="/rules" children={<RulesPane/>}/>
+                            <Route path="/services" children={<ServicesPane/>}/>
+                            <Route exact path="/connections/:id"
+                                   children={<StreamsPane connection={this.state.selectedConnection}/>}/>
+                            <Route children={<MainPane version={this.props.version}/>}/>
+                        </Switch>
                     </div>
 
-                    <div className="page-content">
-                        <div className="pane connections-pane">
-                            <Connections onSelected={(c) => this.setState({selectedConnection: c})}/>
-                        </div>
-                        <div className="pane details-pane">
-                            <Switch>
-                                <Route path="/searches" children={<SearchPane/>}/>
-                                <Route path="/pcaps" children={<PcapsPane/>}/>
-                                <Route path="/rules" children={<RulesPane/>}/>
-                                <Route path="/services" children={<ServicesPane/>}/>
-                                <Route exact path="/connections/:id"
-                                       children={<StreamsPane connection={this.state.selectedConnection}/>}/>
-                                <Route children={<MainPane version={this.props.version}/>}/>
-                            </Switch>
-                        </div>
+                    {modal}
+                </div>
 
-                        {modal}
-                    </div>
-
-                    <div className="page-footer">
-                        <Timeline/>
-                    </div>
-                </Router>
+                <div className="page-footer">
+                    <Timeline/>
+                </div>
             </div>
         );
     }

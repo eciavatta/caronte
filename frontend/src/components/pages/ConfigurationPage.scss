@@ -1,18 +1,30 @@
 @import "../../colors";
 
 .configuration-page {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
   background-color: $color-primary-0;
 
-  .pane {
-    flex-basis: 900px;
-    margin-bottom: 200px;
+  .header-title {
+    margin: 50px auto;
   }
 
-  .pane-container {
-    padding-bottom: 1px;
+  .configuration-pane {
+    display: flex;
+    justify-content: center;
+    height: 100%;
+    padding-top: 100px;
+
+    .section-content {
+      background-color: $color-primary-3;
+      margin-top: 15px;
+    }
+
+    .section-table table {
+      background-color: red !important;
+    }
+
+    .section-footer {
+      background-color: $color-primary-3;
+    }
   }
 }
+

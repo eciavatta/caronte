@@ -39,7 +39,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 
 	router.Use(static.Serve("/", static.LocalFile("./frontend/build", true)))
 
-	for _, path := range []string{"/connections/:id", "/pcaps", "/rules", "/services", "/config"} {
+	for _, path := range []string{"/connections/:id", "/pcaps", "/rules", "/services", "/config", "/searches"} {
 		router.GET(path, func(c *gin.Context) {
 			c.File("./frontend/build/index.html")
 		})

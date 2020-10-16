@@ -236,13 +236,13 @@ class SearchPane extends Component {
                                 })}
                                           name="terms" min={3} inline allowNew={true}
                                           readonly={regexOptionsModified || options["text_search"]["exact_phrase"]}
-                                          onChange={(tags) => this.updateParam((s) => s["text_search"].terms = tags.map(t => t.name))}/>
-                                <TagField tags={(options["text_search"]["excluded_terms"] || []).map(t => {
+                                          onChange={(tags) => this.updateParam((s) => s["text_search"].terms = tags.map((t) => t.name))}/>
+                                <TagField tags={(options["text_search"]["excluded_terms"] || []).map((t) => {
                                     return {name: t};
                                 })}
                                           name="excluded_terms" min={3} inline allowNew={true}
                                           readonly={regexOptionsModified || options["text_search"]["exact_phrase"]}
-                                          onChange={(tags) => this.updateParam((s) => s["text_search"]["excluded_terms"] = tags.map(t => t.name))}/>
+                                          onChange={(tags) => this.updateParam((s) => s["text_search"]["excluded_terms"] = tags.map((t) => t.name))}/>
 
                                 <span className="exclusive-separator">or</span>
 
