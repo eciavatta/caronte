@@ -15,10 +15,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
+import React, {Component} from "react";
 import {withRouter} from "react-router-dom";
-import InputField from "../fields/InputField";
 import dispatcher from "../../dispatcher";
+import InputField from "../fields/InputField";
 
 class StringConnectionsFilter extends Component {
 
@@ -56,15 +56,9 @@ class StringConnectionsFilter extends Component {
                 fieldValue = this.props.replaceFunc(fieldValue);
             }
             if (this.isValueValid(fieldValue)) {
-                this.setState({
-                    fieldValue: fieldValue,
-                    filterValue: filterValue
-                });
+                this.setState({fieldValue, filterValue: filterValue});
             } else {
-                this.setState({
-                    fieldValue: fieldValue,
-                    invalidValue: true
-                });
+                this.setState({fieldValue, invalidValue: true});
             }
         } else {
             this.setState({fieldValue: "", filterValue: null});
@@ -97,7 +91,6 @@ class StringConnectionsFilter extends Component {
         }
 
 
-
         if (this.isValueValid(fieldValue)) {
             let filterValue = fieldValue;
             if (filterValue !== "" && typeof this.props.encodeFunc === "function") {
@@ -113,10 +106,7 @@ class StringConnectionsFilter extends Component {
                 invalidValue: false
             });
         } else {
-            this.setState({
-                fieldValue: fieldValue,
-                invalidValue: true
-            });
+            this.setState({fieldValue, invalidValue: true});
         }
     };
 

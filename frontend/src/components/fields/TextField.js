@@ -15,12 +15,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
-import './TextField.scss';
-import './common.scss';
+import React, {Component} from "react";
 import {randomClassName} from "../../utils";
+import "./common.scss";
+import "./TextField.scss";
 
-const classNames = require('classnames');
+const classNames = require("classnames");
 
 class TextField extends Component {
 
@@ -50,7 +50,7 @@ class TextField extends Component {
                 {"field-invalid": this.props.invalid}, {"field-small": this.props.small})}>
                 {name && <label htmlFor={this.id}>{name}:</label>}
                 <textarea id={this.id} placeholder={this.props.defaultValue} onChange={handler} rows={rows}
-                          readOnly={this.props.readonly} value={this.props.value} ref={this.props.textRef} />
+                          readOnly={this.props.readonly} value={this.props.value} ref={this.props.textRef}/>
                 {error && <div className="field-error">error: {error}</div>}
             </div>
         );

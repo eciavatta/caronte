@@ -15,8 +15,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import log from "./log";
 import dispatcher from "./dispatcher";
+import log from "./log";
 
 class Notifications {
 

@@ -15,19 +15,19 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
-import './StreamsPane.scss';
-import {Row} from 'react-bootstrap';
-import MessageAction from "../objects/MessageAction";
+import DOMPurify from "dompurify";
+import React, {Component} from "react";
+import {Row} from "react-bootstrap";
+import ReactJson from "react-json-view"
 import backend from "../../backend";
+import log from "../../log";
+import {downloadBlob, getHeaderValue} from "../../utils";
 import ButtonField from "../fields/ButtonField";
 import ChoiceField from "../fields/ChoiceField";
-import DOMPurify from 'dompurify';
-import ReactJson from 'react-json-view'
-import {downloadBlob, getHeaderValue} from "../../utils";
-import log from "../../log";
+import MessageAction from "../objects/MessageAction";
+import "./StreamsPane.scss";
 
-const classNames = require('classnames');
+const classNames = require("classnames");
 
 class StreamsPane extends Component {
 

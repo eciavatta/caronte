@@ -15,15 +15,15 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
-import './common.scss';
-import './MainPane.scss';
+import React, {Component} from "react";
 import Typed from "typed.js";
 import dispatcher from "../../dispatcher";
-import RulesPane from "./RulesPane";
-import StreamsPane from "./StreamsPane";
+import "./common.scss";
+import "./MainPane.scss";
 import PcapsPane from "./PcapsPane";
+import RulesPane from "./RulesPane";
 import ServicesPane from "./ServicesPane";
+import StreamsPane from "./StreamsPane";
 
 class MainPane extends Component {
 
@@ -94,7 +94,7 @@ class MainPane extends Component {
                 <div className="main-pane">
                     <div className="pane-section">
                         <div className="tutorial">
-                            <span style={{whiteSpace: 'pre'}} ref={(el) => {
+                            <span style={{whiteSpace: "pre"}} ref={(el) => {
                                 this.el = el;
                             }}/>
                         </div>

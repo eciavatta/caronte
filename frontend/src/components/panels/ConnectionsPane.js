@@ -85,8 +85,8 @@ class ConnectionsPane extends Component {
         this.timelineUpdatesCallback = payload => {
             this.connectionsListRef.current.scrollTop = 0;
             this.loadConnections({
-                started_after: Math.round(payload.from.getTime() / 1000),
-                started_before: Math.round(payload.to.getTime() / 1000),
+                "started_after": Math.round(payload.from.getTime() / 1000),
+                "started_before": Math.round(payload.to.getTime() / 1000),
                 limit: this.maxConnections
             }).then(() => log.info(`Loading connections between ${payload.from} and ${payload.to}`));
         };

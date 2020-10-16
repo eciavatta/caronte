@@ -15,17 +15,17 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
-import Typed from 'typed.js';
-import './Header.scss';
+import React, {Component} from "react";
 import {Link, withRouter} from "react-router-dom";
-import ButtonField from "./fields/ButtonField";
-import ExitSearchFilter from "./filters/ExitSearchFilter";
+import Typed from "typed.js";
 import {cleanNumber, validatePort} from "../utils";
-import StringConnectionsFilter from "./filters/StringConnectionsFilter";
-import RulesConnectionsFilter from "./filters/RulesConnectionsFilter";
-import BooleanConnectionsFilter from "./filters/BooleanConnectionsFilter";
+import ButtonField from "./fields/ButtonField";
 import AdvancedFilters from "./filters/AdvancedFilters";
+import BooleanConnectionsFilter from "./filters/BooleanConnectionsFilter";
+import ExitSearchFilter from "./filters/ExitSearchFilter";
+import RulesConnectionsFilter from "./filters/RulesConnectionsFilter";
+import StringConnectionsFilter from "./filters/StringConnectionsFilter";
+import "./Header.scss";
 
 class Header extends Component {
 
@@ -49,7 +49,7 @@ class Header extends Component {
                     <div className="col-auto">
                         <h1 className="header-title type-wrap">
                             <Link to="/">
-                                <span style={{whiteSpace: 'pre'}} ref={(el) => {
+                                <span style={{whiteSpace: "pre"}} ref={(el) => {
                                     this.el = el;
                                 }}/>
                             </Link>
@@ -67,7 +67,7 @@ class Header extends Component {
                             <RulesConnectionsFilter/>
                             <BooleanConnectionsFilter filterName={"marked"}/>
                             <ExitSearchFilter/>
-                            <AdvancedFilters onClick={this.props.onOpenFilters} />
+                            <AdvancedFilters onClick={this.props.onOpenFilters}/>
                         </div>
                     </div>
 

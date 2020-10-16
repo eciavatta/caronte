@@ -15,12 +15,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
-import './CheckField.scss';
-import './common.scss';
+import React, {Component} from "react";
 import {randomClassName} from "../../utils";
+import "./CheckField.scss";
+import "./common.scss";
 
-const classNames = require('classnames');
+const classNames = require("classnames");
 
 class CheckField extends Component {
 
@@ -41,9 +41,9 @@ class CheckField extends Component {
         };
 
         return (
-            <div className={classNames( "field", "check-field", {"field-checked" : checked}, {"field-small": small})}>
+            <div className={classNames("field", "check-field", {"field-checked": checked}, {"field-small": small})}>
                 <div className="field-input">
-                    <input type="checkbox" id={this.id} checked={checked} onChange={handler} />
+                    <input type="checkbox" id={this.id} checked={checked} onChange={handler}/>
                     <label htmlFor={this.id}>{(checked ? "✓ " : "✗ ") + (name != null ? name : "")}</label>
                 </div>
             </div>

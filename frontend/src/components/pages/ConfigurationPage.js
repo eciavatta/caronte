@@ -15,19 +15,19 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
-import '../panels/common.scss';
-import './ConfigurationPage.scss';
-import LinkPopover from "../objects/LinkPopover";
+import React, {Component} from "react";
 import {Col, Container, Row} from "react-bootstrap";
-import InputField from "../fields/InputField";
-import TextField from "../fields/TextField";
+import Table from "react-bootstrap/Table";
+import backend from "../../backend";
+import {createCurlCommand} from "../../utils";
+import validation from "../../validation";
 import ButtonField from "../fields/ButtonField";
 import CheckField from "../fields/CheckField";
-import {createCurlCommand} from "../../utils";
-import Table from "react-bootstrap/Table";
-import validation from "../../validation";
-import backend from "../../backend";
+import InputField from "../fields/InputField";
+import TextField from "../fields/TextField";
+import LinkPopover from "../objects/LinkPopover";
+import "../panels/common.scss";
+import "./ConfigurationPage.scss";
 
 class ConfigurationPage extends Component {
 
@@ -40,8 +40,7 @@ class ConfigurationPage extends Component {
                     "flag_regex": "",
                     "auth_required": false
                 },
-                "accounts": {
-                }
+                "accounts": {}
             },
             newUsername: "",
             newPassword: ""
@@ -50,9 +49,9 @@ class ConfigurationPage extends Component {
 
     saveSettings = () => {
         if (this.validateSettings(this.state.settings)) {
-            backend.post("/setup", this.state.settings).then(_ => {
+            backend.post("/setup", this.state.settings).then((_) => {
                 this.props.onConfigured();
-            }).catch(res => {
+            }).catch((res) => {
                 this.setState({setupStatusCode: res.status, setupResponse: JSON.stringify(res.json)});
             });
         }
@@ -102,14 +101,14 @@ class ConfigurationPage extends Component {
         const accounts = Object.entries(settings.accounts).map(([username, password]) =>
             <tr key={username}>
                 <td>{username}</td>
-                <td><LinkPopover text="******" content={password} /></td>
+                <td><LinkPopover text="******" content={password}/></td>
                 <td><ButtonField variant="red" small rounded name="delete"
-                                 onClick={() => this.updateParam((s) => delete s.accounts[username]) }/></td>
+                                 onClick={() => this.updateParam((s) => delete s.accounts[username])}/></td>
             </tr>).concat(<tr key={"new_account"}>
             <td><InputField value={this.state.newUsername} small active={this.state.newUsernameActive}
-                            onChange={(v) => this.setState({newUsername: v})} /></td>
+                            onChange={(v) => this.setState({newUsername: v})}/></td>
             <td><InputField value={this.state.newPassword} small active={this.state.newPasswordActive}
-                            onChange={(v) => this.setState({newPassword: v})} /></td>
+                            onChange={(v) => this.setState({newPassword: v})}/></td>
             <td><ButtonField variant="green" small rounded name="add" onClick={this.addAccount}/></td>
         </tr>);
 
@@ -122,7 +121,7 @@ class ConfigurationPage extends Component {
                                 <span className="api-request">POST /setup</span>
                                 <span className="api-response"><LinkPopover text={this.state.setupStatusCode}
                                                                             content={this.state.setupResponse}
-                                                                            placement="left" /></span>
+                                                                            placement="left"/></span>
                             </div>
 
                             <div className="section-content">
@@ -131,10 +130,10 @@ class ConfigurationPage extends Component {
                                         <Col>
                                             <InputField name="server_address" value={settings.config.server_address}
                                                         error={this.state.serverAddressError}
-                                                        onChange={(v) => this.updateParam((s) => s.config.server_address = v)} />
+                                                        onChange={(v) => this.updateParam((s) => s.config.server_address = v)}/>
                                             <InputField name="flag_regex" value={settings.config.flag_regex}
                                                         onChange={(v) => this.updateParam((s) => s.config.flag_regex = v)}
-                                                        error={this.state.flagRegexError} />
+                                                        error={this.state.flagRegexError}/>
                                             <div style={{"marginTop": "10px"}}>
                                                 <CheckField checked={settings.config.auth_required} name="auth_required"
                                                             onChange={(v) => this.updateParam((s) => s.config.auth_required = v)}/>
@@ -166,7 +165,7 @@ class ConfigurationPage extends Component {
                             </div>
 
                             <div className="section-footer">
-                                <ButtonField variant="green" name="save" bordered onClick={this.saveSettings} />
+                                <ButtonField variant="green" name="save" bordered onClick={this.saveSettings}/>
                             </div>
                         </div>
                     </div>

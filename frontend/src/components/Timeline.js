@@ -62,7 +62,7 @@ class Timeline extends Component {
 
         this.loadStatistics(this.state.metric).then(() => log.debug("Statistics loaded after mount"));
 
-        this.connectionsFiltersCallback = payload => {
+        this.connectionsFiltersCallback = (payload) => {
             if ("service_port" in payload && this.state.servicePortFilter !== payload["service_port"]) {
                 this.setState({servicePortFilter: payload["service_port"]});
                 this.loadStatistics(this.state.metric).then(() => log.debug("Statistics reloaded after service port changed"));
@@ -74,22 +74,22 @@ class Timeline extends Component {
         };
         dispatcher.register("connections_filters", this.connectionsFiltersCallback);
 
-        dispatcher.register("connection_updates", payload => {
+        dispatcher.register("connection_updates", (payload) => {
             this.setState({
                 selection: new TimeRange(payload.from, payload.to),
             });
             this.adjustSelection();
         });
 
-        dispatcher.register("notifications", payload => {
+        dispatcher.register("notifications", (payload) => {
             if (payload.event === "services.edit" && this.state.metric !== "matched_rules") {
-                this.loadServices().then(() => log.debug("Statistics reloaded after services updates"));
+                this.loadStatistics(this.state.metric).then(() => log.debug("Statistics reloaded after services updates"));
             } else if (payload.event.startsWith("rules") && this.state.metric === "matched_rules") {
-                this.loadServices().then(() => log.debug("Statistics reloaded after rules updates"));
+                this.loadStatistics(this.state.metric).then(() => log.debug("Statistics reloaded after rules updates"));
             }
         });
 
-        dispatcher.register("pulse_timeline", payload => {
+        dispatcher.register("pulse_timeline", (payload) => {
             this.setState({pulseTimeline: true});
             setTimeout(() => this.setState({pulseTimeline: false}), payload.duration);
         });
@@ -107,12 +107,12 @@ class Timeline extends Component {
         if (metric === "matched_rules") {
             let rules = await this.loadRules();
             if (this.state.matchedRulesFilter.length > 0) {
-                this.state.matchedRulesFilter.forEach(id => {
+                this.state.matchedRulesFilter.forEach((id) => {
                     urlParams.append("rules_ids", id);
                 });
                 columns = this.state.matchedRulesFilter;
             } else {
-                columns = rules.map(r => r.id);
+                columns = rules.map((r) => r.id);
             }
         } else {
             let services = await this.loadServices();
@@ -124,7 +124,7 @@ class Timeline extends Component {
             }
 
             columns = Object.keys(services);
-            columns.forEach(port => urlParams.append("ports", port));
+            columns.forEach((port) => urlParams.append("ports", port));
         }
 
         const metrics = (await backend.get("/api/statistics?" + urlParams)).json;
@@ -133,7 +133,7 @@ class Timeline extends Component {
         }
 
         const zeroFilledMetrics = [];
-        const toTime = m => new Date(m["range_start"]).getTime();
+        const toTime = (m) => new Date(m["range_start"]).getTime();
         let i = 0;
         for (let interval = toTime(metrics[0]) - minutes; interval <= toTime(metrics[metrics.length - 1]) + minutes; interval += minutes) {
             if (i < metrics.length && interval === toTime(metrics[i])) {
@@ -144,7 +144,7 @@ class Timeline extends Component {
                 const m = {};
                 m["range_start"] = new Date(interval);
                 m[metric] = {};
-                columns.forEach(c => m[metric][c] = 0);
+                columns.forEach((c) => m[metric][c] = 0);
                 zeroFilledMetrics.push(m);
             }
         }
@@ -152,7 +152,7 @@ class Timeline extends Component {
         const series = new TimeSeries({
             name: "statistics",
             columns: ["time"].concat(columns),
-            points: zeroFilledMetrics.map(m => [m["range_start"]].concat(columns.map(c =>
+            points: zeroFilledMetrics.map((m) => [m["range_start"]].concat(columns.map(c =>
                 ((metric in m) && (m[metric] != null)) ? (m[metric][c] || 0) : 0
             )))
         });
@@ -184,11 +184,11 @@ class Timeline extends Component {
 
     createStyler = () => {
         if (this.state.metric === "matched_rules") {
-            return styler(this.state.rules.map(rule => {
+            return styler(this.state.rules.map((rule) => {
                 return {key: rule.id, color: rule.color, width: 2};
             }));
         } else {
-            return styler(Object.keys(this.state.services).map(port => {
+            return styler(Object.keys(this.state.services).map((port) => {
                 return {key: port, color: this.state.services[port].color, width: 2};
             }));
         }
@@ -227,7 +227,7 @@ class Timeline extends Component {
     };
 
     aggregateSeries = (func) => {
-        const values = this.state.series.columns().map(c => this.state.series[func](c));
+        const values = this.state.series.columns().map((c) => this.state.series[func](c));
         return Math[func](...values);
     };
 

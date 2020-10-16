@@ -15,12 +15,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
+import React, {Component} from "react";
 import {Modal} from "react-bootstrap";
-import ButtonField from "../fields/ButtonField";
-import './Filters.scss';
 import {cleanNumber, validateIpAddress, validateMin, validatePort} from "../../utils";
+import ButtonField from "../fields/ButtonField";
 import StringConnectionsFilter from "../filters/StringConnectionsFilter";
+import "./Filters.scss";
 
 class Filters extends Component {
 

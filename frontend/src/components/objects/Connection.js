@@ -15,17 +15,17 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
-import './Connection.scss';
+import React, {Component} from "react";
 import {Form} from "react-bootstrap";
 import backend from "../../backend";
+import dispatcher from "../../dispatcher";
 import {dateTimeToTime, durationBetween, formatSize} from "../../utils";
 import ButtonField from "../fields/ButtonField";
-import LinkPopover from "./LinkPopover";
 import TextField from "../fields/TextField";
-import dispatcher from "../../dispatcher";
+import "./Connection.scss";
+import LinkPopover from "./LinkPopover";
 
-const classNames = require('classnames');
+const classNames = require("classnames");
 
 class Connection extends Component {
 
@@ -59,7 +59,7 @@ class Connection extends Component {
         }
         if (name === "copy") {
             this.copyTextarea.current.select();
-            document.execCommand('copy');
+            document.execCommand("copy");
             this.setState({copiedMessage: true});
             setTimeout(() => this.setState({copiedMessage: false}), 3000);
         }

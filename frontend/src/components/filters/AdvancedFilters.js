@@ -15,11 +15,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
+import React, {Component} from "react";
 import {withRouter} from "react-router-dom";
 import dispatcher from "../../dispatcher";
-import ButtonField from "../fields/ButtonField";
 import {updateParams} from "../../utils";
+import ButtonField from "../fields/ButtonField";
 
 class AdvancedFilters extends Component {
 

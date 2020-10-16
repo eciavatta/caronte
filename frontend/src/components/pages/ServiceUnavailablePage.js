@@ -15,8 +15,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
-import './MainPage.scss';
+import React, {Component} from "react";
+import "./MainPage.scss";
 
 class ServiceUnavailablePage extends Component {
 

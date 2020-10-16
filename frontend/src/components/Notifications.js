@@ -15,12 +15,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
-import './Notifications.scss';
+import React, {Component} from "react";
 import dispatcher from "../dispatcher";
+import "./Notifications.scss";
 
-const _ = require('lodash');
-const classNames = require('classnames');
+const _ = require("lodash");
+const classNames = require("classnames");
 
 class Notifications extends Component {
 

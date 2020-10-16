@@ -15,10 +15,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
+import React, {Component} from "react";
 import {withRouter} from "react-router-dom";
-import CheckField from "../fields/CheckField";
 import dispatcher from "../../dispatcher";
+import CheckField from "../fields/CheckField";
 
 class BooleanConnectionsFilter extends Component {
 
@@ -30,7 +30,7 @@ class BooleanConnectionsFilter extends Component {
         let params = new URLSearchParams(this.props.location.search);
         this.setState({filterActive: this.toBoolean(params.get(this.props.filterName)).toString()});
 
-        this.connectionsFiltersCallback = payload => {
+        this.connectionsFiltersCallback = (payload) => {
             const name = this.props.filterName;
             if (name in payload && this.state.filterActive !== payload[name]) {
                 this.setState({filterActive: payload[name]});

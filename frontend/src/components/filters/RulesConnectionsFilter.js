@@ -15,14 +15,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
+import React, {Component} from "react";
 import {withRouter} from "react-router-dom";
 import backend from "../../backend";
 import dispatcher from "../../dispatcher";
 import TagField from "../fields/TagField";
 
-const classNames = require('classnames');
-const _ = require('lodash');
+const classNames = require("classnames");
+const _ = require("lodash");
 
 class RulesConnectionsFilter extends Component {
 

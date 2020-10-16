@@ -15,10 +15,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
+import React, {Component} from "react";
 import {withRouter} from "react-router-dom";
-import CheckField from "../fields/CheckField";
 import dispatcher from "../../dispatcher";
+import CheckField from "../fields/CheckField";
 
 class ExitSearchFilter extends Component {
 

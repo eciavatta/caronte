@@ -15,10 +15,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
-import {randomClassName} from "../../utils";
+import React, {Component} from "react";
 import {OverlayTrigger, Popover} from "react-bootstrap";
-import './LinkPopover.scss';
+import {randomClassName} from "../../utils";
+import "./LinkPopover.scss";
 
 class LinkPopover extends Component {
 
@@ -39,10 +39,11 @@ class LinkPopover extends Component {
         );
 
         return (this.props.content ?
-            <OverlayTrigger trigger={["hover", "focus"]} placement={this.props.placement || "top"} overlay={popover}>
-                <span className="link-popover">{this.props.text}</span>
-            </OverlayTrigger> :
-            <span className="link-popover-empty">{this.props.text}</span>
+                <OverlayTrigger trigger={["hover", "focus"]} placement={this.props.placement || "top"}
+                                overlay={popover}>
+                    <span className="link-popover">{this.props.text}</span>
+                </OverlayTrigger> :
+                <span className="link-popover-empty">{this.props.text}</span>
         );
     }
 }

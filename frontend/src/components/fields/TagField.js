@@ -15,14 +15,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
-import './TagField.scss';
-import './common.scss';
-import {randomClassName} from "../../utils";
+import React, {Component} from "react";
 import ReactTags from "react-tag-autocomplete";
+import {randomClassName} from "../../utils";
+import "./common.scss";
+import "./TagField.scss";
 
-const classNames = require('classnames');
-const _ = require('lodash');
+const classNames = require("classnames");
+const _ = require("lodash");
 
 class TagField extends Component {
 

@@ -15,21 +15,21 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
-import ReactDOM from 'react-dom';
-import 'bootstrap/dist/css/bootstrap.css';
-import './index.scss';
-import App from './components/App';
-import * as serviceWorker from './serviceWorker';
+import "bootstrap/dist/css/bootstrap.css";
+import React from "react";
+import ReactDOM from "react-dom";
+import App from "./components/App";
+import "./index.scss";
 import notifications from "./notifications";
+import * as serviceWorker from "./serviceWorker";
 
 notifications.createWebsocket();
 
 ReactDOM.render(
-  // <React.StrictMode>
-    <App />,
-  // </React.StrictMode>,
-  document.getElementById('root')
+    // <React.StrictMode>
+    <App/>,
+    // </React.StrictMode>,
+    document.getElementById("root")
 );
 
 serviceWorker.unregister();

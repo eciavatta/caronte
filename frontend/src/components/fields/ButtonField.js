@@ -15,11 +15,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
-import './ButtonField.scss';
-import './common.scss';
+import React, {Component} from "react";
+import "./ButtonField.scss";
+import "./common.scss";
 
-const classNames = require('classnames');
+const classNames = require("classnames");
 
 class ButtonField extends Component {
 

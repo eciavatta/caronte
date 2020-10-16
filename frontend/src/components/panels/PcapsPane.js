@@ -15,18 +15,18 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
-import './PcapsPane.scss';
-import './common.scss';
+import React, {Component} from "react";
 import Table from "react-bootstrap/Table";
 import backend from "../../backend";
-import {createCurlCommand, dateTimeToTime, durationBetween, formatSize} from "../../utils";
-import InputField from "../fields/InputField";
-import CheckField from "../fields/CheckField";
-import TextField from "../fields/TextField";
-import ButtonField from "../fields/ButtonField";
-import LinkPopover from "../objects/LinkPopover";
 import dispatcher from "../../dispatcher";
+import {createCurlCommand, dateTimeToTime, durationBetween, formatSize} from "../../utils";
+import ButtonField from "../fields/ButtonField";
+import CheckField from "../fields/CheckField";
+import InputField from "../fields/InputField";
+import TextField from "../fields/TextField";
+import LinkPopover from "../objects/LinkPopover";
+import "./common.scss";
+import "./PcapsPane.scss";
 
 class PcapsPane extends Component {
 
@@ -45,7 +45,7 @@ class PcapsPane extends Component {
     componentDidMount() {
         this.loadSessions();
 
-        dispatcher.register("notifications", payload => {
+        dispatcher.register("notifications", (payload) => {
             if (payload.event === "pcap.upload" || payload.event === "pcap.file") {
                 this.loadSessions();
             }
@@ -56,8 +56,8 @@ class PcapsPane extends Component {
 
     loadSessions = () => {
         backend.get("/api/pcap/sessions")
-            .then(res => this.setState({sessions: res.json, sessionsStatusCode: res.status}))
-            .catch(res => this.setState({
+            .then((res) => this.setState({sessions: res.json, sessionsStatusCode: res.status}))
+            .catch((res) => this.setState({
                 sessions: res.json, sessionsStatusCode: res.status,
                 sessionsResponse: JSON.stringify(res.json)
             }));
@@ -72,14 +72,14 @@ class PcapsPane extends Component {
         const formData = new FormData();
         formData.append("file", this.state.uploadSelectedFile);
         formData.append("flush_all", this.state.uploadFlushAll);
-        backend.postFile("/api/pcap/upload", formData).then(res => {
+        backend.postFile("/api/pcap/upload", formData).then((res) => {
             this.setState({
                 uploadStatusCode: res.status,
                 uploadResponse: JSON.stringify(res.json)
             });
             this.resetUpload();
             this.loadSessions();
-        }).catch(res => this.setState({
+        }).catch((res) => this.setState({
                 uploadStatusCode: res.status,
                 uploadResponse: JSON.stringify(res.json)
             })
@@ -96,14 +96,14 @@ class PcapsPane extends Component {
             file: this.state.fileValue,
             flush_all: this.state.processFlushAll,
             delete_original_file: this.state.deleteOriginalFile
-        }).then(res => {
+        }).then((res) => {
             this.setState({
                 processStatusCode: res.status,
                 processResponse: JSON.stringify(res.json)
             });
             this.resetProcess();
             this.loadSessions();
-        }).catch(res => this.setState({
+        }).catch((res) => this.setState({
                 processStatusCode: res.status,
                 processResponse: JSON.stringify(res.json)
             })
@@ -130,7 +130,7 @@ class PcapsPane extends Component {
     };
 
     render() {
-        let sessions = this.state.sessions.map(s =>
+        let sessions = this.state.sessions.map((s) =>
             <tr key={s.id} className="row-small row-clickable">
                 <td>{s["id"].substring(0, 8)}</td>
                 <td>{dateTimeToTime(s["started_at"])}</td>
@@ -229,7 +229,7 @@ class PcapsPane extends Component {
                                 <div className="upload-options">
                                     <span>options:</span>
                                     <CheckField name="flush_all" checked={this.state.uploadFlushAll}
-                                                onChange={v => this.setState({uploadFlushAll: v})}/>
+                                                onChange={(v) => this.setState({uploadFlushAll: v})}/>
                                 </div>
                                 <ButtonField variant="green" bordered onClick={this.uploadPcap} name="upload"/>
                             </div>
@@ -254,9 +254,9 @@ class PcapsPane extends Component {
                             <div className="upload-actions" style={{"marginTop": "11px"}}>
                                 <div className="upload-options">
                                     <CheckField name="flush_all" checked={this.state.processFlushAll}
-                                                onChange={v => this.setState({processFlushAll: v})}/>
+                                                onChange={(v) => this.setState({processFlushAll: v})}/>
                                     <CheckField name="delete_original_file" checked={this.state.deleteOriginalFile}
-                                                onChange={v => this.setState({deleteOriginalFile: v})}/>
+                                                onChange={(v) => this.setState({deleteOriginalFile: v})}/>
                                 </div>
                                 <ButtonField variant="blue" bordered onClick={this.processPcap} name="process"/>
                             </div>

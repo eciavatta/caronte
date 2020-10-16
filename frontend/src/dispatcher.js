@@ -15,7 +15,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-const _ = require('lodash');
+const _ = require("lodash");
 
 class Dispatcher {
 

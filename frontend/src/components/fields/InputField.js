@@ -15,12 +15,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
-import './InputField.scss';
-import './common.scss';
+import React, {Component} from "react";
 import {randomClassName} from "../../utils";
+import "./common.scss";
+import "./InputField.scss";
 
-const classNames = require('classnames');
+const classNames = require("classnames");
 
 class InputField extends Component {
 
@@ -59,23 +59,23 @@ class InputField extends Component {
         }
 
         return (
-            <div className={classNames("field", "input-field", {"field-active" : active},
+            <div className={classNames("field", "input-field", {"field-active": active},
                 {"field-invalid": invalid}, {"field-small": small}, {"field-inline": inline})}>
                 <div className="field-wrapper">
-                    { name &&
+                    {name &&
                     <div className="field-name">
                         <label>{name}:</label>
                     </div>
                     }
                     <div className="field-input">
                         <div className="field-value">
-                            { type === "file" && <label for={this.id} className={"file-label"}>
-                                {value.name || this.props.placeholder}</label> }
+                            {type === "file" && <label for={this.id} className={"file-label"}>
+                                {value.name || this.props.placeholder}</label>}
                             <input type={type} placeholder={this.props.placeholder} id={this.id}
                                    aria-describedby={this.id} onChange={handler} {...inputProps}
-                                   readOnly={this.props.readonly} />
+                                   readOnly={this.props.readonly}/>
                         </div>
-                        { type !== "file" && value !== "" &&
+                        {type !== "file" && value !== "" &&
                         <div className="field-clear">
                             <span onClick={() => handler(null)}>del</span>
                         </div>

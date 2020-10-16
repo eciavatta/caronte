@@ -15,20 +15,20 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
-import './MainPage.scss';
-import './common.scss';
-import Connections from "../panels/ConnectionsPane";
-import StreamsPane from "../panels/StreamsPane";
+import React, {Component} from "react";
 import {BrowserRouter as Router, Route, Switch} from "react-router-dom";
-import Timeline from "../Timeline";
+import Filters from "../dialogs/Filters";
+import Header from "../Header";
+import Connections from "../panels/ConnectionsPane";
+import MainPane from "../panels/MainPane";
 import PcapsPane from "../panels/PcapsPane";
 import RulesPane from "../panels/RulesPane";
-import ServicesPane from "../panels/ServicesPane";
-import Header from "../Header";
-import Filters from "../dialogs/Filters";
-import MainPane from "../panels/MainPane";
 import SearchPane from "../panels/SearchPane";
+import ServicesPane from "../panels/ServicesPane";
+import StreamsPane from "../panels/StreamsPane";
+import Timeline from "../Timeline";
+import "./common.scss";
+import "./MainPage.scss";
 
 class MainPage extends Component {
 

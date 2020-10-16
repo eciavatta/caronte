@@ -15,21 +15,21 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from 'react';
-import './common.scss';
-import './SearchPane.scss';
+import React, {Component} from "react";
 import Table from "react-bootstrap/Table";
-import InputField from "../fields/InputField";
-import TextField from "../fields/TextField";
 import backend from "../../backend";
-import ButtonField from "../fields/ButtonField";
-import LinkPopover from "../objects/LinkPopover";
-import {createCurlCommand, dateTimeToTime, durationBetween} from "../../utils";
 import dispatcher from "../../dispatcher";
-import TagField from "../fields/TagField";
+import {createCurlCommand, dateTimeToTime, durationBetween} from "../../utils";
+import ButtonField from "../fields/ButtonField";
 import CheckField from "../fields/CheckField";
+import InputField from "../fields/InputField";
+import TagField from "../fields/TagField";
+import TextField from "../fields/TextField";
+import LinkPopover from "../objects/LinkPopover";
+import "./common.scss";
+import "./SearchPane.scss";
 
-const _ = require('lodash');
+const _ = require("lodash");
 
 class SearchPane extends Component {
 
@@ -104,15 +104,15 @@ class SearchPane extends Component {
 
     validateSearch = (options) => {
         let valid = true;
-        if (options.text_search.exact_phrase && options.text_search.exact_phrase.length < 3) {
+        if (options["text_search"]["exact_phrase"] && options["text_search"]["exact_phrase"].length < 3) {
             this.setState({exactPhraseError: "text_search.exact_phrase.length < 3"});
             valid = false;
         }
-        if (options.regex_search.pattern && options.regex_search.pattern.length < 3) {
+        if (options["regex_search"].pattern && options["regex_search"].pattern.length < 3) {
             this.setState({patternError: "regex_search.pattern.length < 3"});
             valid = false;
         }
-        if (options.regex_search.not_pattern && options.regex_search.not_pattern.length < 3) {
+        if (options["regex_search"]["not_pattern"] && options["regex_search"]["not_pattern"].length < 3) {
             this.setState({exactPhraseError: "regex_search.not_pattern.length < 3"});
             valid = false;
         }
@@ -128,25 +128,25 @@ class SearchPane extends Component {
     extractPattern = (options) => {
         let pattern = "";
         if (_.isEqual(options.regex_search, this.searchOptions.regex_search)) { // is text search
-            if (options.text_search.exact_phrase) {
-                pattern += `"${options.text_search.exact_phrase}"`;
+            if (options["text_search"]["exact_phrase"]) {
+                pattern += `"${options["text_search"]["exact_phrase"]}"`;
             } else {
-                pattern += options.text_search.terms.join(" ");
-                if (options.text_search.excluded_terms) {
-                    pattern += " -" + options.text_search.excluded_terms.join(" -");
+                pattern += options["text_search"].terms.join(" ");
+                if (options["text_search"]["excluded_terms"]) {
+                    pattern += " -" + options["text_search"]["excluded_terms"].join(" -");
                 }
             }
-            options.text_search.case_sensitive && (pattern += "/s");
+            options["text_search"]["case_sensitive"] && (pattern += "/s");
         } else { // is regex search
-            if (options.regex_search.pattern) {
-                pattern += "/" + options.regex_search.pattern + "/";
+            if (options["regex_search"].pattern) {
+                pattern += "/" + options["regex_search"].pattern + "/";
             } else {
-                pattern += "!/" + options.regex_search.not_pattern + "/";
+                pattern += "!/" + options["regex_search"]["not_pattern"] + "/";
             }
-            options.regex_search.case_insensitive && (pattern += "i");
-            options.regex_search.multi_line && (pattern += "m");
-            options.regex_search.ignore_whitespaces && (pattern += "x");
-            options.regex_search.dot_character && (pattern += "s");
+            options["regex_search"]["case_insensitive"] && (pattern += "i");
+            options["regex_search"]["multi_line"] && (pattern += "m");
+            options["regex_search"]["ignore_whitespaces"] && (pattern += "x");
+            options["regex_search"]["dot_character"] && (pattern += "s");
         }
 
         return pattern;
@@ -222,25 +222,29 @@ class SearchPane extends Component {
 
                         <div className="content-row">
                             <div className="text-search">
-                                <TagField tags={(options.text_search.terms || []).map(t => {return {name: t};})}
+                                <TagField tags={(options["text_search"].terms || []).map(t => {
+                                    return {name: t};
+                                })}
                                           name="terms" min={3} inline allowNew={true}
-                                          readonly={regexOptionsModified || options.text_search.exact_phrase}
-                                          onChange={(tags) => this.updateParam(s => s.text_search.terms = tags.map(t => t.name))}/>
-                                <TagField tags={(options.text_search.excluded_terms || []).map(t => {return {name: t};})}
+                                          readonly={regexOptionsModified || options["text_search"]["exact_phrase"]}
+                                          onChange={(tags) => this.updateParam(s => s["text_search"].terms = tags.map(t => t.name))}/>
+                                <TagField tags={(options["text_search"]["excluded_terms"] || []).map(t => {
+                                    return {name: t};
+                                })}
                                           name="excluded_terms" min={3} inline allowNew={true}
-                                          readonly={regexOptionsModified || options.text_search.exact_phrase}
-                                          onChange={(tags) => this.updateParam(s => s.text_search.excluded_terms = tags.map(t => t.name))}/>
+                                          readonly={regexOptionsModified || options["text_search"]["exact_phrase"]}
+                                          onChange={(tags) => this.updateParam(s => s["text_search"]["excluded_terms"] = tags.map(t => t.name))}/>
 
                                 <span className="exclusive-separator">or</span>
 
-                                <InputField name="exact_phrase" value={options.text_search.exact_phrase} inline
+                                <InputField name="exact_phrase" value={options["text_search"]["exact_phrase"]} inline
                                             error={this.state.exactPhraseError}
-                                            onChange={v => this.updateParam(s => s.text_search.exact_phrase = v)}
-                                            readonly={regexOptionsModified || (Array.isArray(options.text_search.terms) && options.text_search.terms.length > 0)}/>
+                                            onChange={v => this.updateParam(s => s["text_search"]["exact_phrase"] = v)}
+                                            readonly={regexOptionsModified || (Array.isArray(options["text_search"].terms) && options["text_search"].terms.length > 0)}/>
 
-                                <CheckField checked={options.text_search.case_sensitive} name="case_sensitive"
+                                <CheckField checked={options["text_search"]["case_sensitive"]} name="case_sensitive"
                                             readonly={regexOptionsModified} small
-                                            onChange={(v) => this.updateParam(s => s.text_search.case_sensitive = v)}/>
+                                            onChange={(v) => this.updateParam(s => s["text_search"]["case_sensitive"] = v)}/>
                             </div>
 
                             <div className="separator">
@@ -248,30 +252,30 @@ class SearchPane extends Component {
                             </div>
 
                             <div className="regex-search">
-                                <InputField name="pattern" value={options.regex_search.pattern} inline
+                                <InputField name="pattern" value={options["regex_search"].pattern} inline
                                             error={this.state.patternError}
-                                            readonly={textOptionsModified || options.regex_search.not_pattern}
-                                            onChange={v => this.updateParam(s => s.regex_search.pattern = v)}/>
+                                            readonly={textOptionsModified || options["regex_search"]["not_pattern"]}
+                                            onChange={v => this.updateParam(s => s["regex_search"].pattern = v)}/>
                                 <span className="exclusive-separator">or</span>
-                                <InputField name="not_pattern" value={options.regex_search.not_pattern} inline
+                                <InputField name="not_pattern" value={options["regex_search"]["not_pattern"]} inline
                                             error={this.state.notPatternError}
-                                            readonly={textOptionsModified || options.regex_search.pattern}
-                                            onChange={v => this.updateParam(s => s.regex_search.not_pattern = v)}/>
+                                            readonly={textOptionsModified || options["regex_search"].pattern}
+                                            onChange={v => this.updateParam(s => s["regex_search"]["not_pattern"] = v)}/>
 
                                 <div className="checkbox-line">
-                                    <CheckField checked={options.regex_search.case_insensitive} name="case_insensitive"
+                                    <CheckField checked={options["regex_search"]["case_insensitive"]} name="case_insensitive"
                                                 readonly={textOptionsModified} small
-                                                onChange={(v) => this.updateParam(s => s.regex_search.case_insensitive = v)}/>
-                                    <CheckField checked={options.regex_search.multi_line} name="multi_line"
+                                                onChange={(v) => this.updateParam(s => s["regex_search"]["case_insensitive"] = v)}/>
+                                    <CheckField checked={options["regex_search"]["multi_line"]} name="multi_line"
                                                 readonly={textOptionsModified} small
-                                                onChange={(v) => this.updateParam(s => s.regex_search.multi_line = v)}/>
-                                    <CheckField checked={options.regex_search.ignore_whitespaces}
+                                                onChange={(v) => this.updateParam(s => s["regex_search"]["multi_line"] = v)}/>
+                                    <CheckField checked={options["regex_search"]["ignore_whitespaces"]}
                                                 name="ignore_whitespaces"
                                                 readonly={textOptionsModified} small
-                                                onChange={(v) => this.updateParam(s => s.regex_search.ignore_whitespaces = v)}/>
-                                    <CheckField checked={options.regex_search.dot_character} name="dot_character"
+                                                onChange={(v) => this.updateParam(s => s["regex_search"]["ignore_whitespaces"] = v)}/>
+                                    <CheckField checked={options["regex_search"]["dot_character"]} name="dot_character"
                                                 readonly={textOptionsModified} small
-                                                onChange={(v) => this.updateParam(s => s.regex_search.dot_character = v)}/>
+                                                onChange={(v) => this.updateParam(s => s["regex_search"]["dot_character"] = v)}/>
                                 </div>
                             </div>
                         </div>
