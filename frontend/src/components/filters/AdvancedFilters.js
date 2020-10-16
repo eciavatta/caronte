@@ -33,7 +33,7 @@ class AdvancedFilters extends Component {
             const active = ["client_address", "client_port", "min_duration", "max_duration", "min_bytes", "max_bytes"]
                 .some(f => this.urlParams.has(f));
             if (this.state.active !== active) {
-                this.setState({active: active});
+                this.setState({active});
             }
         };
         dispatcher.register("connections_filters", this.connectionsFiltersCallback);

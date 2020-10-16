@@ -35,6 +35,10 @@ func TestCreateApplicationContext(t *testing.T) {
 	assert.Nil(t, appContext.PcapImporter)
 	assert.Nil(t, appContext.RulesManager)
 
+	notificationController := NewNotificationController(appContext)
+	appContext.SetNotificationController(notificationController)
+	assert.Equal(t, notificationController, appContext.NotificationController)
+
 	config := Config{
 		ServerAddress: "10.10.10.10",
 		FlagRegex:     "FLAG{test}",
@@ -58,11 +62,14 @@ func TestCreateApplicationContext(t *testing.T) {
 
 	checkAppContext, err := CreateApplicationContext(wrapper.Storage, "test")
 	assert.NoError(t, err)
+	checkAppContext.SetNotificationController(notificationController)
+	checkAppContext.Configure()
 	assert.True(t, checkAppContext.IsConfigured)
 	assert.Equal(t, checkAppContext.Config, config)
 	assert.Equal(t, checkAppContext.Accounts, accounts)
 	assert.NotNil(t, checkAppContext.PcapImporter)
 	assert.NotNil(t, checkAppContext.RulesManager)
+	assert.Equal(t, notificationController, appContext.NotificationController)
 
 	wrapper.Destroy(t)
 }

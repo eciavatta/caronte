@@ -70,20 +70,20 @@ class SearchPane extends Component {
 
     loadSearches = () => {
         backend.get("/api/searches")
-            .then(res => this.setState({searches: res.json, searchesStatusCode: res.status}))
-            .catch(res => this.setState({searchesStatusCode: res.status, searchesResponse: JSON.stringify(res.json)}));
+            .then((res) => this.setState({searches: res.json, searchesStatusCode: res.status}))
+            .catch((res) => this.setState({searchesStatusCode: res.status, searchesResponse: JSON.stringify(res.json)}));
     };
 
     performSearch = () => {
         const options = this.state.currentSearchOptions;
         this.setState({loading: true});
         if (this.validateSearch(options)) {
-            backend.post("/api/searches/perform", options).then(res => {
+            backend.post("/api/searches/perform", options).then((res) => {
                 this.reset();
                 this.setState({searchStatusCode: res.status, loading: false});
                 this.loadSearches();
                 this.viewSearch(res.json.id);
-            }).catch(res => {
+            }).catch((res) => {
                 this.setState({
                     searchStatusCode: res.status, searchResponse: JSON.stringify(res.json),
                     loading: false
@@ -168,7 +168,7 @@ class SearchPane extends Component {
     render() {
         const options = this.state.currentSearchOptions;
 
-        let searches = this.state.searches.map(s =>
+        let searches = this.state.searches.map((s) =>
             <tr key={s.id} className="row-small row-clickable">
                 <td>{s.id.substring(0, 8)}</td>
                 <td>{this.extractPattern(s["search_options"])}</td>

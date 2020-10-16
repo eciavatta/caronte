@@ -328,10 +328,10 @@ func (rm *rulesManagerImpl) validateAndAddRuleLocal(rule *Rule) error {
 		duplicatePatterns[regex] = true
 	}
 
-	startId := len(rm.patterns)
+	startID := len(rm.patterns)
 	for id, pattern := range newPatterns {
 		rm.patterns = append(rm.patterns, pattern)
-		rm.patternsIds[pattern.String()] = uint(startId + id)
+		rm.patternsIds[pattern.String()] = uint(startID + id)
 	}
 
 	rm.rules[rule.ID] = *rule

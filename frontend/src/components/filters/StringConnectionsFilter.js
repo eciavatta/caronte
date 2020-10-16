@@ -33,7 +33,7 @@ class StringConnectionsFilter extends Component {
         let params = new URLSearchParams(this.props.location.search);
         this.updateStateFromFilterValue(params.get(this.props.filterName));
 
-        this.connectionsFiltersCallback = payload => {
+        this.connectionsFiltersCallback = (payload) => {
             const name = this.props.filterName;
             if (name in payload && this.state.filterValue !== payload[name]) {
                 this.updateStateFromFilterValue(payload[name]);
@@ -56,7 +56,7 @@ class StringConnectionsFilter extends Component {
                 fieldValue = this.props.replaceFunc(fieldValue);
             }
             if (this.isValueValid(fieldValue)) {
-                this.setState({fieldValue, filterValue: filterValue});
+                this.setState({fieldValue, filterValue});
             } else {
                 this.setState({fieldValue, invalidValue: true});
             }
@@ -98,9 +98,9 @@ class StringConnectionsFilter extends Component {
             }
 
             this.setState({
-                fieldValue: fieldValue,
+                fieldValue,
                 timeoutHandle: setTimeout(() => {
-                    this.setState({filterValue: filterValue});
+                    this.setState({filterValue});
                     this.changeFilterValue(filterValue);
                 }, 500),
                 invalidValue: false

@@ -35,17 +35,17 @@ class RulesConnectionsFilter extends Component {
         const params = new URLSearchParams(this.props.location.search);
         let activeRules = params.getAll("matched_rules") || [];
 
-        backend.get("/api/rules").then(res => {
-            let rules = res.json.flatMap(rule => rule.enabled ? [{id: rule.id, name: rule.name}] : []);
-            activeRules = rules.filter(rule => activeRules.some(id => rule.id === id));
+        backend.get("/api/rules").then((res) => {
+            let rules = res.json.flatMap((rule) => rule.enabled ? [{id: rule.id, name: rule.name}] : []);
+            activeRules = rules.filter((rule) => activeRules.some(id => rule.id === id));
             this.setState({rules, activeRules});
         });
 
-        this.connectionsFiltersCallback = payload => {
+        this.connectionsFiltersCallback = (payload) => {
             if ("matched_rules" in payload && !_.isEqual(payload["matched_rules"].sort(), this.state.activeRules.sort())) {
-                const newRules = this.state.rules.filter(r => payload["matched_rules"].includes(r.id));
+                const newRules = this.state.rules.filter((r) => payload["matched_rules"].includes(r.id));
                 this.setState({
-                    activeRules: newRules.map(r => {
+                    activeRules: newRules.map((r) => {
                         return {id: r.id, name: r.name};
                     })
                 });
@@ -61,7 +61,7 @@ class RulesConnectionsFilter extends Component {
     onChange = (activeRules) => {
         if (!_.isEqual(activeRules.sort(), this.state.activeRules.sort())) {
             this.setState({activeRules});
-            dispatcher.dispatch("connections_filters", {"matched_rules": activeRules.map(r => r.id)});
+            dispatcher.dispatch("connections_filters", {"matched_rules": activeRules.map((r) => r.id)});
         }
     };
 

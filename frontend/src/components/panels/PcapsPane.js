@@ -181,15 +181,15 @@ class PcapsPane extends Component {
         };
 
         const uploadCurlCommand = createCurlCommand("/pcap/upload", "POST", null, {
-            file: "@" + ((this.state.uploadSelectedFile != null && this.state.isUploadFileValid) ?
+            "file": "@" + ((this.state.uploadSelectedFile != null && this.state.isUploadFileValid) ?
                 this.state.uploadSelectedFile.name : "invalid.pcap"),
-            flush_all: this.state.uploadFlushAll
+            "flush_all": this.state.uploadFlushAll
         });
 
         const fileCurlCommand = createCurlCommand("/pcap/file", "POST", {
-            file: this.state.fileValue,
-            flush_all: this.state.processFlushAll,
-            delete_original_file: this.state.deleteOriginalFile
+            "file": this.state.fileValue,
+            "flush_all": this.state.processFlushAll,
+            "delete_original_file": this.state.deleteOriginalFile
         });
 
         return (

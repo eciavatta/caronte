@@ -133,7 +133,7 @@ export function getHeaderValue(request, key) {
     if (request && request.headers) {
         return request.headers[Object.keys(request.headers).find((k) => k.toLowerCase() === key.toLowerCase())];
     }
-    return undefined;
+    return null;
 }
 
 export function downloadBlob(blob, fileName) {

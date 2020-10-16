@@ -27,8 +27,8 @@
     }
 
     .field-options {
-      position: absolute;
-      z-index: 20;
+      position: static;
+      z-index: 100;
       top: 35px;
       display: none;
       width: 100%;

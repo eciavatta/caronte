@@ -30,8 +30,8 @@ type BasicMetadata struct {
 }
 
 var parsers = []Parser{	// order matter
-	HttpRequestParser{},
-	HttpResponseParser{},
+	HTTPRequestParser{},
+	HTTPResponseParser{},
 }
 
 func Parse(content []byte) Metadata {

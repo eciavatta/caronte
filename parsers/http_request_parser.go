@@ -28,7 +28,7 @@ import (
 	"strings"
 )
 
-type HttpRequestMetadata struct {
+type HTTPRequestMetadata struct {
 	BasicMetadata
 	Method        string                         `json:"method"`
 	URL           string                         `json:"url"`
@@ -40,19 +40,19 @@ type HttpRequestMetadata struct {
 	FormData      map[string]string              `json:"form_data" binding:"omitempty"`
 	Body          string                         `json:"body" binding:"omitempty"`
 	Trailer       map[string]string              `json:"trailer" binding:"omitempty"`
-	Reproducers   HttpRequestMetadataReproducers `json:"reproducers"`
+	Reproducers   HTTPRequestMetadataReproducers `json:"reproducers"`
 }
 
-type HttpRequestMetadataReproducers struct {
+type HTTPRequestMetadataReproducers struct {
 	CurlCommand  string `json:"curl_command"`
 	RequestsCode string `json:"requests_code"`
 	FetchRequest string `json:"fetch_request"`
 }
 
-type HttpRequestParser struct {
+type HTTPRequestParser struct {
 }
 
-func (p HttpRequestParser) TryParse(content []byte) Metadata {
+func (p HTTPRequestParser) TryParse(content []byte) Metadata {
 	reader := bufio.NewReader(bytes.NewReader(content))
 	request, err := http.ReadRequest(reader)
 	if err != nil {
@@ -68,7 +68,7 @@ func (p HttpRequestParser) TryParse(content []byte) Metadata {
 	_ = request.Body.Close()
 	_ = request.ParseForm()
 
-	return HttpRequestMetadata{
+	return HTTPRequestMetadata{
 		BasicMetadata: BasicMetadata{"http-request"},
 		Method:        request.Method,
 		URL:           request.URL.String(),
@@ -80,7 +80,7 @@ func (p HttpRequestParser) TryParse(content []byte) Metadata {
 		FormData:      JoinArrayMap(request.Form),
 		Body:          body,
 		Trailer:       JoinArrayMap(request.Trailer),
-		Reproducers: HttpRequestMetadataReproducers{
+		Reproducers: HTTPRequestMetadataReproducers{
 			CurlCommand:  curlCommand(content),
 			RequestsCode: requestsCode(request, body),
 			FetchRequest: fetchRequest(request, body),
@@ -92,17 +92,17 @@ func curlCommand(content []byte) string {
 	// a new reader is required because all the body is read before and GetBody() doesn't works
 	reader := bufio.NewReader(bytes.NewReader(content))
 	request, _ := http.ReadRequest(reader)
-	if command, err := http2curl.GetCurlCommand(request); err == nil {
+	command, err := http2curl.GetCurlCommand(request)
+	if err == nil {
 		return command.String()
-	} else {
-		return err.Error()
 	}
+	return err.Error()
 }
 
 func requestsCode(request *http.Request, body string) string {
 	var b strings.Builder
-	headers := toJson(JoinArrayMap(request.Header))
-	cookies := toJson(CookiesMap(request.Cookies()))
+	headers := toJSON(JoinArrayMap(request.Header))
+	cookies := toJSON(CookiesMap(request.Cookies()))
 
 	b.WriteString("import requests\n\nresponse = requests." + strings.ToLower(request.Method) + "(")
 	b.WriteString("\"" + request.URL.String() + "\"")
@@ -146,14 +146,14 @@ func fetchRequest(request *http.Request, body string) string {
 	data["method"] = request.Method
 	// TODO: mode
 
-	if jsonData := toJson(data); jsonData != "" {
+	if jsonData := toJSON(data); jsonData != "" {
 		return "fetch(\"" + request.URL.String() + "\", " + jsonData + ");"
 	} else {
 		return "invalid-request"
 	}
 }
 
-func toJson(obj interface{}) string {
+func toJSON(obj interface{}) string {
 	if buffer, err := json.MarshalIndent(obj, "", "\t"); err == nil {
 		return string(buffer)
 	} else {

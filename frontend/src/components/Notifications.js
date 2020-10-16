@@ -67,7 +67,7 @@ class Notifications extends Component {
                 n.variant = "blue";
                 return this.pushNotification(n);
             default:
-                return;
+                return null;
         }
     };
 

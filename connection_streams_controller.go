@@ -369,7 +369,7 @@ func decodePwntools(payload []byte, isClient bool, format string) string {
 
 	if isClient {
 		return fmt.Sprintf("p.send(%s)\n", content)
-	} else {
-		return fmt.Sprintf("p.recvuntil(%s)\n", content)
 	}
+
+	return fmt.Sprintf("p.recvuntil(%s)\n", content)
 }

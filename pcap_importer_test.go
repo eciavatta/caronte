@@ -127,6 +127,7 @@ func newTestPcapImporter(wrapper *TestStorageWrapper, serverAddress string) *Pca
 		mAssemblers: sync.Mutex{},
 		mSessions:   sync.Mutex{},
 		serverNet:   *ParseIPNet(serverAddress),
+		notificationController: NewNotificationController(nil),
 	}
 }
 

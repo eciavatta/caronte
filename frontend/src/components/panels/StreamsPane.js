@@ -18,7 +18,7 @@
 import DOMPurify from "dompurify";
 import React, {Component} from "react";
 import {Row} from "react-bootstrap";
-import ReactJson from "react-json-view"
+import ReactJson from "react-json-view";
 import backend from "../../backend";
 import log from "../../log";
 import {downloadBlob, getHeaderValue} from "../../utils";
@@ -72,7 +72,7 @@ class StreamsPane extends Component {
 
     setFormat = (format) => {
         if (this.validFormats.includes(format)) {
-            this.setState({format: format});
+            this.setState({format});
         }
     };
 

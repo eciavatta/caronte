@@ -59,11 +59,11 @@ class ConfigurationPage extends Component {
 
     validateSettings = (settings) => {
         let valid = true;
-        if (!validation.isValidAddress(settings.config.server_address, true)) {
+        if (!validation.isValidAddress(settings.config["server_address"], true)) {
             this.setState({serverAddressError: "invalid ip_address"});
             valid = false;
         }
-        if (settings.config.flag_regex.length < 8) {
+        if (settings.config["flag_regex"].length < 8) {
             this.setState({flagRegexError: "flag_regex.length < 8"});
             valid = false;
         }
@@ -84,7 +84,7 @@ class ConfigurationPage extends Component {
             this.setState({
                 newUsername: "",
                 newPassword: "",
-                settings: settings
+                settings
             });
         } else {
             this.setState({
@@ -128,15 +128,15 @@ class ConfigurationPage extends Component {
                                 <Container className="p-0">
                                     <Row>
                                         <Col>
-                                            <InputField name="server_address" value={settings.config.server_address}
+                                            <InputField name="server_address" value={settings.config["server_address"]}
                                                         error={this.state.serverAddressError}
-                                                        onChange={(v) => this.updateParam((s) => s.config.server_address = v)}/>
-                                            <InputField name="flag_regex" value={settings.config.flag_regex}
-                                                        onChange={(v) => this.updateParam((s) => s.config.flag_regex = v)}
+                                                        onChange={(v) => this.updateParam((s) => s.config["server_address"] = v)}/>
+                                            <InputField name="flag_regex" value={settings.config["flag_regex"]}
+                                                        onChange={(v) => this.updateParam((s) => s.config["flag_regex"] = v)}
                                                         error={this.state.flagRegexError}/>
                                             <div style={{"marginTop": "10px"}}>
-                                                <CheckField checked={settings.config.auth_required} name="auth_required"
-                                                            onChange={(v) => this.updateParam((s) => s.config.auth_required = v)}/>
+                                                <CheckField checked={settings.config["auth_required"]} name="auth_required"
+                                                            onChange={(v) => this.updateParam((s) => s.config["auth_required"] = v)}/>
                                             </div>
 
                                         </Col>

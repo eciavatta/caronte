@@ -26,7 +26,7 @@ import (
 	"net/http"
 )
 
-type HttpResponseMetadata struct {
+type HTTPResponseMetadata struct {
 	BasicMetadata
 	Status           string            `json:"status"`
 	StatusCode       int               `json:"status_code"`
@@ -40,10 +40,10 @@ type HttpResponseMetadata struct {
 	Trailer          map[string]string `json:"trailer" binding:"omitempty"`
 }
 
-type HttpResponseParser struct {
+type HTTPResponseParser struct {
 }
 
-func (p HttpResponseParser) TryParse(content []byte) Metadata {
+func (p HTTPResponseParser) TryParse(content []byte) Metadata {
 	reader := bufio.NewReader(bytes.NewReader(content))
 	response, err := http.ReadResponse(reader, nil)
 	if err != nil {
@@ -74,11 +74,11 @@ func (p HttpResponseParser) TryParse(content []byte) Metadata {
 	_ = response.Body.Close()
 
 	var location string
-	if locationUrl, err := response.Location(); err == nil {
-		location = locationUrl.String()
+	if locationURL, err := response.Location(); err == nil {
+		location = locationURL.String()
 	}
 
-	return HttpResponseMetadata{
+	return HTTPResponseMetadata{
 		BasicMetadata:    BasicMetadata{"http-response"},
 		Status:           response.Status,
 		StatusCode:       response.StatusCode,

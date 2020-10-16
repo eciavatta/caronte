@@ -21,7 +21,6 @@ import ReactDOM from "react-dom";
 import App from "./components/App";
 import "./index.scss";
 import notifications from "./notifications";
-import * as serviceWorker from "./serviceWorker";
 
 notifications.createWebsocket();
 
@@ -31,5 +30,3 @@ ReactDOM.render(
     // </React.StrictMode>,
     document.getElementById("root")
 );
-
-serviceWorker.unregister();

@@ -57,12 +57,12 @@ func CustomRowID(payload uint64, timestamp time.Time) RowID {
 	binary.BigEndian.PutUint32(key[0:4], uint32(timestamp.Unix()))
 	binary.BigEndian.PutUint64(key[4:12], payload)
 
-	if oid, err := primitive.ObjectIDFromHex(hex.EncodeToString(key[:])); err == nil {
+	oid, err := primitive.ObjectIDFromHex(hex.EncodeToString(key[:]))
+	if err == nil {
 		return oid
-	} else {
-		log.WithError(err).Warn("failed to create object id")
-		return primitive.NewObjectID()
 	}
+	log.WithError(err).Warn("failed to create object id")
+	return primitive.NewObjectID()
 }
 
 func NewRowID() RowID {

@@ -10,6 +10,18 @@
     }
   }
 
+  .react-tags {
+    position: relative;
+    display: flex;
+    border-radius: 4px;
+    background-color: $color-primary-2;
+
+    &:focus-within,
+    &:focus-within .react-tags__search-input {
+      background-color: $color-primary-1;
+    }
+  }
+
   &.field-small {
     font-size: 0.8em;
   }
@@ -35,18 +47,6 @@
     }
 
     &:focus-within .field-name {
-      background-color: $color-primary-1;
-    }
-  }
-
-  .react-tags {
-    position: relative;
-    display: flex;
-    border-radius: 4px;
-    background-color: $color-primary-2;
-
-    &:focus-within,
-    &:focus-within .react-tags__search-input {
       background-color: $color-primary-1;
     }
   }

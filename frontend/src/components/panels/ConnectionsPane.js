@@ -178,7 +178,7 @@ class ConnectionsPane extends Component {
         let firstConnection = this.state.firstConnection;
         let lastConnection = this.state.lastConnection;
 
-        if (additionalParams !== undefined && additionalParams.from !== undefined && additionalParams.to === undefined) {
+        if (additionalParams && additionalParams.from && !additionalParams.to) {
             if (res.length > 0) {
                 if (!isInitial) {
                     res = res.slice(1);
@@ -194,7 +194,7 @@ class ConnectionsPane extends Component {
                     firstConnection = connections[0];
                 }
             }
-        } else if (additionalParams !== undefined && additionalParams.to !== undefined && additionalParams.from === undefined) {
+        } else if (additionalParams && additionalParams.to && !additionalParams.from) {
             if (res.length > 0) {
                 connections = res.slice(0, res.length - 1).concat(this.state.connections);
                 firstConnection = connections[0];
@@ -215,12 +215,7 @@ class ConnectionsPane extends Component {
             }
         }
 
-        this.setState({
-            loading: false,
-            connections: connections,
-            firstConnection: firstConnection,
-            lastConnection: lastConnection
-        });
+        this.setState({loading: false, connections, firstConnection, lastConnection});
 
         if (firstConnection != null && lastConnection != null) {
             dispatcher.dispatch("connection_updates", {

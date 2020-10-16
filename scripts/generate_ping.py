@@ -28,7 +28,7 @@ if __name__ == "__main__":
 
     port = 9999
     n = 10000
-    
+
     if sys.argv[1] == "server":
         # docker run -it --rm -p 9999:9999 -v "$PWD":/ping -w /ping python:3 python generate_ping.py server
         with socketserver.TCPServer(("0.0.0.0", port), PongHandler) as server:

@@ -47,14 +47,14 @@
       background-color: $color-primary-4 !important;
     }
 
+    .file-label::after {
+      background-color: $color-secondary-4 !important;
+    }
+
     .field-value input,
     .field-value .file-label {
       color: $color-primary-3 !important;
       background-color: $color-primary-4 !important;
-    }
-
-    .file-label::after {
-      background-color: $color-secondary-4 !important;
     }
   }
 

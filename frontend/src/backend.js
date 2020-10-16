@@ -17,7 +17,7 @@
 
 async function json(method, url, data, json, headers) {
     const options = {
-        method: method,
+        method,
         body: json != null ? JSON.stringify(json) : data,
         mode: "cors",
         cache: "no-cache",
