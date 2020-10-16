@@ -67,7 +67,7 @@ class StreamsPane extends Component {
     loadStream = (connectionId) => {
         this.setState({messages: [], currentId: connectionId});
         backend.get(`/api/streams/${connectionId}?format=${this.state.format}`)
-            .then(res => this.setState({messages: res.json}));
+            .then((res) => this.setState({messages: res.json}));
     };
 
     setFormat = (format) => {
@@ -166,8 +166,8 @@ class StreamsPane extends Component {
     downloadStreamRaw = (value) => {
         if (this.state.currentId) {
             backend.download(`/api/streams/${this.props.connection.id}/download?format=${this.state.format}&type=${value}`)
-                .then(res => downloadBlob(res.blob, `${this.state.currentId}-${value}-${this.state.format}.txt`))
-                .catch(_ => log.error("Failed to download stream messages"));
+                .then((res) => downloadBlob(res.blob, `${this.state.currentId}-${value}-${this.state.format}.txt`))
+                .catch((_) => log.error("Failed to download stream messages"));
         }
     };
 

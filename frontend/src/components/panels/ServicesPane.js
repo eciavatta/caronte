@@ -68,18 +68,18 @@ class ServicesPane extends Component {
 
     loadServices = () => {
         backend.get("/api/services")
-            .then(res => this.setState({services: Object.values(res.json), servicesStatusCode: res.status}))
-            .catch(res => this.setState({servicesStatusCode: res.status, servicesResponse: JSON.stringify(res.json)}));
+            .then((res) => this.setState({services: Object.values(res.json), servicesStatusCode: res.status}))
+            .catch((res) => this.setState({servicesStatusCode: res.status, servicesResponse: JSON.stringify(res.json)}));
     };
 
     updateService = () => {
         const service = this.state.currentService;
         if (this.validateService(service)) {
-            backend.put("/api/services", service).then(res => {
+            backend.put("/api/services", service).then((res) => {
                 this.reset();
                 this.setState({serviceStatusCode: res.status});
                 this.loadServices();
-            }).catch(res => {
+            }).catch((res) => {
                 this.setState({serviceStatusCode: res.status, serviceResponse: JSON.stringify(res.json)});
             });
         }
@@ -126,7 +126,7 @@ class ServicesPane extends Component {
         const isUpdate = this.state.isUpdate;
         const service = this.state.currentService;
 
-        let services = this.state.services.map(s =>
+        let services = this.state.services.map((s) =>
             <tr key={s.port} onClick={() => {
                 this.reset();
                 this.setState({isUpdate: true, currentService: _.cloneDeep(s)});

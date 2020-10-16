@@ -27,7 +27,7 @@ class App extends Component {
     state = {};
 
     componentDidMount() {
-        dispatcher.register("notifications", payload => {
+        dispatcher.register("notifications", (payload) => {
             if (payload.event === "connected") {
                 this.setState({
                     connected: true,

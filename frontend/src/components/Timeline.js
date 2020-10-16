@@ -127,7 +127,7 @@ class Timeline extends Component {
         const series = new TimeSeries({
             name: "statistics",
             columns: ["time"].concat(columns),
-            points: zeroFilledMetrics.map((m) => [m["range_start"]].concat(columns.map(c =>
+            points: zeroFilledMetrics.map((m) => [m["range_start"]].concat(columns.map((c) =>
                 ((metric in m) && (m[metric] != null)) ? (m[metric][c] || 0) : 0
             )))
         });

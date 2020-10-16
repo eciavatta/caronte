@@ -28,7 +28,7 @@ class ExitSearchFilter extends Component {
         let params = new URLSearchParams(this.props.location.search);
         this.setState({performedSearch: params.get("performed_search")});
 
-        this.connectionsFiltersCallback = payload => {
+        this.connectionsFiltersCallback = (payload) => {
             if (this.state.performedSearch !== payload["performed_search"]) {
                 this.setState({performedSearch: payload["performed_search"]});
             }

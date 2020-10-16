@@ -103,17 +103,17 @@ class RulesPane extends Component {
     };
 
     loadRules = () => {
-        backend.get("/api/rules").then(res => this.setState({rules: res.json, rulesStatusCode: res.status}))
-            .catch(res => this.setState({rulesStatusCode: res.status, rulesResponse: JSON.stringify(res.json)}));
+        backend.get("/api/rules").then((res) => this.setState({rules: res.json, rulesStatusCode: res.status}))
+            .catch((res) => this.setState({rulesStatusCode: res.status, rulesResponse: JSON.stringify(res.json)}));
     };
 
     addRule = () => {
         if (this.validateRule(this.state.newRule)) {
-            backend.post("/api/rules", this.state.newRule).then(res => {
+            backend.post("/api/rules", this.state.newRule).then((res) => {
                 this.reset();
                 this.setState({ruleStatusCode: res.status});
                 this.loadRules();
-            }).catch(res => {
+            }).catch((res) => {
                 this.setState({ruleStatusCode: res.status, ruleResponse: JSON.stringify(res.json)});
             });
         }
@@ -122,11 +122,11 @@ class RulesPane extends Component {
     updateRule = () => {
         const rule = this.state.selectedRule;
         if (this.validateRule(rule)) {
-            backend.put(`/api/rules/${rule.id}`, rule).then(res => {
+            backend.put(`/api/rules/${rule.id}`, rule).then((res) => {
                 this.reset();
                 this.setState({ruleStatusCode: res.status});
                 this.loadRules();
-            }).catch(res => {
+            }).catch((res) => {
                 this.setState({ruleStatusCode: res.status, ruleResponse: JSON.stringify(res.json)});
             });
         }
@@ -247,7 +247,7 @@ class RulesPane extends Component {
         const rule = this.currentRule();
         const pattern = this.state.selectedPattern || this.state.newPattern;
 
-        let rules = this.state.rules.map(r =>
+        let rules = this.state.rules.map((r) =>
             <tr key={r.id} onClick={() => {
                 this.reset();
                 this.setState({selectedRule: _.cloneDeep(r)});
@@ -262,7 +262,7 @@ class RulesPane extends Component {
         let patterns = (this.state.selectedPattern == null && !isUpdate ?
                 rule.patterns.concat(this.state.newPattern) :
                 rule.patterns
-        ).map(p => p === pattern ?
+        ).map((p) => p === pattern ?
             <tr key={"new_pattern"}>
                 <td style={{"width": "500px"}}>
                     <InputField small active={this.state.patternRegexFocused} value={pattern.regex}

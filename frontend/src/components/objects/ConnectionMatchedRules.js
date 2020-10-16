@@ -33,8 +33,8 @@ class ConnectionMatchedRules extends Component {
     };
 
     render() {
-        const matchedRules = this.props.matchedRules.map(mr => {
-            const rule = this.props.rules.find(r => r.id === mr);
+        const matchedRules = this.props.matchedRules.map((mr) => {
+            const rule = this.props.rules.find((r) => r.id === mr);
             return <ButtonField key={mr} onClick={() => this.onMatchedRulesSelected(rule.id)} name={rule.name}
                                 color={rule.color} small/>;
         });

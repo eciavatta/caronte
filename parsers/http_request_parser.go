@@ -148,9 +148,8 @@ func fetchRequest(request *http.Request, body string) string {
 
 	if jsonData := toJSON(data); jsonData != "" {
 		return "fetch(\"" + request.URL.String() + "\", " + jsonData + ");"
-	} else {
-		return "invalid-request"
 	}
+	return "invalid-request"
 }
 
 func toJSON(obj interface{}) string {

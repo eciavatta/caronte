@@ -107,7 +107,7 @@ class Notifications extends Component {
             <div className="notifications">
                 <div className="notifications-list">
                     {
-                        this.state.closedNotifications.concat(this.state.notifications).map(n => {
+                        this.state.closedNotifications.concat(this.state.notifications).map((n) => {
                             const notificationClassnames = {
                                 "notification": true,
                                 "notification-closed": n.closed,

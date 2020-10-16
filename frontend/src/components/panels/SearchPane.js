@@ -231,29 +231,29 @@ class SearchPane extends Component {
 
                         <div className="content-row">
                             <div className="text-search">
-                                <TagField tags={(options["text_search"].terms || []).map(t => {
+                                <TagField tags={(options["text_search"].terms || []).map((t) => {
                                     return {name: t};
                                 })}
                                           name="terms" min={3} inline allowNew={true}
                                           readonly={regexOptionsModified || options["text_search"]["exact_phrase"]}
-                                          onChange={(tags) => this.updateParam(s => s["text_search"].terms = tags.map(t => t.name))}/>
+                                          onChange={(tags) => this.updateParam((s) => s["text_search"].terms = tags.map(t => t.name))}/>
                                 <TagField tags={(options["text_search"]["excluded_terms"] || []).map(t => {
                                     return {name: t};
                                 })}
                                           name="excluded_terms" min={3} inline allowNew={true}
                                           readonly={regexOptionsModified || options["text_search"]["exact_phrase"]}
-                                          onChange={(tags) => this.updateParam(s => s["text_search"]["excluded_terms"] = tags.map(t => t.name))}/>
+                                          onChange={(tags) => this.updateParam((s) => s["text_search"]["excluded_terms"] = tags.map(t => t.name))}/>
 
                                 <span className="exclusive-separator">or</span>
 
                                 <InputField name="exact_phrase" value={options["text_search"]["exact_phrase"]} inline
                                             error={this.state.exactPhraseError}
-                                            onChange={v => this.updateParam(s => s["text_search"]["exact_phrase"] = v)}
+                                            onChange={(v) => this.updateParam((s) => s["text_search"]["exact_phrase"] = v)}
                                             readonly={regexOptionsModified || (Array.isArray(options["text_search"].terms) && options["text_search"].terms.length > 0)}/>
 
                                 <CheckField checked={options["text_search"]["case_sensitive"]} name="case_sensitive"
                                             readonly={regexOptionsModified} small
-                                            onChange={(v) => this.updateParam(s => s["text_search"]["case_sensitive"] = v)}/>
+                                            onChange={(v) => this.updateParam((s) => s["text_search"]["case_sensitive"] = v)}/>
                             </div>
 
                             <div className="separator">
@@ -264,28 +264,28 @@ class SearchPane extends Component {
                                 <InputField name="pattern" value={options["regex_search"].pattern} inline
                                             error={this.state.patternError}
                                             readonly={textOptionsModified || options["regex_search"]["not_pattern"]}
-                                            onChange={v => this.updateParam(s => s["regex_search"].pattern = v)}/>
+                                            onChange={(v) => this.updateParam((s) => s["regex_search"].pattern = v)}/>
                                 <span className="exclusive-separator">or</span>
                                 <InputField name="not_pattern" value={options["regex_search"]["not_pattern"]} inline
                                             error={this.state.notPatternError}
                                             readonly={textOptionsModified || options["regex_search"].pattern}
-                                            onChange={v => this.updateParam(s => s["regex_search"]["not_pattern"] = v)}/>
+                                            onChange={(v) => this.updateParam((s) => s["regex_search"]["not_pattern"] = v)}/>
 
                                 <div className="checkbox-line">
                                     <CheckField checked={options["regex_search"]["case_insensitive"]}
                                                 name="case_insensitive"
                                                 readonly={textOptionsModified} small
-                                                onChange={(v) => this.updateParam(s => s["regex_search"]["case_insensitive"] = v)}/>
+                                                onChange={(v) => this.updateParam((s) => s["regex_search"]["case_insensitive"] = v)}/>
                                     <CheckField checked={options["regex_search"]["multi_line"]} name="multi_line"
                                                 readonly={textOptionsModified} small
-                                                onChange={(v) => this.updateParam(s => s["regex_search"]["multi_line"] = v)}/>
+                                                onChange={(v) => this.updateParam((s) => s["regex_search"]["multi_line"] = v)}/>
                                     <CheckField checked={options["regex_search"]["ignore_whitespaces"]}
                                                 name="ignore_whitespaces"
                                                 readonly={textOptionsModified} small
-                                                onChange={(v) => this.updateParam(s => s["regex_search"]["ignore_whitespaces"] = v)}/>
+                                                onChange={(v) => this.updateParam((s) => s["regex_search"]["ignore_whitespaces"] = v)}/>
                                     <CheckField checked={options["regex_search"]["dot_character"]} name="dot_character"
                                                 readonly={textOptionsModified} small
-                                                onChange={(v) => this.updateParam(s => s["regex_search"]["dot_character"] = v)}/>
+                                                onChange={(v) => this.updateParam((s) => s["regex_search"]["dot_character"] = v)}/>
                                 </div>
                             </div>
                         </div>

@@ -28,10 +28,10 @@ class AdvancedFilters extends Component {
     componentDidMount() {
         this.urlParams = new URLSearchParams(this.props.location.search);
 
-        this.connectionsFiltersCallback = payload => {
+        this.connectionsFiltersCallback = (payload) => {
             this.urlParams = updateParams(this.urlParams, payload);
             const active = ["client_address", "client_port", "min_duration", "max_duration", "min_bytes", "max_bytes"]
-                .some(f => this.urlParams.has(f));
+                .some((f) => this.urlParams.has(f));
             if (this.state.active !== active) {
                 this.setState({active});
             }

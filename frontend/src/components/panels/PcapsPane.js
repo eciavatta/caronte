@@ -98,9 +98,9 @@ class PcapsPane extends Component {
         }
 
         backend.post("/api/pcap/file", {
-            file: this.state.fileValue,
-            flush_all: this.state.processFlushAll,
-            delete_original_file: this.state.deleteOriginalFile
+            "file": this.state.fileValue,
+            "flush_all": this.state.processFlushAll,
+            "delete_original_file": this.state.deleteOriginalFile
         }).then((res) => {
             this.setState({
                 processStatusCode: res.status,

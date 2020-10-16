@@ -61,8 +61,8 @@ class ConnectionsPane extends Component {
             const id = match[1];
             additionalParams.from = id;
             backend.get(`/api/connections/${id}`)
-                .then(res => this.connectionSelected(res.json))
-                .catch(error => log.error("Error loading initial connection", error));
+                .then((res) => this.connectionSelected(res.json))
+                .catch((error) => log.error("Error loading initial connection", error));
         }
 
         this.loadConnections(additionalParams, urlParams, true).then(() => log.debug("Connections loaded"));
@@ -283,11 +283,11 @@ class ConnectionsPane extends Component {
                         </thead>
                         <tbody>
                         {
-                            this.state.connections.flatMap(c => {
+                            this.state.connections.flatMap((c) => {
                                 return [<Connection key={c.id} data={c} onSelected={() => this.connectionSelected(c)}
                                                     selected={this.state.selected === c.id}
-                                                    onMarked={marked => c.marked = marked}
-                                                    onEnabled={enabled => c.hidden = !enabled}
+                                                    onMarked={(marked) => c.marked = marked}
+                                                    onEnabled={(enabled) => c.hidden = !enabled}
                                                     services={this.state.services}/>,
                                     c.matched_rules.length > 0 &&
                                     <ConnectionMatchedRules key={c.id + "_m"} matchedRules={c.matched_rules}

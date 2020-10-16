@@ -37,7 +37,7 @@ class Connection extends Component {
         if (name === "hide") {
             const enabled = !this.props.data.hidden;
             backend.post(`/api/connections/${this.props.data.id}/${enabled ? "hide" : "show"}`)
-                .then(_ => {
+                .then((_) => {
                     this.props.onEnabled(!enabled);
                     this.setState({update: true});
                 });
@@ -45,7 +45,7 @@ class Connection extends Component {
         if (name === "mark") {
             const marked = this.props.data.marked;
             backend.post(`/api/connections/${this.props.data.id}/${marked ? "unmark" : "mark"}`)
-                .then(_ => {
+                .then((_) => {
                     this.props.onMarked(!marked);
                     this.setState({update: true});
                 });
