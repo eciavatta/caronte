@@ -1,0 +1,41 @@
+@import "../colors";
+
+.header {
+  height: 80px;
+  padding: 15px 30px;
+
+  > .row {
+    background-color: $color-primary-0;
+  }
+
+  .header-title {
+    width: 200px;
+    margin: 5px 0 5px -5px;
+  }
+
+  .header-buttons {
+    display: flex;
+    justify-content: flex-end;
+    margin: 7px 0;
+
+    .button-field {
+      margin-left: 7px;
+    }
+  }
+
+  .filters-bar {
+    padding: 3px 0;
+
+    .filter,
+    .button-field {
+      display: inline-block;
+      margin-right: 10px;
+    }
+
+    .button-field button {
+      font-weight: 400;
+      padding: 7px 10px;
+      border-radius: 5px;
+    }
+  }
+}

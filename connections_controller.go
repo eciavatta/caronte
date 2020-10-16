@@ -1,3 +1,20 @@
+/*
+ * This file is part of caronte (https://github.com/eciavatta/caronte).
+ * Copyright (c) 2020 Emiliano Ciavatta.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package main
 
 import (
@@ -31,48 +48,54 @@ type Connection struct {
 }
 
 type ConnectionsFilter struct {
-	From          string  `form:"from" binding:"omitempty,hexadecimal,len=24"`
-	To            string  `form:"to" binding:"omitempty,hexadecimal,len=24"`
-	ServicePort   uint16  `form:"service_port"`
-	ClientAddress string  `form:"client_address" binding:"omitempty,ip"`
-	ClientPort    uint16  `form:"client_port"`
-	MinDuration   uint    `form:"min_duration"`
-	MaxDuration   uint    `form:"max_duration" binding:"omitempty,gtefield=MinDuration"`
-	MinBytes      uint    `form:"min_bytes"`
-	MaxBytes      uint    `form:"max_bytes" binding:"omitempty,gtefield=MinBytes"`
-	StartedAfter  int64   `form:"started_after" `
-	StartedBefore int64   `form:"started_before" binding:"omitempty,gtefield=StartedAfter"`
-	ClosedAfter   int64   `form:"closed_after" `
-	ClosedBefore  int64   `form:"closed_before" binding:"omitempty,gtefield=ClosedAfter"`
-	Hidden        bool    `form:"hidden"`
-	Marked        bool    `form:"marked"`
-	MatchedRules  []string `form:"matched_rules" binding:"dive,hexadecimal,len=24"`
-	Limit         int64   `form:"limit"`
+	From            string   `form:"from" binding:"omitempty,hexadecimal,len=24"`
+	To              string   `form:"to" binding:"omitempty,hexadecimal,len=24"`
+	ServicePort     uint16   `form:"service_port"`
+	ClientAddress   string   `form:"client_address" binding:"omitempty,ip"`
+	ClientPort      uint16   `form:"client_port"`
+	MinDuration     uint     `form:"min_duration"`
+	MaxDuration     uint     `form:"max_duration" binding:"omitempty,gtefield=MinDuration"`
+	MinBytes        uint     `form:"min_bytes"`
+	MaxBytes        uint     `form:"max_bytes" binding:"omitempty,gtefield=MinBytes"`
+	StartedAfter    int64    `form:"started_after" `
+	StartedBefore   int64    `form:"started_before" binding:"omitempty,gtefield=StartedAfter"`
+	ClosedAfter     int64    `form:"closed_after" `
+	ClosedBefore    int64    `form:"closed_before" binding:"omitempty,gtefield=ClosedAfter"`
+	Hidden          bool     `form:"hidden"`
+	Marked          bool     `form:"marked"`
+	MatchedRules    []string `form:"matched_rules" binding:"dive,hexadecimal,len=24"`
+	PerformedSearch string   `form:"performed_search" binding:"omitempty,hexadecimal,len=24"`
+	Limit           int64    `form:"limit"`
 }
 
 type ConnectionsController struct {
-	storage Storage
+	storage            Storage
+	searchController   *SearchController
 	servicesController *ServicesController
 }
 
-func NewConnectionsController(storage Storage, servicesController *ServicesController) ConnectionsController {
+func NewConnectionsController(storage Storage, searchesController *SearchController,
+	servicesController *ServicesController) ConnectionsController {
 	return ConnectionsController{
-		storage: storage,
+		storage:            storage,
+		searchController:   searchesController,
 		servicesController: servicesController,
 	}
 }
 
 func (cc ConnectionsController) GetConnections(c context.Context, filter ConnectionsFilter) []Connection {
 	var connections []Connection
-	query := cc.storage.Find(Connections).Context(c).Sort("_id", false)
+	query := cc.storage.Find(Connections).Context(c)
 
 	from, _ := RowIDFromHex(filter.From)
 	if !from.IsZero() {
-		query = query.Filter(OrderedDocument{{"_id", UnorderedDocument{"$lt": from}}})
+		query = query.Filter(OrderedDocument{{"_id", UnorderedDocument{"$lte": from}}})
 	}
 	to, _ := RowIDFromHex(filter.To)
 	if !to.IsZero() {
-		query = query.Filter(OrderedDocument{{"_id", UnorderedDocument{"$gt": to}}})
+		query = query.Filter(OrderedDocument{{"_id", UnorderedDocument{"$gte": to}}})
+	} else {
+		query = query.Sort("_id", false)
 	}
 	if filter.ServicePort > 0 {
 		query = query.Filter(OrderedDocument{{"port_dst", filter.ServicePort}})
@@ -125,6 +148,13 @@ func (cc ConnectionsController) GetConnections(c context.Context, filter Connect
 
 		query = query.Filter(OrderedDocument{{"matched_rules", UnorderedDocument{"$all": matchedRules}}})
 	}
+	performedSearchID, _ := RowIDFromHex(filter.PerformedSearch)
+	if !performedSearchID.IsZero() {
+		performedSearch := cc.searchController.GetPerformedSearch(performedSearchID)
+		if !performedSearch.ID.IsZero() && len(performedSearch.AffectedConnections) > 0 {
+			query = query.Filter(OrderedDocument{{"_id", UnorderedDocument{"$in": performedSearch.AffectedConnections}}})
+		}
+	}
 	if filter.Limit > 0 && filter.Limit <= MaxQueryLimit {
 		query = query.Limit(filter.Limit)
 	} else {
@@ -144,6 +174,10 @@ func (cc ConnectionsController) GetConnections(c context.Context, filter Connect
 		if service, isPresent := services[connection.DestinationPort]; isPresent {
 			connections[i].Service = service
 		}
+	}
+
+	if !to.IsZero() {
+		connections = reverseConnections(connections)
 	}
 
 	return connections
@@ -177,4 +211,12 @@ func (cc ConnectionsController) setProperty(c context.Context, id RowID, propert
 		log.WithError(err).WithField("id", id).Panic("failed to update a connection property")
 	}
 	return updated
+}
+
+func reverseConnections(connections []Connection) []Connection {
+	for i := 0; i < len(connections)/2; i++ {
+		j := len(connections) - i - 1
+		connections[i], connections[j] = connections[j], connections[i]
+	}
+	return connections
 }

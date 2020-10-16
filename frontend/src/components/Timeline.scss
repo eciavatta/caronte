@@ -1,0 +1,27 @@
+@import "../colors";
+
+.footer {
+  padding: 15px;
+
+  .time-line {
+    position: relative;
+    background-color: $color-primary-0;
+
+    .metric-selection {
+      font-size: 0.8em;
+      position: absolute;
+      top: 5px;
+      right: 10px;
+      width: 180px;
+    }
+
+    &.pulse-timeline {
+      animation: pulse 2s infinite;
+    }
+  }
+
+  svg text {
+    font-family: "Fira Code", monospace !important;
+    fill: $color-primary-4 !important;
+  }
+}

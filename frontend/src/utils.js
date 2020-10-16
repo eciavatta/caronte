@@ -1,15 +1,32 @@
+/*
+ * This file is part of caronte (https://github.com/eciavatta/caronte).
+ * Copyright (c) 2020 Emiliano Ciavatta.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 const timeRegex = /^(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$/;
 
 export function createCurlCommand(subCommand, method = null, json = null, data = null) {
-    const full = window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : '');
+    const full = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ":" + window.location.port : "");
 
     let contentType = null;
     let content = null;
     if (json != null) {
-        contentType = '    -H "Content-Type: application/json" \\\n';
+        contentType = "    -H \"Content-Type: application/json\" \\\n";
         content = `    -d '${JSON.stringify(json)}'`;
     } else if (data != null) {
-        contentType = '    -H "Content-Type: multipart/form-data" \\\n';
+        contentType = "    -H \"Content-Type: multipart/form-data\" \\\n";
         content = "    " + Object.entries(data).map(([key, value]) => `-F "${key}=${value}"`).join(" \\\n    ");
     }
 
@@ -49,13 +66,13 @@ export function timeToTimestamp(time) {
     let d = new Date();
     let matches = time.match(timeRegex);
 
-    if (matches[1] !== undefined) {
+    if (matches[1]) {
         d.setHours(matches[1]);
     }
-    if (matches[2] !== undefined) {
+    if (matches[2]) {
         d.setMinutes(matches[2]);
     }
-    if (matches[3] !== undefined) {
+    if (matches[3]) {
         d.setSeconds(matches[3]);
     }
 
@@ -67,7 +84,7 @@ export function timestampToTime(timestamp) {
     let hours = d.getHours();
     let minutes = "0" + d.getMinutes();
     let seconds = "0" + d.getSeconds();
-    return hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
+    return hours + ":" + minutes.substr(-2) + ":" + seconds.substr(-2);
 }
 
 export function timestampToDateTime(timestamp) {
@@ -83,7 +100,7 @@ export function dateTimeToTime(dateTime) {
     let hours = dateTime.getHours();
     let minutes = "0" + dateTime.getMinutes();
     let seconds = "0" + dateTime.getSeconds();
-    return hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
+    return hours + ":" + minutes.substr(-2) + ":" + seconds.substr(-2);
 }
 
 export function durationBetween(from, to) {
@@ -110,4 +127,38 @@ export function formatSize(size) {
 
 export function randomClassName() {
     return Math.random().toString(36).slice(2);
+}
+
+export function getHeaderValue(request, key) {
+    if (request && request.headers) {
+        return request.headers[Object.keys(request.headers).find((k) => k.toLowerCase() === key.toLowerCase())];
+    }
+    return null;
+}
+
+export function downloadBlob(blob, fileName) {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.style.display = "none";
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
+export function updateParams(urlParams, payload) {
+    const params = new URLSearchParams(urlParams.toString());
+    Object.entries(payload).forEach(([key, value]) => {
+        if (value == null) {
+            params.delete(key);
+        } else if (Array.isArray(value)) {
+            params.delete(key);
+            value.forEach((v) => params.append(key, v));
+        } else {
+            params.set(key, value);
+        }
+    });
+
+    return params;
 }

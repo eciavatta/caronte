@@ -28,7 +28,7 @@
         display: none;
       }
 
-      .file-label:after {
+      .file-label::after {
         position: absolute;
         top: 0;
         right: 0;
@@ -47,13 +47,14 @@
       background-color: $color-primary-4 !important;
     }
 
-    .field-value input, .field-value .file-label {
-      color: $color-primary-3 !important;
-      background-color: $color-primary-4 !important;
+    .file-label::after {
+      background-color: $color-secondary-4 !important;
     }
 
-    .file-label:after {
-      background-color: $color-secondary-4 !important;
+    .field-value input,
+    .field-value .file-label {
+      color: $color-primary-3 !important;
+      background-color: $color-primary-4 !important;
     }
   }
 
@@ -63,12 +64,13 @@
       background-color: $color-secondary-2 !important;
     }
 
-    .field-value input, .field-value .file-label {
+    .field-value input,
+    .field-value .file-label {
       color: $color-primary-4 !important;
       background-color: $color-secondary-2 !important;
     }
 
-    .file-label:after {
+    .file-label::after {
       background-color: $color-secondary-1 !important;
     }
   }
@@ -90,7 +92,8 @@
     .field-input {
       width: 100%;
 
-      input, .file-label {
+      input,
+      .file-label {
         padding-left: 3px;
         border-top-left-radius: 0;
         border-bottom-left-radius: 0;

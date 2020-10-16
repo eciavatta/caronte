@@ -1,0 +1,49 @@
+@import "../colors.scss";
+
+.notifications {
+  position: absolute;
+  z-index: 50;
+  bottom: 50px;
+  left: 30px;
+
+  .notification {
+    width: 250px;
+    margin: 10px 0;
+    padding: 10px;
+    cursor: pointer;
+    transition: all 1s ease;
+    transform: translateX(-300px);
+    color: $color-green-light;
+    border-left: 5px solid $color-green-dark;
+    background-color: $color-green;
+
+    .notification-title {
+      font-size: 0.9em;
+      margin: 0;
+    }
+
+    .notification-description {
+      font-size: 0.8em;
+      overflow: hidden;
+      margin: 10px 0;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      color: $color-primary-4;
+    }
+
+    &.notification-open {
+      transform: translateX(0);
+    }
+
+    &.notification-closed {
+      transform: translateY(-50px);
+      opacity: 0;
+    }
+
+    &.notification-blue {
+      color: $color-blue-light;
+      border-left: 5px solid $color-blue-dark;
+      background-color: $color-blue;
+    }
+  }
+}

@@ -1,16 +1,37 @@
+/*
+ * This file is part of caronte (https://github.com/eciavatta/caronte).
+ * Copyright (c) 2020 Emiliano Ciavatta.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package main
 
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"github.com/eciavatta/caronte/parsers"
 	log "github.com/sirupsen/logrus"
+	"strings"
 	"time"
 )
 
-const InitialPayloadsSize = 1024
-const DefaultQueryFormatLimit = 8024
-const InitialRegexSlicesCount = 8
+const (
+	initialMessagesSize     = 1024
+	initialRegexSlicesCount = 8
+	pwntoolsMaxServerBytes  = 20
+)
 
 type ConnectionStream struct {
 	ID               RowID                   `bson:"_id"`
@@ -18,6 +39,7 @@ type ConnectionStream struct {
 	FromClient       bool                    `bson:"from_client"`
 	DocumentIndex    int                     `bson:"document_index"`
 	Payload          []byte                  `bson:"payload"`
+	PayloadString    string                  `bson:"payload_string"`
 	BlocksIndexes    []int                   `bson:"blocks_indexes"`
 	BlocksTimestamps []time.Time             `bson:"blocks_timestamps"`
 	BlocksLoss       []bool                  `bson:"blocks_loss"`
@@ -26,7 +48,7 @@ type ConnectionStream struct {
 
 type PatternSlice [2]uint64
 
-type Payload struct {
+type Message struct {
 	FromClient             bool             `json:"from_client"`
 	Content                string           `json:"content"`
 	Metadata               parsers.Metadata `json:"metadata"`
@@ -42,10 +64,13 @@ type RegexSlice struct {
 	To   uint64 `json:"to"`
 }
 
-type QueryFormat struct {
+type GetMessageFormat struct {
 	Format string `form:"format"`
-	Skip   uint64 `form:"skip"`
-	Limit  uint64 `form:"limit"`
+}
+
+type DownloadMessageFormat struct {
+	Format string `form:"format"`
+	Type   string `form:"type"`
 }
 
 type ConnectionStreamsController struct {
@@ -58,14 +83,15 @@ func NewConnectionStreamsController(storage Storage) ConnectionStreamsController
 	}
 }
 
-func (csc ConnectionStreamsController) GetConnectionPayload(c context.Context, connectionID RowID,
-	format QueryFormat) []*Payload {
-	payloads := make([]*Payload, 0, InitialPayloadsSize)
-	var clientIndex, serverIndex, globalIndex uint64
-
-	if format.Limit <= 0 {
-		format.Limit = DefaultQueryFormatLimit
+func (csc ConnectionStreamsController) GetConnectionMessages(c context.Context, connectionID RowID,
+	format GetMessageFormat) ([]*Message, bool) {
+	connection := csc.getConnection(c, connectionID)
+	if connection.ID.IsZero() {
+		return nil, false
 	}
+
+	messages := make([]*Message, 0, initialMessagesSize)
+	var clientIndex, serverIndex uint64
 
 	var clientBlocksIndex, serverBlocksIndex int
 	var clientDocumentIndex, serverDocumentIndex int
@@ -79,8 +105,8 @@ func (csc ConnectionStreamsController) GetConnectionPayload(c context.Context, c
 		return serverBlocksIndex < len(serverStream.BlocksIndexes)
 	}
 
-	var payload *Payload
-	payloadsBuffer := make([]*Payload, 0, 16)
+	var message *Message
+	messagesBuffer := make([]*Message, 0, 16)
 	contentChunkBuffer := new(bytes.Buffer)
 	var lastContentSlice []byte
 	var sideChanged, lastClient, lastServer bool
@@ -97,7 +123,7 @@ func (csc ConnectionStreamsController) GetConnectionPayload(c context.Context, c
 			}
 			size := uint64(end - start)
 
-			payload = &Payload{
+			message = &Message{
 				FromClient:      true,
 				Content:         DecodeBytes(clientStream.Payload[start:end], format.Format),
 				Index:           start,
@@ -106,7 +132,6 @@ func (csc ConnectionStreamsController) GetConnectionPayload(c context.Context, c
 				RegexMatches:    findMatchesBetween(clientStream.PatternMatches, clientIndex, clientIndex+size),
 			}
 			clientIndex += size
-			globalIndex += size
 			clientBlocksIndex++
 
 			lastContentSlice = clientStream.Payload[start:end]
@@ -121,7 +146,7 @@ func (csc ConnectionStreamsController) GetConnectionPayload(c context.Context, c
 			}
 			size := uint64(end - start)
 
-			payload = &Payload{
+			message = &Message{
 				FromClient:      false,
 				Content:         DecodeBytes(serverStream.Payload[start:end], format.Format),
 				Index:           start,
@@ -130,7 +155,6 @@ func (csc ConnectionStreamsController) GetConnectionPayload(c context.Context, c
 				RegexMatches:    findMatchesBetween(serverStream.PatternMatches, serverIndex, serverIndex+size),
 			}
 			serverIndex += size
-			globalIndex += size
 			serverBlocksIndex++
 
 			lastContentSlice = serverStream.Payload[start:end]
@@ -140,49 +164,150 @@ func (csc ConnectionStreamsController) GetConnectionPayload(c context.Context, c
 		if !hasClientBlocks() {
 			clientDocumentIndex++
 			clientBlocksIndex = 0
+			clientIndex = 0
 			clientStream = csc.getConnectionStream(c, connectionID, true, clientDocumentIndex)
 		}
 		if !hasServerBlocks() {
 			serverDocumentIndex++
 			serverBlocksIndex = 0
+			serverIndex = 0
 			serverStream = csc.getConnectionStream(c, connectionID, false, serverDocumentIndex)
 		}
 
 		updateMetadata := func() {
 			metadata := parsers.Parse(contentChunkBuffer.Bytes())
 			var isMetadataContinuation bool
-			for _, elem := range payloadsBuffer {
+			for _, elem := range messagesBuffer {
 				elem.Metadata = metadata
 				elem.IsMetadataContinuation = isMetadataContinuation
 				isMetadataContinuation = true
 			}
 
-			payloadsBuffer = payloadsBuffer[:0]
+			messagesBuffer = messagesBuffer[:0]
 			contentChunkBuffer.Reset()
 		}
 
 		if sideChanged {
 			updateMetadata()
 		}
-		payloadsBuffer = append(payloadsBuffer, payload)
+		messagesBuffer = append(messagesBuffer, message)
 		contentChunkBuffer.Write(lastContentSlice)
 
 		if clientStream.ID.IsZero() && serverStream.ID.IsZero() {
 			updateMetadata()
 		}
 
-		if globalIndex > format.Skip {
-			// problem: waste of time if the payload is discarded
-			payloads = append(payloads, payload)
+		messages = append(messages, message)
+	}
+
+	return messages, true
+}
+
+func (csc ConnectionStreamsController) DownloadConnectionMessages(c context.Context, connectionID RowID,
+	format DownloadMessageFormat) (string, bool) {
+	connection := csc.getConnection(c, connectionID)
+	if connection.ID.IsZero() {
+		return "", false
+	}
+
+	var sb strings.Builder
+	includeClient, includeServer := format.Type != "only_server", format.Type != "only_client"
+	isPwntools := format.Type == "pwntools"
+
+	var clientBlocksIndex, serverBlocksIndex int
+	var clientDocumentIndex, serverDocumentIndex int
+	var clientStream ConnectionStream
+	if includeClient {
+		clientStream = csc.getConnectionStream(c, connectionID, true, clientDocumentIndex)
+	}
+	var serverStream ConnectionStream
+	if includeServer {
+		serverStream = csc.getConnectionStream(c, connectionID, false, serverDocumentIndex)
+	}
+
+	hasClientBlocks := func() bool {
+		return clientBlocksIndex < len(clientStream.BlocksIndexes)
+	}
+	hasServerBlocks := func() bool {
+		return serverBlocksIndex < len(serverStream.BlocksIndexes)
+	}
+
+	if isPwntools {
+		if format.Format == "base32" || format.Format == "base64" {
+			sb.WriteString("import base64\n")
 		}
-		if globalIndex > format.Skip+format.Limit {
-			// problem: the last chunk is not parsed, but can be ok because it is not finished
-			updateMetadata()
-			return payloads
+		sb.WriteString("from pwn import *\n\n")
+		sb.WriteString(fmt.Sprintf("p = remote('%s', %d)\n", connection.DestinationIP, connection.DestinationPort))
+	}
+
+	lastIsClient, lastIsServer := true, true
+	for !clientStream.ID.IsZero() || !serverStream.ID.IsZero() {
+		if hasClientBlocks() && (!hasServerBlocks() || // next payload is from client
+			clientStream.BlocksTimestamps[clientBlocksIndex].UnixNano() <=
+				serverStream.BlocksTimestamps[serverBlocksIndex].UnixNano()) {
+			start := clientStream.BlocksIndexes[clientBlocksIndex]
+			end := 0
+			if clientBlocksIndex < len(clientStream.BlocksIndexes)-1 {
+				end = clientStream.BlocksIndexes[clientBlocksIndex+1]
+			} else {
+				end = len(clientStream.Payload)
+			}
+
+			if !lastIsClient {
+				sb.WriteString("\n")
+			}
+			lastIsClient = true
+			lastIsServer = false
+			if isPwntools {
+				sb.WriteString(decodePwntools(clientStream.Payload[start:end], true, format.Format))
+			} else {
+				sb.WriteString(DecodeBytes(clientStream.Payload[start:end], format.Format))
+			}
+			clientBlocksIndex++
+		} else { // next payload is from server
+			start := serverStream.BlocksIndexes[serverBlocksIndex]
+			end := 0
+			if serverBlocksIndex < len(serverStream.BlocksIndexes)-1 {
+				end = serverStream.BlocksIndexes[serverBlocksIndex+1]
+			} else {
+				end = len(serverStream.Payload)
+			}
+
+			if !lastIsServer {
+				sb.WriteString("\n")
+			}
+			lastIsClient = false
+			lastIsServer = true
+			if isPwntools {
+				sb.WriteString(decodePwntools(serverStream.Payload[start:end], false, format.Format))
+			} else {
+				sb.WriteString(DecodeBytes(serverStream.Payload[start:end], format.Format))
+			}
+			serverBlocksIndex++
+		}
+
+		if includeClient && !hasClientBlocks() {
+			clientDocumentIndex++
+			clientBlocksIndex = 0
+			clientStream = csc.getConnectionStream(c, connectionID, true, clientDocumentIndex)
+		}
+		if includeServer && !hasServerBlocks() {
+			serverDocumentIndex++
+			serverBlocksIndex = 0
+			serverStream = csc.getConnectionStream(c, connectionID, false, serverDocumentIndex)
 		}
 	}
 
-	return payloads
+	return sb.String(), true
+}
+
+func (csc ConnectionStreamsController) getConnection(c context.Context, connectionID RowID) Connection {
+	var connection Connection
+	if err := csc.storage.Find(Connections).Context(c).Filter(OrderedDocument{{"_id", connectionID}}).
+		First(&connection); err != nil {
+		log.WithError(err).WithField("id", connectionID).Panic("failed to get connection")
+	}
+	return connection
 }
 
 func (csc ConnectionStreamsController) getConnectionStream(c context.Context, connectionID RowID, fromClient bool,
@@ -199,14 +324,13 @@ func (csc ConnectionStreamsController) getConnectionStream(c context.Context, co
 }
 
 func findMatchesBetween(patternMatches map[uint][]PatternSlice, from, to uint64) []RegexSlice {
-	regexSlices := make([]RegexSlice, 0, InitialRegexSlicesCount)
+	regexSlices := make([]RegexSlice, 0, initialRegexSlicesCount)
 	for _, slices := range patternMatches {
 		for _, slice := range slices {
 			if from > slice[1] || to <= slice[0] {
 				continue
 			}
 
-			log.Info(slice[0], slice[1], from, to)
 			var start, end uint64
 			if from > slice[0] {
 				start = 0
@@ -224,4 +348,28 @@ func findMatchesBetween(patternMatches map[uint][]PatternSlice, from, to uint64)
 		}
 	}
 	return regexSlices
+}
+
+func decodePwntools(payload []byte, isClient bool, format string) string {
+	if !isClient && len(payload) > pwntoolsMaxServerBytes {
+		payload = payload[len(payload)-pwntoolsMaxServerBytes:]
+	}
+
+	var content string
+	switch format {
+	case "hex":
+		content = fmt.Sprintf("bytes.fromhex('%s')", DecodeBytes(payload, format))
+	case "base32":
+		content = fmt.Sprintf("base64.b32decode('%s')", DecodeBytes(payload, format))
+	case "base64":
+		content = fmt.Sprintf("base64.b64decode('%s')", DecodeBytes(payload, format))
+	default:
+		content = fmt.Sprintf("'%s'", strings.Replace(DecodeBytes(payload, "ascii"), "'", "\\'", -1))
+	}
+
+	if isClient {
+		return fmt.Sprintf("p.send(%s)\n", content)
+	}
+
+	return fmt.Sprintf("p.recvuntil(%s)\n", content)
 }

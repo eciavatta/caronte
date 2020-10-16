@@ -1,3 +1,20 @@
+/*
+ * This file is part of caronte (https://github.com/eciavatta/caronte).
+ * Copyright (c) 2020 Emiliano Ciavatta.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package main
 
 import (
@@ -20,10 +37,14 @@ type ApplicationContext struct {
 	ConnectionsController       ConnectionsController
 	ServicesController          *ServicesController
 	ConnectionStreamsController ConnectionStreamsController
+	SearchController            *SearchController
+	StatisticsController        StatisticsController
+	NotificationController      *NotificationController
 	IsConfigured                bool
+	Version                     string
 }
 
-func CreateApplicationContext(storage Storage) (*ApplicationContext, error) {
+func CreateApplicationContext(storage Storage, version string) (*ApplicationContext, error) {
 	var configWrapper struct {
 		Config Config
 	}
@@ -44,18 +65,18 @@ func CreateApplicationContext(storage Storage) (*ApplicationContext, error) {
 	}
 
 	applicationContext := &ApplicationContext{
-		Storage:  storage,
-		Config:   configWrapper.Config,
-		Accounts: accountsWrapper.Accounts,
+		Storage:                storage,
+		Config:                 configWrapper.Config,
+		Accounts:               accountsWrapper.Accounts,
+		Version:                version,
 	}
 
-	applicationContext.configure()
 	return applicationContext, nil
 }
 
 func (sm *ApplicationContext) SetConfig(config Config) {
 	sm.Config = config
-	sm.configure()
+	sm.Configure()
 	var upsertResults interface{}
 	if _, err := sm.Storage.Update(Settings).Upsert(&upsertResults).
 		Filter(OrderedDocument{{"_id", "config"}}).One(UnorderedDocument{"config": config}); err != nil {
@@ -72,7 +93,11 @@ func (sm *ApplicationContext) SetAccounts(accounts gin.Accounts) {
 	}
 }
 
-func (sm *ApplicationContext) configure() {
+func (sm *ApplicationContext) SetNotificationController(notificationController *NotificationController) {
+	sm.NotificationController = notificationController
+}
+
+func (sm *ApplicationContext) Configure() {
 	if sm.IsConfigured {
 		return
 	}
@@ -89,9 +114,11 @@ func (sm *ApplicationContext) configure() {
 		log.WithError(err).Panic("failed to create a RulesManager")
 	}
 	sm.RulesManager = rulesManager
-	sm.PcapImporter = NewPcapImporter(sm.Storage, *serverNet, sm.RulesManager)
+	sm.PcapImporter = NewPcapImporter(sm.Storage, *serverNet, sm.RulesManager, sm.NotificationController)
 	sm.ServicesController = NewServicesController(sm.Storage)
-	sm.ConnectionsController = NewConnectionsController(sm.Storage, sm.ServicesController)
+	sm.SearchController = NewSearchController(sm.Storage)
+	sm.ConnectionsController = NewConnectionsController(sm.Storage, sm.SearchController, sm.ServicesController)
 	sm.ConnectionStreamsController = NewConnectionStreamsController(sm.Storage)
+	sm.StatisticsController = NewStatisticsController(sm.Storage)
 	sm.IsConfigured = true
 }

@@ -1,3 +1,20 @@
+/*
+ * This file is part of caronte (https://github.com/eciavatta/caronte).
+ * Copyright (c) 2020 Emiliano Ciavatta.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package main
 
 import (
@@ -7,6 +24,7 @@ import (
 	"github.com/flier/gohs/hyperscan"
 	"github.com/go-playground/validator/v10"
 	log "github.com/sirupsen/logrus"
+	"sort"
 	"sync"
 	"time"
 )
@@ -104,16 +122,22 @@ func LoadRulesManager(storage Storage, flagRegex string) (RulesManager, error) {
 
 	// if there are no rules in database (e.g. first run), set flagRegex as first rule
 	if len(rulesManager.rules) == 0 {
-		if _, err := rulesManager.AddRule(context.Background(), Rule{
-			Name:  "flag",
-			Color: "#E53935",
-			Notes: "Mark connections where the flag is stolen",
+		_, _ = rulesManager.AddRule(context.Background(), Rule{
+			Name:  "flag_out",
+			Color: "#e53935",
+			Notes: "Mark connections where the flags are stolen",
 			Patterns: []Pattern{
-				{Regex: flagRegex, Direction: DirectionToClient},
+				{Regex: flagRegex, Direction: DirectionToClient, Flags: RegexFlags{Utf8Mode: true}},
 			},
-		}); err != nil {
-			return nil, err
-		}
+		})
+		_, _ = rulesManager.AddRule(context.Background(), Rule{
+			Name:  "flag_in",
+			Color: "#43A047",
+			Notes: "Mark connections where the flags are placed",
+			Patterns: []Pattern{
+				{Regex: flagRegex, Direction: DirectionToServer, Flags: RegexFlags{Utf8Mode: true}},
+			},
+		})
 	} else {
 		if err := rulesManager.generateDatabase(rules[len(rules)-1].ID); err != nil {
 			return nil, err
@@ -189,6 +213,10 @@ func (rm *rulesManagerImpl) GetRules() []Rule {
 	for _, rule := range rm.rules {
 		rules = append(rules, rule)
 	}
+
+	sort.Slice(rules, func(i, j int) bool {
+		return rules[i].ID.Timestamp().Before(rules[j].ID.Timestamp())
+	})
 
 	return rules
 }
@@ -305,10 +333,10 @@ func (rm *rulesManagerImpl) validateAndAddRuleLocal(rule *Rule) error {
 		duplicatePatterns[regex] = true
 	}
 
-	startId := len(rm.patterns)
+	startID := len(rm.patterns)
 	for id, pattern := range newPatterns {
 		rm.patterns = append(rm.patterns, pattern)
-		rm.patternsIds[pattern.String()] = uint(startId + id)
+		rm.patternsIds[pattern.String()] = uint(startID + id)
 	}
 
 	rm.rules[rule.ID] = *rule
@@ -323,11 +351,13 @@ func (rm *rulesManagerImpl) generateDatabase(version RowID) error {
 		return err
 	}
 
-	rm.databaseUpdated <- RulesDatabase{
-		database:     database,
-		databaseSize: len(rm.patterns),
-		version:      version,
-	}
+	go func() {
+		rm.databaseUpdated <- RulesDatabase{
+			database:     database,
+			databaseSize: len(rm.patterns),
+			version:      version,
+		}
+	}()
 
 	return nil
 }

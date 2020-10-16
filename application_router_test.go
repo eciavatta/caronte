@@ -1,3 +1,20 @@
+/*
+ * This file is part of caronte (https://github.com/eciavatta/caronte).
+ * Copyright (c) 2020 Emiliano Ciavatta.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package main
 
 import (
@@ -92,7 +109,7 @@ func TestRulesApi(t *testing.T) {
 	var rules []Rule
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &rules))
-	assert.Len(t, rules, 3)
+	assert.Len(t, rules, 4)
 
 	toolkit.wrapper.Destroy(t)
 }
@@ -148,10 +165,13 @@ func NewRouterTestToolkit(t *testing.T, withSetup bool) *RouterTestToolkit {
 	wrapper := NewTestStorageWrapper(t)
 	wrapper.AddCollection(Settings)
 
-	appContext, err := CreateApplicationContext(wrapper.Storage)
+	appContext, err := CreateApplicationContext(wrapper.Storage, "test")
 	require.NoError(t, err)
 	gin.SetMode(gin.ReleaseMode)
-	router := CreateApplicationRouter(appContext)
+	notificationController := NewNotificationController(appContext)
+	go notificationController.Run()
+	resourcesController := NewResourcesController(notificationController)
+	router := CreateApplicationRouter(appContext, notificationController, resourcesController)
 
 	toolkit := RouterTestToolkit{
 		appContext: appContext,

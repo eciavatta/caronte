@@ -1,3 +1,20 @@
+/*
+ * This file is part of caronte (https://github.com/eciavatta/caronte).
+ * Copyright (c) 2020 Emiliano Ciavatta.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package main
 
 import (
@@ -40,12 +57,12 @@ func CustomRowID(payload uint64, timestamp time.Time) RowID {
 	binary.BigEndian.PutUint32(key[0:4], uint32(timestamp.Unix()))
 	binary.BigEndian.PutUint64(key[4:12], payload)
 
-	if oid, err := primitive.ObjectIDFromHex(hex.EncodeToString(key[:])); err == nil {
+	oid, err := primitive.ObjectIDFromHex(hex.EncodeToString(key[:]))
+	if err == nil {
 		return oid
-	} else {
-		log.WithError(err).Warn("failed to create object id")
-		return primitive.NewObjectID()
 	}
+	log.WithError(err).Warn("failed to create object id")
+	return primitive.NewObjectID()
 }
 
 func NewRowID() RowID {
@@ -150,4 +167,12 @@ func ParseIPNet(address string) *net.IPNet {
 	}
 
 	return network
+}
+
+func Average(array []float64) float64 {
+	var sum float64
+	for _, f := range array {
+		sum += f
+	}
+	return sum / float64(len(array))
 }

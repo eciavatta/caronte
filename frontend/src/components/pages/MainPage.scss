@@ -1,0 +1,25 @@
+@import "../../colors";
+
+.main-page {
+  .page-content {
+    display: flex;
+    flex: 1;
+    padding: 0 15px;
+    background-color: $color-primary-2;
+
+    .connections-pane {
+      flex: 1 0;
+      margin-right: 7.5px;
+    }
+
+    .details-pane {
+      position: relative;
+      flex: 1 1;
+      margin-left: 7.5px;
+    }
+  }
+
+  .page-footer {
+    flex: 0;
+  }
+}

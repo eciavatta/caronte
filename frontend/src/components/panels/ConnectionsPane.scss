@@ -1,0 +1,41 @@
+@import "../../colors";
+
+.connections-container {
+  position: relative;
+  height: 100%;
+  background-color: $color-primary-3;
+
+  .connections {
+    position: relative;
+    overflow-y: scroll;
+    height: 100%;
+
+    .table {
+      margin-bottom: 0;
+    }
+
+    th {
+      font-size: 13.5px;
+      position: sticky;
+      top: 0;
+      padding: 5px;
+      border: none;
+      background-color: $color-primary-3;
+    }
+
+    &:hover::-webkit-scrollbar-thumb {
+      background: $color-secondary-2;
+    }
+  }
+
+  .most-recent-button {
+    position: absolute;
+    z-index: 20;
+    top: 45px;
+    left: calc(50% - 50px);
+  }
+
+  .connections-pulse {
+    animation: pulse 2s infinite;
+  }
+}

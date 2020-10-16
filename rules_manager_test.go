@@ -1,3 +1,20 @@
+/*
+ * This file is part of caronte (https://github.com/eciavatta/caronte).
+ * Copyright (c) 2020 Emiliano Ciavatta.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package main
 
 import (
@@ -14,7 +31,8 @@ func TestAddAndGetAllRules(t *testing.T) {
 	rulesManager, err := LoadRulesManager(wrapper.Storage, "FLAG{test}")
 	require.NoError(t, err)
 	impl := rulesManager.(*rulesManagerImpl)
-	checkVersion(t, rulesManager, impl.rulesByName["flag"].ID)
+	checkVersion(t, rulesManager, impl.rulesByName["flag_out"].ID)
+	checkVersion(t, rulesManager, impl.rulesByName["flag_in"].ID)
 	emptyRule := Rule{Name: "empty", Color: "#fff", Enabled: true}
 	emptyID, err := rulesManager.AddRule(wrapper.Context, emptyRule)
 	assert.NoError(t, err)
@@ -103,8 +121,8 @@ func TestAddAndGetAllRules(t *testing.T) {
 		assert.Equal(t, expected, impl.rulesByName[expected.Name])
 	}
 
-	assert.Len(t, impl.rules, 5)
-	assert.Len(t, impl.rulesByName, 5)
+	assert.Len(t, impl.rules, 6)
+	assert.Len(t, impl.rulesByName, 6)
 	assert.Len(t, impl.patterns, 5)
 	assert.Len(t, impl.patternsIds, 5)
 
@@ -118,8 +136,9 @@ func TestAddAndGetAllRules(t *testing.T) {
 	checkRule(rule2, []int{2, 3})
 	checkRule(rule3, []int{3, 4})
 
-	assert.Len(t, rulesManager.GetRules(), 5)
-	assert.ElementsMatch(t, []Rule{impl.rulesByName["flag"], emptyRule, rule1, rule2, rule3}, rulesManager.GetRules())
+	assert.Len(t, rulesManager.GetRules(), 6)
+	assert.ElementsMatch(t, []Rule{impl.rulesByName["flag_out"], impl.rulesByName["flag_in"], emptyRule,
+		rule1, rule2, rule3}, rulesManager.GetRules())
 
 	wrapper.Destroy(t)
 }
@@ -193,7 +212,8 @@ func TestFillWithMatchedRules(t *testing.T) {
 	rulesManager, err := LoadRulesManager(wrapper.Storage, "FLAG{test}")
 	require.NoError(t, err)
 	impl := rulesManager.(*rulesManagerImpl)
-	checkVersion(t, rulesManager, impl.rulesByName["flag"].ID)
+	checkVersion(t, rulesManager, impl.rulesByName["flag_out"].ID)
+	checkVersion(t, rulesManager, impl.rulesByName["flag_in"].ID)
 
 	emptyRule, err := rulesManager.AddRule(wrapper.Context, Rule{Name: "empty", Color: "#fff"})
 	require.NoError(t, err)

@@ -1,0 +1,72 @@
+@import "../../colors";
+
+.connection {
+  border-top: 3px solid $color-primary-3;
+  border-bottom: 3px solid $color-primary-3;
+  background-color: $color-primary-0;
+
+  td {
+    vertical-align: middle;
+  }
+
+  .connection-service {
+    .btn {
+      width: 100%;
+    }
+
+    .btn:hover {
+      color: $color-primary-4;
+      background-color: $color-primary-1 !important;
+    }
+  }
+
+  .connection-icon {
+    font-size: 18px;
+    font-weight: 600;
+    margin-right: 6px;
+    cursor: pointer;
+  }
+
+  .connection-icon.icon-enabled {
+    color: $color-secondary-2;
+  }
+
+  &:hover {
+    background-color: $color-primary-2;
+  }
+
+  &.connection-selected {
+    background-color: $color-primary-2;
+  }
+
+  &.has-matched-rules {
+    border-bottom: 0;
+  }
+
+  .link-popover {
+    font-weight: 400;
+  }
+
+  .connection-actions .link-popover {
+    text-decoration: none;
+  }
+}
+
+.connection-popover {
+  border: none;
+  background-color: $color-primary-4;
+
+  .popover-body {
+    color: $color-primary-1;
+
+    textarea {
+      font-size: 12px;
+      width: 200px;
+      background-color: $color-primary-3;
+    }
+  }
+
+  .arrow::after {
+    border-right-color: $color-primary-4;
+  }
+}

@@ -1,3 +1,20 @@
+/*
+ * This file is part of caronte (https://github.com/eciavatta/caronte).
+ * Copyright (c) 2020 Emiliano Ciavatta.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package main
 
 import (
@@ -13,7 +30,8 @@ import (
 	"time"
 )
 
-func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine {
+func CreateApplicationRouter(applicationContext *ApplicationContext,
+	notificationController *NotificationController, resourcesController *ResourcesController) *gin.Engine {
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
@@ -21,7 +39,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 
 	router.Use(static.Serve("/", static.LocalFile("./frontend/build", true)))
 
-	for _, path := range []string{"/connections/:id", "/pcaps", "/rules", "/services", "/config"} {
+	for _, path := range []string{"/connections/:id", "/pcaps", "/rules", "/services", "/config", "/searches"} {
 		router.GET(path, func(c *gin.Context) {
 			c.File("./frontend/build/index.html")
 		})
@@ -47,6 +65,13 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 		applicationContext.SetAccounts(settings.Accounts)
 
 		c.JSON(http.StatusAccepted, gin.H{})
+		notificationController.Notify("setup", gin.H{})
+	})
+
+	router.GET("/ws", func(c *gin.Context) {
+		if err := notificationController.NotificationHandler(c.Writer, c.Request); err != nil {
+			serverError(c, err)
+		}
 	})
 
 	api := router.Group("/api")
@@ -68,7 +93,9 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 			if id, err := applicationContext.RulesManager.AddRule(c, rule); err != nil {
 				unprocessableEntity(c, err)
 			} else {
-				success(c, UnorderedDocument{"id": id})
+				response := UnorderedDocument{"id": id}
+				success(c, response)
+				notificationController.Notify("rules.new", response)
 			}
 		})
 
@@ -107,6 +134,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 				notFound(c, UnorderedDocument{"id": id})
 			} else {
 				success(c, rule)
+				notificationController.Notify("rules.edit", rule)
 			}
 		})
 
@@ -119,14 +147,16 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 			flushAllValue, isPresent := c.GetPostForm("flush_all")
 			flushAll := isPresent && strings.ToLower(flushAllValue) == "true"
 			fileName := fmt.Sprintf("%v-%s", time.Now().UnixNano(), fileHeader.Filename)
-			if err := c.SaveUploadedFile(fileHeader, ProcessingPcapsBasePath + fileName); err != nil {
+			if err := c.SaveUploadedFile(fileHeader, ProcessingPcapsBasePath+fileName); err != nil {
 				log.WithError(err).Panic("failed to save uploaded file")
 			}
 
 			if sessionID, err := applicationContext.PcapImporter.ImportPcap(fileName, flushAll); err != nil {
 				unprocessableEntity(c, err)
 			} else {
-				c.JSON(http.StatusAccepted, gin.H{"session": sessionID})
+				response := gin.H{"session": sessionID}
+				c.JSON(http.StatusAccepted, response)
+				notificationController.Notify("pcap.upload", response)
 			}
 		})
 
@@ -147,7 +177,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 			}
 
 			fileName := fmt.Sprintf("%v-%s", time.Now().UnixNano(), filepath.Base(request.File))
-			if err := CopyFile(ProcessingPcapsBasePath + fileName, request.File); err != nil {
+			if err := CopyFile(ProcessingPcapsBasePath+fileName, request.File); err != nil {
 				log.WithError(err).Panic("failed to copy pcap file")
 			}
 			if sessionID, err := applicationContext.PcapImporter.ImportPcap(fileName, request.FlushAll); err != nil {
@@ -158,7 +188,9 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 				}
 				unprocessableEntity(c, err)
 			} else {
-				c.JSON(http.StatusAccepted, gin.H{"session": sessionID})
+				response := gin.H{"session": sessionID}
+				c.JSON(http.StatusAccepted, response)
+				notificationController.Notify("pcap.file", response)
 			}
 		})
 
@@ -179,9 +211,9 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 			sessionID := c.Param("id")
 			if _, isPresent := applicationContext.PcapImporter.GetSession(sessionID); isPresent {
 				if FileExists(PcapsBasePath + sessionID + ".pcap") {
-					c.FileAttachment(PcapsBasePath + sessionID + ".pcap", sessionID[:16] + ".pcap")
+					c.FileAttachment(PcapsBasePath+sessionID+".pcap", sessionID[:16]+".pcap")
 				} else if FileExists(PcapsBasePath + sessionID + ".pcapng") {
-					c.FileAttachment(PcapsBasePath + sessionID + ".pcapng", sessionID[:16] + ".pcapng")
+					c.FileAttachment(PcapsBasePath+sessionID+".pcapng", sessionID[:16]+".pcapng")
 				} else {
 					log.WithField("sessionID", sessionID).Panic("pcap file not exists")
 				}
@@ -195,6 +227,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 			session := gin.H{"session": sessionID}
 			if cancelled := applicationContext.PcapImporter.CancelSession(sessionID); cancelled {
 				c.JSON(http.StatusAccepted, session)
+				notificationController.Notify("sessions.delete", session)
 			} else {
 				notFound(c, session)
 			}
@@ -253,10 +286,51 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 			}
 
 			if result {
-				c.Status(http.StatusAccepted)
+				response := gin.H{"connection_id": c.Param("id"), "action": c.Param("action")}
+				success(c, response)
+				notificationController.Notify("connections.action", response)
 			} else {
 				notFound(c, gin.H{"connection": id})
 			}
+		})
+
+		api.GET("/searches", func(c *gin.Context) {
+			success(c, applicationContext.SearchController.GetPerformedSearches())
+		})
+
+		api.POST("/searches/perform", func(c *gin.Context) {
+			var options SearchOptions
+
+			if err := c.ShouldBindJSON(&options); err != nil {
+				badRequest(c, err)
+				return
+			}
+
+			// stupid checks because validator library is a shit
+			var badContentError error
+			if options.TextSearch.isZero() == options.RegexSearch.isZero() {
+				badContentError = errors.New("specify either 'text_search' or 'regex_search'")
+			}
+			if !options.TextSearch.isZero() {
+				if (options.TextSearch.Terms == nil) == (options.TextSearch.ExactPhrase == "") {
+					badContentError = errors.New("specify either 'terms' or 'exact_phrase'")
+				}
+				if (options.TextSearch.Terms == nil) && (options.TextSearch.ExcludedTerms != nil) {
+					badContentError = errors.New("'excluded_terms' must be specified only with 'terms'")
+				}
+			}
+			if !options.RegexSearch.isZero() {
+				if (options.RegexSearch.Pattern == "") == (options.RegexSearch.NotPattern == "") {
+					badContentError = errors.New("specify either 'pattern' or 'not_pattern'")
+				}
+			}
+
+			if badContentError != nil {
+				badRequest(c, badContentError)
+				return
+			}
+
+			success(c, applicationContext.SearchController.PerformSearch(c, options))
 		})
 
 		api.GET("/streams/:id", func(c *gin.Context) {
@@ -265,12 +339,36 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 				badRequest(c, err)
 				return
 			}
-			var format QueryFormat
+			var format GetMessageFormat
 			if err := c.ShouldBindQuery(&format); err != nil {
 				badRequest(c, err)
 				return
 			}
-			success(c, applicationContext.ConnectionStreamsController.GetConnectionPayload(c, id, format))
+
+			if messages, found := applicationContext.ConnectionStreamsController.GetConnectionMessages(c, id, format); !found {
+				notFound(c, gin.H{"connection": id})
+			} else {
+				success(c, messages)
+			}
+		})
+
+		api.GET("/streams/:id/download", func(c *gin.Context) {
+			id, err := RowIDFromHex(c.Param("id"))
+			if err != nil {
+				badRequest(c, err)
+				return
+			}
+			var format DownloadMessageFormat
+			if err := c.ShouldBindQuery(&format); err != nil {
+				badRequest(c, err)
+				return
+			}
+
+			if blob, found := applicationContext.ConnectionStreamsController.DownloadConnectionMessages(c, id, format); !found {
+				notFound(c, gin.H{"connection": id})
+			} else {
+				c.String(http.StatusOK, blob)
+			}
 		})
 
 		api.GET("/services", func(c *gin.Context) {
@@ -285,13 +383,30 @@ func CreateApplicationRouter(applicationContext *ApplicationContext) *gin.Engine
 			}
 			if err := applicationContext.ServicesController.SetService(c, service); err == nil {
 				success(c, service)
+				notificationController.Notify("services.edit", service)
 			} else {
 				unprocessableEntity(c, err)
 			}
 		})
+
+		api.GET("/statistics", func(c *gin.Context) {
+			var filter StatisticsFilter
+			if err := c.ShouldBindQuery(&filter); err != nil {
+				badRequest(c, err)
+				return
+			}
+
+			success(c, applicationContext.StatisticsController.GetStatistics(c, filter))
+		})
+
+		api.GET("/resources/system", func(c *gin.Context) {
+			success(c, resourcesController.GetSystemStats(c))
+		})
+
+		api.GET("/resources/process", func(c *gin.Context) {
+			success(c, resourcesController.GetProcessStats(c))
+		})
 	}
-
-
 
 	return router
 }
@@ -351,4 +466,8 @@ func unprocessableEntity(c *gin.Context, err error) {
 
 func notFound(c *gin.Context, obj interface{}) {
 	c.JSON(http.StatusNotFound, obj)
+}
+
+func serverError(c *gin.Context, err error) {
+	c.JSON(http.StatusInternalServerError, UnorderedDocument{"result": "error", "error": err.Error()})
 }

@@ -1,0 +1,30 @@
+@import "../../colors";
+
+.configuration-page {
+  background-color: $color-primary-0;
+
+  .header-title {
+    margin: 50px auto;
+  }
+
+  .configuration-pane {
+    display: flex;
+    justify-content: center;
+    height: 100%;
+    padding-top: 100px;
+
+    .section-content {
+      background-color: $color-primary-3;
+      margin-top: 15px;
+    }
+
+    .section-table table {
+      background-color: red !important;
+    }
+
+    .section-footer {
+      background-color: $color-primary-3;
+    }
+  }
+}
+

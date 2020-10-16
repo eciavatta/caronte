@@ -1,0 +1,157 @@
+@import "../../colors.scss";
+
+.tag-field {
+  font-size: 0.9em;
+  margin: 5px 0;
+
+  .field-name {
+    label {
+      margin: 0;
+    }
+  }
+
+  .react-tags {
+    position: relative;
+    display: flex;
+    border-radius: 4px;
+    background-color: $color-primary-2;
+
+    &:focus-within,
+    &:focus-within .react-tags__search-input {
+      background-color: $color-primary-1;
+    }
+  }
+
+  &.field-small {
+    font-size: 0.8em;
+  }
+
+  &.field-inline {
+    display: flex;
+
+    .field-name {
+      padding: 6px 0 6px 7px;
+      border-top-left-radius: 5px;
+      border-bottom-left-radius: 5px;
+      background-color: $color-primary-2;
+    }
+
+    .field-input {
+      flex: 1;
+
+      .react-tags {
+        padding-left: 3px;
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+      }
+    }
+
+    &:focus-within .field-name {
+      background-color: $color-primary-1;
+    }
+  }
+
+  .react-tags__selected {
+    display: inline-block;
+    flex: 0 1;
+    margin: 6px 0;
+    white-space: nowrap;
+  }
+
+  .react-tags__selected-tag {
+    font-size: 0.75em;
+    margin: 0 3px;
+    padding: 2px 4px;
+    color: $color-primary-3;
+    border-radius: 2px;
+    background: $color-primary-4;
+  }
+
+  .react-tags__selected-tag::after {
+    margin-left: 8px;
+    content: "\2715";
+    color: $color-primary-3;
+  }
+
+  .react-tags__selected-tag:hover,
+  .react-tags__selected-tag:focus {
+    border-color: #b1b1b1;
+    background-color: $color-primary-0;
+
+    &::after {
+      color: $color-primary-4;
+    }
+  }
+
+  .react-tags__search {
+    flex: 1 0;
+  }
+
+  @media screen and (min-width: 30em) {
+    .react-tags__search {
+      position: relative;
+    }
+  }
+
+  .react-tags__search-input {
+    color: $color-primary-4;
+    background-color: $color-primary-2;
+  }
+
+  .react-tags__search-input::-ms-clear {
+    display: none;
+  }
+
+  .react-tags__suggestions {
+    position: absolute;
+    z-index: 50;
+    top: 100%;
+    left: 0;
+    width: 100%;
+  }
+
+  @media screen and (min-width: 30em) {
+    .react-tags__suggestions {
+      width: 240px;
+    }
+  }
+
+  .react-tags__suggestions ul {
+    font-size: 12px;
+    margin: 4px -1px;
+    padding: 0;
+    list-style: none;
+    border-radius: 3px;
+    background: $color-primary-2;
+  }
+
+  .react-tags__suggestions li {
+    padding: 5px 10px;
+  }
+
+  .react-tags__suggestions li mark {
+    font-weight: 600;
+    padding: 0;
+    color: $color-primary-4;
+    background: none;
+  }
+
+  .react-tags__suggestions li:hover {
+    cursor: pointer;
+    border-radius: 3px;
+    background: $color-primary-1;
+
+    mark {
+      color: $color-primary-4;
+    }
+  }
+
+  .react-tags__suggestions li.is-active {
+    background: $color-primary-3;
+  }
+
+  .react-tags__suggestions li.is-disabled {
+    cursor: auto;
+    opacity: 0.5;
+  }
+}

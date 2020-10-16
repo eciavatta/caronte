@@ -1,19 +1,35 @@
-import React, {Component} from 'react';
+/*
+ * This file is part of caronte (https://github.com/eciavatta/caronte).
+ * Copyright (c) 2020 Emiliano Ciavatta.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+import React, {Component} from "react";
 import {OverlayTrigger, Popover} from "react-bootstrap";
-import './ColorField.scss';
-import InputField from "../InputField";
 import validation from "../../../validation";
+import InputField from "../InputField";
+import "./ColorField.scss";
 
 class ColorField extends Component {
 
     constructor(props) {
         super(props);
 
-        this.state = {
-        };
+        this.state = {};
 
-        this.colors = ["#E53935", "#D81B60", "#8E24AA", "#5E35B1", "#3949AB", "#1E88E5", "#039BE5", "#00ACC1",
-            "#00897B", "#43A047", "#7CB342", "#9E9D24", "#F9A825", "#FB8C00", "#F4511E", "#6D4C41"];
+        this.colors = ["#e53935", "#d81b60", "#8e24aa", "#5e35b1", "#3949ab", "#1e88e5", "#039be5", "#00acc1",
+            "#00897b", "#43a047", "#7cb342", "#9e9d24", "#f9a825", "#fb8c00", "#f4511e", "#6d4c41"];
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -38,7 +54,7 @@ class ColorField extends Component {
                           this.props.onChange(color);
                       }
                       document.body.click(); // magic to close popup
-                  }} />);
+                  }}/>);
 
         const popover = (
             <Popover id="popover-basic">
@@ -65,7 +81,7 @@ class ColorField extends Component {
             <div className="field color-field">
                 <div className="color-input">
                     <InputField {...this.props} onChange={this.onChange} invalid={this.state.invalid} name="color"
-                                error={null} />
+                                error={null}/>
                     <div className="color-picker">
                         <OverlayTrigger trigger="click" placement="top" overlay={popover} rootClose>
                             <button type="button" className="picker-button" style={buttonStyles}>pick</button>

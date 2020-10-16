@@ -3,15 +3,16 @@ FROM ubuntu:20.04 AS BUILDSTAGE
 
 # Install tools and libraries
 RUN apt-get update && \
-	DEBIAN_FRONTEND=noninteractive apt-get install -qq golang-1.14 pkg-config libpcap-dev libhyperscan-dev yarnpkg
+	DEBIAN_FRONTEND=noninteractive apt-get install -qq git golang-1.14 pkg-config libpcap-dev libhyperscan-dev yarnpkg
 
 COPY . /caronte
 
 WORKDIR /caronte
 
 RUN ln -sf ../lib/go-1.14/bin/go /usr/bin/go && \
+    export VERSION=$(git describe --tags) && \
     go mod download && \
-    go build && \
+    go build -ldflags "-X main.Version=$VERSION" && \
     cd frontend && \
 	yarnpkg install && \
 	yarnpkg build --production=true && \

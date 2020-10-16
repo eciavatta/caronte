@@ -1,0 +1,23 @@
+@import "../../colors";
+
+.connection-matches {
+  background-color: $color-primary-0;
+
+  .rule-buttons {
+    padding: 0;
+  }
+
+  .button-field {
+    display: inline-block;
+    margin-right: 5px;
+
+    button {
+      font-size: 0.8em;
+      padding: 2px 10px;
+    }
+  }
+
+  .row-label {
+    font-size: 0.8em;
+  }
+}

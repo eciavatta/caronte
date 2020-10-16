@@ -1,0 +1,52 @@
+.search-pane {
+  display: flex;
+  flex-direction: column;
+
+  .searches-list {
+    overflow: hidden;
+    flex: 2 1;
+
+    .section-content {
+      height: 100%;
+    }
+
+    .section-table {
+      height: calc(100% - 30px);
+    }
+  }
+
+  .search-new {
+    .content-row {
+      display: flex;
+
+      .text-search,
+      .regex-search {
+        flex: 1;
+      }
+
+      .exclusive-separator {
+        font-size: 0.8em;
+        display: block;
+        text-align: center;
+      }
+
+      .separator {
+        font-size: 0.9em;
+        flex: 0;
+        margin: auto 10px;
+      }
+    }
+
+    .notes {
+      font-size: 0.8em;
+    }
+
+    .checkbox-line {
+      .check-field {
+        display: inline-block;
+        margin-top: 0;
+        margin-right: 10px;
+      }
+    }
+  }
+}
