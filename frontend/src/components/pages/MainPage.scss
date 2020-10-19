@@ -1,13 +1,11 @@
 @import "../../colors";
 
 .main-page {
-  .page-header {
-    min-height: 80px;
-  }
+  height: 100vh !important;
 
   .page-footer {
     overflow: hidden !important;
-    min-height: 175px;
+    min-height: 210px;
   }
 
   .page-content {

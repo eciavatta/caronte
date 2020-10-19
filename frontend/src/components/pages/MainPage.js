@@ -17,6 +17,7 @@
 
 import React, {Component} from "react";
 import {ReflexContainer, ReflexElement, ReflexSplitter} from "react-reflex";
+import "react-reflex/styles.css"
 import {Route, Switch} from "react-router-dom";
 import Filters from "../dialogs/Filters";
 import Header from "../Header";
@@ -28,14 +29,12 @@ import SearchPane from "../panels/SearchPane";
 import ServicesPane from "../panels/ServicesPane";
 import StreamsPane from "../panels/StreamsPane";
 import Timeline from "../Timeline";
-import "./common.scss";
 import "./MainPage.scss";
-import 'react-reflex/styles.css'
 
 class MainPage extends Component {
 
     state = {
-        timelineHeight: 175
+        timelineHeight: 210
     };
 
     handleTimelineResize = (e) => {
@@ -55,10 +54,12 @@ class MainPage extends Component {
 
         return (
             <ReflexContainer orientation="horizontal" className="page main-page">
-                <ReflexElement className="page-header">
-                    <Header onOpenFilters={() => this.setState({filterWindowOpen: true})} configured={true}/>
-                    {modal}
-                </ReflexElement>
+                <div className="fuck-css">
+                    <ReflexElement className="page-header">
+                        <Header onOpenFilters={() => this.setState({filterWindowOpen: true})} configured={true}/>
+                        {modal}
+                    </ReflexElement>
+                </div>
 
                 <ReflexElement className="page-content" flex={1}>
                     <ReflexContainer orientation="vertical" className="page-content">

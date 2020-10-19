@@ -28,7 +28,6 @@ import TextField from "../fields/TextField";
 import Header from "../Header";
 import LinkPopover from "../objects/LinkPopover";
 import "../panels/common.scss";
-import "./common.scss";
 import "./ConfigurationPage.scss";
 
 class ConfigurationPage extends Component {
