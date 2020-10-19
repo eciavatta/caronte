@@ -21,12 +21,14 @@ import {Row} from "react-bootstrap";
 import ReactJson from "react-json-view";
 import backend from "../../backend";
 import log from "../../log";
+import rules from "../../model/rules";
 import {downloadBlob, getHeaderValue} from "../../utils";
 import ButtonField from "../fields/ButtonField";
 import ChoiceField from "../fields/ChoiceField";
 import MessageAction from "../objects/MessageAction";
 import "./StreamsPane.scss";
 
+const reactStringReplace = require('react-string-replace')
 const classNames = require("classnames");
 
 class StreamsPane extends Component {
@@ -77,11 +79,9 @@ class StreamsPane extends Component {
     };
 
     tryParseConnectionMessage = (connectionMessage) => {
+        const isClient = connectionMessage["from_client"];
         if (connectionMessage.metadata == null) {
-            return connectionMessage.content;
-        }
-        if (connectionMessage["is_metadata_continuation"]) {
-            return <span style={{"fontSize": "12px"}}>**already parsed in previous messages**</span>;
+            return this.highlightRules(connectionMessage.content, isClient);
         }
 
         let unrollMap = (obj) => obj == null ? null : Object.entries(obj).map(([key, value]) =>
@@ -96,7 +96,7 @@ class StreamsPane extends Component {
                 return <span className="type-http-request">
                     <p style={{"marginBottom": "7px"}}><strong>{m.method}</strong> {url} {m.protocol}</p>
                     {unrollMap(m.headers)}
-                    <div style={{"margin": "20px 0"}}>{m.body}</div>
+                    <div style={{"margin": "20px 0"}}>{this.highlightRules(m.body, isClient)}</div>
                     {unrollMap(m.trailers)}
                 </span>;
             case "http-response":
@@ -108,18 +108,42 @@ class StreamsPane extends Component {
                         body = <ReactJson src={json} theme="grayscale" collapsed={false} displayDataTypes={false}/>;
                     } catch (e) {
                         log.error(e);
+                        body = m.body;
                     }
                 }
 
                 return <span className="type-http-response">
                     <p style={{"marginBottom": "7px"}}>{m.protocol} <strong>{m.status}</strong></p>
                     {unrollMap(m.headers)}
-                    <div style={{"margin": "20px 0"}}>{body}</div>
+                    <div style={{"margin": "20px 0"}}>{this.highlightRules(body, isClient)}</div>
                     {unrollMap(m.trailers)}
                 </span>;
             default:
-                return connectionMessage.content;
+                return this.highlightRules(connectionMessage.content, isClient);
         }
+    };
+
+    highlightRules = (content, isClient) => {
+        let streamContent = content;
+        this.props.connection["matched_rules"].forEach(ruleId => {
+            const rule = rules.ruleById(ruleId);
+            rule.patterns.forEach(pattern => {
+                if ((!isClient && pattern.direction === 1) || (isClient && pattern.direction === 2)) {
+                    return;
+                }
+                let flags = "";
+                pattern["caseless"] && (flags += "i");
+                pattern["dot_all"] && (flags += "s");
+                pattern["multi_line"] && (flags += "m");
+                pattern["unicode_property"] && (flags += "u");
+                const regex = new RegExp("(" + pattern.regex + ")", flags);
+                streamContent = reactStringReplace(streamContent, regex, (match, i) => (
+                    <span key={i} className="matched-occurrence" style={{"backgroundColor": rule.color}}>{match}</span>
+                ));
+            });
+        });
+
+        return streamContent;
     };
 
     connectionsActions = (connectionMessage) => {
@@ -187,7 +211,7 @@ class StreamsPane extends Component {
         };
         const content = this.state.messages || [];
 
-        let payload = content.map((c, i) =>
+        let payload = content.filter((c) => !c["is_metadata_continuation"]).map((c, i) =>
             <div key={`content-${i}`}
                  className={classNames("connection-message", c["from_client"] ? "from-client" : "from-server")}>
                 <div className="connection-message-header container-fluid">

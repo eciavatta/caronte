@@ -18,6 +18,12 @@
     &:hover::-webkit-scrollbar-thumb {
       background: $color-secondary-2;
     }
+
+    .matched-occurrence {
+      color: $color-primary-4;
+      font-weight: 500;
+      border-radius: 2px;
+    }
   }
 
   .connection-message {
