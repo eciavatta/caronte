@@ -49,6 +49,10 @@ a {
   background: $color-secondary-2;
 }
 
+::-webkit-scrollbar-corner {
+  background-color: $color-primary-3;
+}
+
 .clickable {
   cursor: pointer;
 }
@@ -78,15 +82,37 @@ a {
   color: $color-primary-1;
 }
 
+.reflex-container.horizontal > .reflex-splitter {
+  width: auto;
+  margin: 0 15px;
+  border-top: 2px solid $color-primary-3;
+  border-bottom: 2px solid $color-primary-3;
+}
+
+.reflex-container.horizontal > .reflex-splitter:hover,
+.reflex-container.horizontal > .reflex-splitter.active {
+  border-top: 2px solid $color-secondary-2;
+  border-bottom: 2px solid $color-secondary-2;
+}
+
+.reflex-container.vertical > .reflex-splitter {
+  border-right: 2px solid $color-primary-3;
+  border-left: 2px solid $color-primary-3;
+}
+
+.reflex-container.vertical > .reflex-splitter:hover,
+.reflex-container.vertical > .reflex-splitter.active {
+  border-right: 2px solid $color-secondary-2;
+  border-left: 2px solid $color-secondary-2;
+}
+
 @keyframes pulse {
   0% {
     opacity: 1;
   }
-
   50% {
     opacity: 0.3;
   }
-
   100% {
     opacity: 1;
   }

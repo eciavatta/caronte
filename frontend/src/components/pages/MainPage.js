@@ -16,6 +16,7 @@
  */
 
 import React, {Component} from "react";
+import {ReflexContainer, ReflexElement, ReflexSplitter} from "react-reflex";
 import {Route, Switch} from "react-router-dom";
 import Filters from "../dialogs/Filters";
 import Header from "../Header";
@@ -29,10 +30,22 @@ import StreamsPane from "../panels/StreamsPane";
 import Timeline from "../Timeline";
 import "./common.scss";
 import "./MainPage.scss";
+import 'react-reflex/styles.css'
 
 class MainPage extends Component {
 
-    state = {};
+    state = {
+        timelineHeight: 175
+    };
+
+    handleTimelineResize = (e) => {
+        if (this.timelineTimeoutHandle) {
+            clearTimeout(this.timelineTimeoutHandle);
+        }
+
+        this.timelineTimeoutHandle = setTimeout(() =>
+            this.setState({timelineHeight: e.domElement.clientHeight}), 100);
+    };
 
     render() {
         let modal;
@@ -41,34 +54,40 @@ class MainPage extends Component {
         }
 
         return (
-            <div className="page main-page">
-                <div className="page-header">
+            <ReflexContainer orientation="horizontal" className="page main-page">
+                <ReflexElement className="page-header">
                     <Header onOpenFilters={() => this.setState({filterWindowOpen: true})} configured={true}/>
-                </div>
-
-                <div className="page-content">
-                    <div className="pane connections-pane">
-                        <Connections onSelected={(c) => this.setState({selectedConnection: c})}/>
-                    </div>
-                    <div className="pane details-pane">
-                        <Switch>
-                            <Route path="/searches" children={<SearchPane/>}/>
-                            <Route path="/pcaps" children={<PcapsPane/>}/>
-                            <Route path="/rules" children={<RulesPane/>}/>
-                            <Route path="/services" children={<ServicesPane/>}/>
-                            <Route exact path="/connections/:id"
-                                   children={<StreamsPane connection={this.state.selectedConnection}/>}/>
-                            <Route children={<MainPane version={this.props.version}/>}/>
-                        </Switch>
-                    </div>
-
                     {modal}
-                </div>
+                </ReflexElement>
 
-                <div className="page-footer">
-                    <Timeline/>
-                </div>
-            </div>
+                <ReflexElement className="page-content" flex={1}>
+                    <ReflexContainer orientation="vertical" className="page-content">
+                        <ReflexElement className="pane connections-pane">
+                            <Connections onSelected={(c) => this.setState({selectedConnection: c})}/>
+                        </ReflexElement>
+
+                        <ReflexSplitter/>
+
+                        <ReflexElement className="pane details-pane">
+                            <Switch>
+                                <Route path="/searches" children={<SearchPane/>}/>
+                                <Route path="/pcaps" children={<PcapsPane/>}/>
+                                <Route path="/rules" children={<RulesPane/>}/>
+                                <Route path="/services" children={<ServicesPane/>}/>
+                                <Route exact path="/connections/:id"
+                                       children={<StreamsPane connection={this.state.selectedConnection}/>}/>
+                                <Route children={<MainPane version={this.props.version}/>}/>
+                            </Switch>
+                        </ReflexElement>
+                    </ReflexContainer>
+                </ReflexElement>
+
+                <ReflexSplitter propagate={true}/>
+
+                <ReflexElement className="page-footer" onResize={this.handleTimelineResize}>
+                    <Timeline height={this.state.timelineHeight}/>
+                </ReflexElement>
+            </ReflexContainer>
         );
     }
 }
