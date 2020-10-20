@@ -273,7 +273,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 				result = applicationContext.ConnectionsController.SetMarked(c, id, false)
 			case "comment":
 				var comment struct {
-					Comment string `json:"comment" binding:"required"`
+					Comment string `json:"comment"`
 				}
 				if err := c.ShouldBindJSON(&comment); err != nil {
 					badRequest(c, err)

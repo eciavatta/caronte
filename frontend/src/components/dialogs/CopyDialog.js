@@ -19,51 +19,51 @@ import React, {Component} from "react";
 import {Modal} from "react-bootstrap";
 import ButtonField from "../fields/ButtonField";
 import TextField from "../fields/TextField";
-import "./MessageAction.scss";
 
-class MessageAction extends Component {
+class CopyDialog extends Component {
+
+    state = {
+        copyButtonText: "copy"
+    };
 
     constructor(props) {
         super(props);
-        this.state = {
-            copyButtonText: "copy"
-        };
-        this.actionValue = React.createRef();
-        this.copyActionValue = this.copyActionValue.bind(this);
+        this.textbox = React.createRef();
     }
 
-    copyActionValue() {
-        this.actionValue.current.select();
+    copyActionValue = () => {
+        this.textbox.current.select();
         document.execCommand("copy");
         this.setState({copyButtonText: "copied!"});
-        setTimeout(() => this.setState({copyButtonText: "copy"}), 3000);
+        this.timeoutHandle = setTimeout(() => this.setState({copyButtonText: "copy"}), 3000);
+    };
+
+    componentWillUnmount() {
+        if (this.timeoutHandle) {
+            clearTimeout(this.timeoutHandle);
+        }
     }
 
     render() {
         return (
-            <Modal
-                {...this.props}
-                show={true}
-                size="lg"
-                aria-labelledby="message-action-dialog"
-                centered
-            >
+            <Modal show={true} size="lg" aria-labelledby="message-action-dialog" centered>
                 <Modal.Header>
                     <Modal.Title id="message-action-dialog">
-                        {this.props.actionName}
+                        {this.props.name}
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <TextField readonly value={this.props.actionValue} textRef={this.actionValue} rows={15}/>
+                    <TextField readonly={this.props.readonly} value={this.props.value} textRef={this.textbox}
+                               rows={15}/>
                 </Modal.Body>
                 <Modal.Footer className="dialog-footer">
+                    <ButtonField variant="red" bordered onClick={this.props.onHide} name="close"/>
                     <ButtonField variant="green" bordered onClick={this.copyActionValue}
                                  name={this.state.copyButtonText}/>
-                    <ButtonField variant="red" bordered onClick={this.props.onHide} name="close"/>
                 </Modal.Footer>
             </Modal>
         );
     }
 }
 
-export default MessageAction;
+export default CopyDialog;
