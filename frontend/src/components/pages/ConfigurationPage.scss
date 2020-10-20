@@ -1,6 +1,7 @@
 @import "../../colors";
 
 .configuration-page {
+  height: 100vh;
   background-color: $color-primary-0;
 
   .header-title {
@@ -10,16 +11,10 @@
   .configuration-pane {
     display: flex;
     justify-content: center;
-    height: 100%;
-    padding-top: 100px;
 
     .section-content {
-      background-color: $color-primary-3;
       margin-top: 15px;
-    }
-
-    .section-table table {
-      background-color: red !important;
+      background-color: $color-primary-3;
     }
 
     .section-footer {
@@ -27,4 +22,3 @@
     }
   }
 }
-

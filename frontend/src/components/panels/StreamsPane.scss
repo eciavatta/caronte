@@ -18,6 +18,12 @@
     &:hover::-webkit-scrollbar-thumb {
       background: $color-secondary-2;
     }
+
+    .matched-occurrence {
+      font-weight: 500;
+      color: $color-primary-4;
+      border-radius: 2px;
+    }
   }
 
   .connection-message {
@@ -32,8 +38,11 @@
 
       .connection-message-info {
         font-size: 11px;
+        overflow: hidden;
         margin-top: 6px;
         margin-left: -10px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
       }
 
       .connection-message-actions {
@@ -97,8 +106,11 @@
 
     .header-info {
       font-size: 12px;
+      overflow: hidden;
       padding-top: 7px;
       padding-left: 25px;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
 
     .header-actions {

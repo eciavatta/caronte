@@ -1,16 +1,18 @@
 @import "../colors";
 
 .header {
-  height: 80px;
-  padding: 15px 30px;
+  padding: 15px;
 
-  > .row {
+  .header-content {
+    display: flex;
+    width: 100%;
+    padding: 0 10px;
     background-color: $color-primary-0;
   }
 
   .header-title {
     width: 200px;
-    margin: 5px 0 5px -5px;
+    margin: 5px 0 5px 0;
   }
 
   .header-buttons {
@@ -24,6 +26,7 @@
   }
 
   .filters-bar {
+    flex: 1;
     padding: 3px 0;
 
     .filter,
@@ -36,6 +39,12 @@
       font-weight: 400;
       padding: 7px 10px;
       border-radius: 5px;
+    }
+  }
+
+  @media screen and (max-width: 1530px) {
+    &.configured .header-title {
+      display: none;
     }
   }
 }

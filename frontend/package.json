@@ -23,9 +23,11 @@
     "react-dom": "^16.13.1",
     "react-input-mask": "^3.0.0-alpha.2",
     "react-json-view": "^1.19.1",
+    "react-reflex": "^3.1.0",
     "react-router": "^5.1.2",
     "react-router-dom": "^5.1.2",
     "react-scripts": "3.4.1",
+    "react-string-replace": "^0.4.4",
     "react-tag-autocomplete": "^6.0.0-beta.6",
     "react-timeseries-charts": "^0.16.1",
     "typed.js": "^2.0.11"
@@ -50,5 +52,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "license": "GPL-3.0",
+  "resolutions": {
+    "object-path": "0.11.5"
   }
 }

@@ -1,6 +1,7 @@
 # `caronte$`
 
 [![Build Status](https://travis-ci.com/eciavatta/caronte.svg?branch=develop)](https://travis-ci.com/eciavatta/caronte)
+[![Docker Status](https://img.shields.io/docker/cloud/build/eciavatta/caronte)](https://hub.docker.com/r/eciavatta/caronte)
 [![codecov](https://codecov.io/gh/eciavatta/caronte/branch/develop/graph/badge.svg)](https://codecov.io/gh/eciavatta/caronte)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/009dca44f4da4118a20aed2b9b7610c0)](https://www.codacy.com/manual/eciavatta/caronte?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=eciavatta/caronte&amp;utm_campaign=Badge_Grade)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/tag/eciavatta/caronte)
@@ -15,21 +16,28 @@ The connection flows are saved into a database and can be visualized with the we
 ## Features
 -   immediate installation with docker-compose
 -   no configuration file, settings can be changed via GUI or API
--   the pcaps to be analyzed can be loaded via `curl`, either locally or remotely, or via the GUI
+-   pcaps to be analyzed can be loaded via `curl`, either locally or remotely, or via the GUI
     -   it is also possible to download the pcaps from the GUI and see all the analysis statistics for each pcap
 -   rules can be created to identify connections that contain certain strings
     -   pattern matching is done through regular expressions (regex)
     -   regex in UTF-8 and Unicode format are also supported
-    -   it is possible to add an additional filter to the connections identified through pattern matching by type of connection
--   the connections can be labeled by type of service, identified by the port number
+-   connections can be labeled by type of service, identified by the port number
     -   each service can be assigned a different color
--   it is possible to filter connections by addresses, ports, dimensions, time, duration, matched rules
--   supports both IPv4 and IPv6 addresses
-    -   if more addresses are assigned to the vulnerable machine to be defended, a CIDR address can be used
+-   ability to filter connections by addresses, ports, dimensions, time, duration, matched rules
+-   a timeline shows statistics with different metrics sampled per minute
+    -   some of these metrics are *connections_per_service*, *client_bytes_per_service*, *server_bytes_per_service*, *duration_per service*, *matched_rules*
+        -   with *matched_rules* metric it can be possible to see the relationship between *flag_in* and *flag_out*
+    -   the timeline contains a sliding window which can be used to search for connections in a certain time interval
+-   advanced search by term, negated term, exact phrase, regex, negated regex
+    -   the performed searches are saved to be instantly repeated the following times
 -   the detected HTTP connections are automatically reconstructed
     -   HTTP requests can be replicated through `curl`, `fetch` and `python requests`
-    -   compressed HTTP responses (gzip/deflate) are automatically decompressed
--   it is possible to export and view the content of connections in various formats, including hex and base64
+    -   compressed HTTP responses (gzip/deflate) are automatically decompressed    
+-   ability to export and view the content of connections in various formats, including hex and base64
+-   JSON content is displayed in a JSON tree viewer, HTML code can be rendered in a separate window
+-   occurrences of matched rules are highlighted in the connection content view
+-   supports both IPv4 and IPv6 addresses
+    -   if more addresses are assigned to the vulnerable machine to be defended, a CIDR address can be used
 
 ## Installation
 There are two ways to install Caronte:
@@ -77,17 +85,17 @@ The backend, written in Go language, it is designed as a service. It exposes RES
 ## Screenshots
 Below there are some screenshots showing the main features of the tool.
 
-### Viewing the contents of a connection
-![Connection Content](frontend/screenshots/connection_content.png)
+### Main window, with connections list and stream content
+![Connection Content](https://raw.githubusercontent.com/eciavatta/caronte/main/frontend/screenshots/main.png)
 
-### Loading pcaps and analysis details
-![Connection Content](frontend/screenshots/pcaps.png)
+### Main window, with the timeline expanded
+![Connection Content](https://raw.githubusercontent.com/eciavatta/caronte/main/frontend/screenshots/main2.png)
 
-### Creating new pattern matching rules
-![Connection Content](frontend/screenshots/rules.png)
+### Rules and services view
+![Connection Content](https://raw.githubusercontent.com/eciavatta/caronte/main/frontend/screenshots/rules_services.png)
 
-### Creating or editing services
-![Connection Content](frontend/screenshots/services.png)
+### Searches and pcaps view
+![Connection Content](https://raw.githubusercontent.com/eciavatta/caronte/main/frontend/screenshots/searches_pcaps.png)
 
 ## License
 caronte was created by [Emiliano Ciavatta](https://eciavatta.it) and is licensed under the [GPL-3.0 license](LICENSE).

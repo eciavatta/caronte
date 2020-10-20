@@ -256,7 +256,7 @@ class Timeline extends Component {
                                         enablePanZoom={true} utc={false}
                                         onTimeRangeChanged={this.handleTimeRangeChange}>
 
-                            <ChartRow height="125">
+                            <ChartRow height={this.props.height - 70}>
                                 <YAxis id="axis1" hideAxisLine
                                        min={this.aggregateSeries("min")}
                                        max={this.aggregateSeries("max")} width="35" type="linear" transition={300}/>

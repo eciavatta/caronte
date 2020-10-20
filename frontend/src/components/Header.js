@@ -46,19 +46,17 @@ class Header extends Component {
 
     render() {
         return (
-            <header className="header container-fluid">
-                <div className="row">
-                    <div className={classNames({"col-auto": this.props.configured, "col": !this.props.configured})}>
-                        <h1 className="header-title type-wrap">
-                            <Link to="/">
-                                <span style={{whiteSpace: "pre"}} ref={(el) => {
-                                    this.el = el;
-                                }}/>
-                            </Link>
-                        </h1>
-                    </div>
+            <header className={classNames("header", {"configured": this.props.configured})}>
+                <div className="header-content">
+                    <h1 className="header-title type-wrap">
+                        <Link to="/">
+                            <span style={{whiteSpace: "pre"}} ref={(el) => {
+                                this.el = el;
+                            }}/>
+                        </Link>
+                    </h1>
 
-                    {this.props.configured && <div className="col-auto">
+                    {this.props.configured &&
                         <div className="filters-bar">
                             <StringConnectionsFilter filterName="service_port"
                                                      defaultFilterValue="all_ports"
@@ -71,9 +69,9 @@ class Header extends Component {
                             <ExitSearchFilter/>
                             <AdvancedFilters onClick={this.props.onOpenFilters}/>
                         </div>
-                    </div>}
+                    }
 
-                    {this.props.configured && <div className="col">
+                    {this.props.configured &&
                         <div className="header-buttons">
                             <Link to={"/searches" + this.props.location.search}>
                                 <ButtonField variant="pink" name="searches" bordered/>
@@ -91,7 +89,7 @@ class Header extends Component {
                                 <ButtonField variant="blue" name="config" bordered/>
                             </Link>
                         </div>
-                    </div>}
+                    }
                 </div>
             </header>
         );
