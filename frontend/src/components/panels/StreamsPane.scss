@@ -20,8 +20,8 @@
     }
 
     .matched-occurrence {
-      color: $color-primary-4;
       font-weight: 500;
+      color: $color-primary-4;
       border-radius: 2px;
     }
   }
@@ -38,10 +38,10 @@
 
       .connection-message-info {
         font-size: 11px;
+        overflow: hidden;
         margin-top: 6px;
         margin-left: -10px;
         white-space: nowrap;
-        overflow: hidden;
         text-overflow: ellipsis;
       }
 
@@ -106,10 +106,10 @@
 
     .header-info {
       font-size: 12px;
+      overflow: hidden;
       padding-top: 7px;
       padding-left: 25px;
       white-space: nowrap;
-      overflow: hidden;
       text-overflow: ellipsis;
     }
 

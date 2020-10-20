@@ -28,7 +28,7 @@ import ChoiceField from "../fields/ChoiceField";
 import MessageAction from "../objects/MessageAction";
 import "./StreamsPane.scss";
 
-const reactStringReplace = require('react-string-replace')
+const reactStringReplace = require("react-string-replace");
 const classNames = require("classnames");
 
 class StreamsPane extends Component {
