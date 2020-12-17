@@ -80,19 +80,21 @@ func NewStreamHandler(connection ConnectionHandler, streamFlow StreamFlow, scann
 func (sh *StreamHandler) Reassembled(reassembly []tcpassembly.Reassembly) {
 	for _, r := range reassembly {
 		skip := r.Skip
+		isLoss := skip != 0
+
 		if r.Start {
 			sh.firstPacketSeen = r.Seen
 		}
 		if r.End {
 			sh.lastPacketSeen = r.Seen
 		}
-		if skip < 0 { // start or flush ~ workaround
-			skip = 0
-		}
 
 		reassemblyLen := len(r.Bytes)
 		if reassemblyLen == 0 {
 			continue
+		}
+		if skip < 0 || skip >= reassemblyLen { // start or flush ~ workaround
+			skip = 0
 		}
 
 		if sh.buffer.Len()+len(r.Bytes)-skip > MaxDocumentSize {
@@ -106,7 +108,7 @@ func (sh *StreamHandler) Reassembled(reassembly []tcpassembly.Reassembly) {
 		}
 		sh.indexes = append(sh.indexes, sh.currentIndex)
 		sh.timestamps = append(sh.timestamps, r.Seen)
-		sh.lossBlocks = append(sh.lossBlocks, skip != 0)
+		sh.lossBlocks = append(sh.lossBlocks, isLoss)
 		sh.currentIndex += n
 		sh.streamLength += n
 

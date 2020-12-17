@@ -66,6 +66,11 @@ class Notifications extends Component {
                 n.description = `${n.message["processed_packets"]} packets processed`;
                 n.variant = "blue";
                 return this.pushNotification(n);
+            case "timeline.range.large":
+                n.title = "timeline cropped";
+                n.description = `the maximum range is 24h`;
+                n.variant = "red";
+                return this.pushNotification(n);
             default:
                 return null;
         }

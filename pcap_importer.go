@@ -204,7 +204,8 @@ func (pi *PcapImporter) parsePcap(session ImportingSession, fileName string, flu
 		case packet := <-packets:
 			if packet == nil { // completed
 				if flushAll {
-					assembler.FlushAll()
+					connectionsClosed := assembler.FlushAll()
+					log.Debugf("connections closed after flush: %v", connectionsClosed)
 				}
 				handle.Close()
 				pi.releaseAssembler(assembler)

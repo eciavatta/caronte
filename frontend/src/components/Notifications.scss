@@ -45,5 +45,11 @@
       border-left: 5px solid $color-blue-dark;
       background-color: $color-blue;
     }
+
+    &.notification-red {
+      color: $color-red-light;
+      border-left: 5px solid $color-red-dark;
+      background-color: $color-red;
+    }
   }
 }

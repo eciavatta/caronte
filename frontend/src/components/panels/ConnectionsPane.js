@@ -287,7 +287,7 @@ class ConnectionsPane extends Component {
                                 return [<Connection key={c.id} data={c} onSelected={() => this.connectionSelected(c)}
                                                     selected={this.state.selected === c.id}
                                                     onMarked={(marked) => c.marked = marked}
-                                                    onEnabled={(enabled) => c.hidden = !enabled}
+                                                    onCommented={(comment) => c.comment = comment}
                                                     services={this.state.services}/>,
                                     c.matched_rules.length > 0 &&
                                     <ConnectionMatchedRules key={c.id + "_m"} matchedRules={c.matched_rules}

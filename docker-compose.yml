@@ -15,7 +15,7 @@ services:
       - mongo
     networks:
       - acheronet
-    command: ./caronte -mongo-host mongo -mongo-port 27017
+    command: ./caronte -mongo-host mongo -mongo-port 27017 -assembly_memuse_log
 
 networks:
   acheronet:

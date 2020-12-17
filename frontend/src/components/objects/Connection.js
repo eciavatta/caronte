@@ -16,11 +16,12 @@
  */
 
 import React, {Component} from "react";
-import {Form} from "react-bootstrap";
 import backend from "../../backend";
 import dispatcher from "../../dispatcher";
 import {dateTimeToTime, durationBetween, formatSize} from "../../utils";
+import CommentDialog from "../dialogs/CommentDialog";
 import ButtonField from "../fields/ButtonField";
+import TextField from "../fields/TextField";
 import "./Connection.scss";
 import CopyLinkPopover from "./CopyLinkPopover";
 import LinkPopover from "./LinkPopover";
@@ -33,15 +34,7 @@ class Connection extends Component {
         update: false
     };
 
-    handleAction = (name) => {
-        if (name === "hide") {
-            const enabled = !this.props.data.hidden;
-            backend.post(`/api/connections/${this.props.data.id}/${enabled ? "hide" : "show"}`)
-                .then((_) => {
-                    this.props.onEnabled(!enabled);
-                    this.setState({update: true});
-                });
-        }
+    handleAction = (name, comment) => {
         if (name === "mark") {
             const marked = this.props.data.marked;
             backend.post(`/api/connections/${this.props.data.id}/${marked ? "unmark" : "mark"}`)
@@ -49,6 +42,9 @@ class Connection extends Component {
                     this.props.onMarked(!marked);
                     this.setState({update: true});
                 });
+        } else if (name === "comment") {
+            this.props.onCommented(comment);
+            this.setState({showCommentDialog: false});
         }
     };
 
@@ -70,9 +66,9 @@ class Connection extends Component {
             <span>Closed at {closedAt.toLocaleDateString() + " " + closedAt.toLocaleTimeString()}</span>
         </div>;
 
-        const commentPopoverContent = <div>
-            <span>Click to <strong>{conn.comment.length > 0 ? "edit" : "add"}</strong> comment</span>
-            {conn.comment && <Form.Control as="textarea" readOnly={true} rows={2} defaultValue={conn.comment}/>}
+        const commentPopoverContent = <div style={{"width": "250px"}}>
+            <span>Click to <strong>{conn.comment ? "edit" : "add"}</strong> comment</span>
+            {conn.comment && <TextField rows={3} value={conn.comment} readonly/>}
         </div>;
 
         return (
@@ -100,10 +96,16 @@ class Connection extends Component {
                                              onClick={() => this.handleAction("mark")}>!!</span>}
                                  content={<span>Mark this connection</span>} placement="right"/>
                     <LinkPopover text={<span className={classNames("connection-icon", {"icon-enabled": conn.comment})}
-                                             onClick={() => this.handleAction("comment")}>@</span>}
+                                             onClick={() => this.setState({showCommentDialog: true})}>@</span>}
                                  content={commentPopoverContent} placement="right"/>
                     <CopyLinkPopover text="#" value={conn.id}
                                      textClassName={classNames("connection-icon", {"icon-enabled": conn.hidden})}/>
+                    {
+                        this.state.showCommentDialog &&
+                        <CommentDialog onSave={(comment) => this.handleAction("comment", comment)}
+                                       initialComment={conn.comment} connectionId={conn.id}/>
+                    }
+
                 </td>
             </tr>
         );

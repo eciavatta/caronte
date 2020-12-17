@@ -25,7 +25,7 @@ import rules from "../../model/rules";
 import {downloadBlob, getHeaderValue} from "../../utils";
 import ButtonField from "../fields/ButtonField";
 import ChoiceField from "../fields/ChoiceField";
-import MessageAction from "../objects/MessageAction";
+import CopyDialog from "../dialogs/CopyDialog";
 import "./StreamsPane.scss";
 
 const reactStringReplace = require("react-string-replace");
@@ -105,10 +105,11 @@ class StreamsPane extends Component {
                 if (contentType && contentType.includes("application/json")) {
                     try {
                         const json = JSON.parse(m.body);
-                        body = <ReactJson src={json} theme="grayscale" collapsed={false} displayDataTypes={false}/>;
+                        if (typeof json === "object") {
+                            body = <ReactJson src={json} theme="grayscale" collapsed={false} displayDataTypes={false}/>;
+                        }
                     } catch (e) {
                         log.error(e);
-                        body = m.body;
                     }
                 }
 
@@ -157,11 +158,11 @@ class StreamsPane extends Component {
                 if (!connectionMessage.metadata["reproducers"]) {
                     return;
                 }
-                return Object.entries(connectionMessage.metadata["reproducers"]).map(([actionName, actionValue]) =>
-                    <ButtonField small key={actionName + "_button"} name={actionName} onClick={() => {
+                return Object.entries(connectionMessage.metadata["reproducers"]).map(([name, value]) =>
+                    <ButtonField small key={name + "_button"} name={name} onClick={() => {
                         this.setState({
-                            messageActionDialog: <MessageAction actionName={actionName} actionValue={actionValue}
-                                                                onHide={() => this.setState({messageActionDialog: null})}/>
+                            messageActionDialog: <CopyDialog actionName={name} value={value}
+                                                             onHide={() => this.setState({messageActionDialog: null})}/>
                         });
                     }}/>
                 );
