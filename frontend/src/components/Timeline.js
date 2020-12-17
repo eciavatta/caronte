@@ -35,6 +35,7 @@ import ChoiceField from "./fields/ChoiceField";
 import "./Timeline.scss";
 
 const minutes = 60 * 1000;
+const maxTimelineRange = 24 * 60 * minutes;
 const classNames = require("classnames");
 
 const leftSelectionPaddingMultiplier = 24;
@@ -109,8 +110,25 @@ class Timeline extends Component {
 
         const zeroFilledMetrics = [];
         const toTime = (m) => new Date(m["range_start"]).getTime();
-        let i = 0;
-        for (let interval = toTime(metrics[0]) - minutes; interval <= toTime(metrics[metrics.length - 1]) + minutes; interval += minutes) {
+
+        let i;
+        let timeStart = toTime(metrics[0]) - minutes;
+        for (i = 0; timeStart < 0 && i < metrics.length; i++) { // workaround to remove negative timestamps :(
+            timeStart = toTime(metrics[i]) - minutes;
+        }
+
+        let timeEnd = toTime(metrics[metrics.length - 1]) + minutes;
+        if (timeEnd - timeStart > maxTimelineRange) {
+            timeEnd = timeStart + maxTimelineRange;
+
+            const now = new Date().getTime();
+            if (!this.lastDisplayNotificationTime || this.lastDisplayNotificationTime + minutes < now) {
+                this.lastDisplayNotificationTime = now;
+                dispatcher.dispatch("notifications", {event: "timeline.range.large"});
+            }
+        }
+
+        for (let interval = timeStart; interval <= timeEnd; interval += minutes) {
             if (i < metrics.length && interval === toTime(metrics[i])) {
                 const m = metrics[i++];
                 m["range_start"] = new Date(m["range_start"]);
@@ -204,10 +222,12 @@ class Timeline extends Component {
     };
 
     handleConnectionUpdates = (payload) => {
-        this.setState({
-            selection: new TimeRange(payload.from, payload.to),
-        });
-        this.adjustSelection();
+        if (payload.from >= this.state.start && payload.from < payload.to && payload.to <= this.state.end) {
+            this.setState({
+                selection: new TimeRange(payload.from, payload.to),
+            });
+            this.adjustSelection();
+        }
     };
 
     handleNotifications = (payload) => {
