@@ -21,6 +21,7 @@ import "react-reflex/styles.css"
 import {Route, Switch} from "react-router-dom";
 import Filters from "../dialogs/Filters";
 import Header from "../Header";
+import ConfigPane from "../panels/ConfigPane";
 import Connections from "../panels/ConnectionsPane";
 import MainPane from "../panels/MainPane";
 import PcapsPane from "../panels/PcapsPane";
@@ -75,6 +76,7 @@ class MainPage extends Component {
                                 <Route path="/pcaps" children={<PcapsPane/>}/>
                                 <Route path="/rules" children={<RulesPane/>}/>
                                 <Route path="/services" children={<ServicesPane/>}/>
+                                <Route path="/config" children={<ConfigPane/>}/>
                                 <Route exact path="/connections/:id"
                                        children={<StreamsPane connection={this.state.selectedConnection}/>}/>
                                 <Route children={<MainPane version={this.props.version}/>}/>
