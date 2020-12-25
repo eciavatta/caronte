@@ -120,8 +120,10 @@ export function formatSize(size) {
         return `${size}`;
     } else if (size < 1000000) {
         return `${(size / 1000).toFixed(1)}K`;
-    } else {
+    } else if (size < 1000000000) {
         return `${(size / 1000000).toFixed(1)}M`;
+    } else {
+        return `${(size / 1000000000).toFixed(1)}Gi`;
     }
 }
 

@@ -1,0 +1,21 @@
+@import "../../colors.scss";
+
+.stats-pane {
+  display: flex;
+  flex-direction: column;
+
+  .stats-list {
+    position: relative;
+    flex: 1;
+    height: 50%;
+
+    .section-content {
+      overflow-y: scroll;
+      height: calc(100% - 10px);
+    }
+
+    .section-table {
+      margin-bottom: 10px;
+    }
+  }
+}

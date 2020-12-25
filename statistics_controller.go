@@ -26,10 +26,11 @@ import (
 
 type StatisticRecord struct {
 	RangeStart            time.Time        `json:"range_start" bson:"_id"`
-	ConnectionsPerService map[uint16]int   `json:"connections_per_service" bson:"connections_per_service"`
-	ClientBytesPerService map[uint16]int   `json:"client_bytes_per_service" bson:"client_bytes_per_service"`
-	ServerBytesPerService map[uint16]int   `json:"server_bytes_per_service" bson:"server_bytes_per_service"`
-	TotalBytesPerService  map[uint16]int   `json:"total_bytes_per_service" bson:"total_bytes_per_service"`
+	RangeEnd              time.Time        `json:"range_end"`
+	ConnectionsPerService map[uint16]int64 `json:"connections_per_service" bson:"connections_per_service"`
+	ClientBytesPerService map[uint16]int64 `json:"client_bytes_per_service" bson:"client_bytes_per_service"`
+	ServerBytesPerService map[uint16]int64 `json:"server_bytes_per_service" bson:"server_bytes_per_service"`
+	TotalBytesPerService  map[uint16]int64 `json:"total_bytes_per_service" bson:"total_bytes_per_service"`
 	DurationPerService    map[uint16]int64 `json:"duration_per_service" bson:"duration_per_service"`
 	MatchedRules          map[string]int64 `json:"matched_rules" bson:"matched_rules"`
 }
@@ -99,5 +100,69 @@ func (sc *StatisticsController) GetStatistics(context context.Context, filter St
 		return []StatisticRecord{}
 	}
 
+	for i, _ := range statisticRecords {
+		statisticRecords[i].RangeEnd = statisticRecords[i].RangeStart.Add(time.Minute)
+	}
+
 	return statisticRecords
+}
+
+func (sc *StatisticsController) GetTotalStatistics(context context.Context, filter StatisticsFilter) StatisticRecord {
+	totalStats := StatisticRecord{}
+	statisticsPerMinute := sc.GetStatistics(context, filter)
+
+	if len(statisticsPerMinute) == 0 {
+		return totalStats
+	}
+
+	totalStats.RangeStart = statisticsPerMinute[0].RangeStart
+	totalStats.RangeEnd = statisticsPerMinute[len(statisticsPerMinute) - 1].RangeEnd
+
+	if statisticsPerMinute[0].ConnectionsPerService != nil {
+		totalStats.ConnectionsPerService = make(map[uint16]int64)
+	}
+	if statisticsPerMinute[0].ClientBytesPerService != nil {
+		totalStats.ClientBytesPerService = make(map[uint16]int64)
+	}
+	if statisticsPerMinute[0].ServerBytesPerService != nil {
+		totalStats.ServerBytesPerService = make(map[uint16]int64)
+	}
+	if statisticsPerMinute[0].TotalBytesPerService != nil {
+		totalStats.TotalBytesPerService = make(map[uint16]int64)
+	}
+	if statisticsPerMinute[0].DurationPerService != nil {
+		totalStats.DurationPerService = make(map[uint16]int64)
+	}
+	if statisticsPerMinute[0].MatchedRules != nil {
+		totalStats.MatchedRules = make(map[string]int64)
+	}
+
+	aggregateServicesMap := func(accumulator map[uint16]int64, record map[uint16]int64) {
+		if accumulator == nil || record == nil {
+			return
+		}
+		for k, v := range record {
+			accumulator[k] += v
+		}
+	}
+
+	aggregateMatchedRulesMap := func(accumulator map[string]int64, record map[string]int64) {
+		if accumulator == nil || record == nil {
+			return
+		}
+		for k, v := range record {
+			accumulator[k] += v
+		}
+	}
+
+	for _, record := range statisticsPerMinute {
+		aggregateServicesMap(totalStats.ConnectionsPerService, record.ConnectionsPerService)
+		aggregateServicesMap(totalStats.ClientBytesPerService, record.ClientBytesPerService)
+		aggregateServicesMap(totalStats.ServerBytesPerService, record.ServerBytesPerService)
+		aggregateServicesMap(totalStats.TotalBytesPerService, record.TotalBytesPerService)
+		aggregateServicesMap(totalStats.DurationPerService, record.DurationPerService)
+		aggregateMatchedRulesMap(totalStats.MatchedRules, record.MatchedRules)
+	}
+
+	return totalStats
 }

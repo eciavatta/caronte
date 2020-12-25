@@ -399,6 +399,16 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 			success(c, applicationContext.StatisticsController.GetStatistics(c, filter))
 		})
 
+		api.GET("/statistics/totals", func(c *gin.Context) {
+			var filter StatisticsFilter
+			if err := c.ShouldBindQuery(&filter); err != nil {
+				badRequest(c, err)
+				return
+			}
+
+			success(c, applicationContext.StatisticsController.GetTotalStatistics(c, filter))
+		})
+
 		api.GET("/resources/system", func(c *gin.Context) {
 			success(c, resourcesController.GetSystemStats(c))
 		})
