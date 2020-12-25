@@ -80,7 +80,7 @@ class StatsPane extends Component {
         const s = this.state.stats;
         const rs = this.state.resourcesStats;
 
-        const ports = s ? Object.keys(s["connections_per_service"]) : [];
+        const ports = s && s["connections_per_service"] ? Object.keys(s["connections_per_service"]) : [];
         let connections = 0, clientBytes = 0, serverBytes = 0, totalBytes = 0, duration = 0;
         let servicesStats = ports.map((port) => {
             connections += s["connections_per_service"][port];
