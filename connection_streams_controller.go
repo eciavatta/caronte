@@ -179,7 +179,7 @@ func (csc ConnectionStreamsController) GetConnectionMessages(c context.Context, 
 			var isMetadataContinuation bool
 			for _, elem := range messagesBuffer {
 				elem.Metadata = metadata
-				elem.IsMetadataContinuation = isMetadataContinuation
+				elem.IsMetadataContinuation = metadata != nil && isMetadataContinuation
 				isMetadataContinuation = true
 			}
 

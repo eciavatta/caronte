@@ -252,7 +252,7 @@ class RulesPane extends Component {
                 this.reset();
                 this.setState({selectedRule: _.cloneDeep(r)});
             }} className={classNames("row-small", "row-clickable", {"row-selected": rule.id === r.id})}>
-                <CopyLinkPopover text={r["id"].substring(0, 8)} value={r["id"]}/>
+                <td><CopyLinkPopover text={r["id"].substring(0, 8)} value={r["id"]}/></td>
                 <td>{r["name"]}</td>
                 <td><ButtonField name={r["color"]} color={r["color"]} small/></td>
                 <td>{r["notes"]}</td>

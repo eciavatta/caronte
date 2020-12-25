@@ -78,6 +78,14 @@ class StreamsPane extends Component {
         }
     };
 
+    viewAs = (mode) => {
+        if (mode === "decoded") {
+            this.setState({tryParse: true});
+        } else if (mode === "raw") {
+            this.setState({tryParse: false});
+        }
+    };
+
     tryParseConnectionMessage = (connectionMessage) => {
         const isClient = connectionMessage["from_client"];
         if (connectionMessage.metadata == null) {
@@ -212,7 +220,8 @@ class StreamsPane extends Component {
         };
         const content = this.state.messages || [];
 
-        let payload = content.filter((c) => !c["is_metadata_continuation"]).map((c, i) =>
+        let payload = content.filter((c) => !this.state.tryParse || (this.state.tryParse && !c["is_metadata_continuation"]))
+            .map((c, i) =>
             <div key={`content-${i}`}
                  className={classNames("connection-message", c["from_client"] ? "from-client" : "from-server")}>
                 <div className="connection-message-header container-fluid">
@@ -244,9 +253,10 @@ class StreamsPane extends Component {
                             <ChoiceField name="format" inline small onlyName
                                          keys={["default", "hex", "hexdump", "base32", "base64", "ascii", "binary", "decimal", "octal"]}
                                          values={["plain", "hex", "hexdump", "base32", "base64", "ascii", "binary", "decimal", "octal"]}
-                                         onChange={this.setFormat} value={this.state.value}/>
+                                         onChange={this.setFormat} />
 
-                            <ChoiceField name="view_as" inline small onlyName keys={["default"]} values={["default"]}/>
+                            <ChoiceField name="view_as" inline small onlyName onChange={this.viewAs}
+                                         keys={["decoded", "raw"]} values={["decoded", "raw"]} />
 
                             <ChoiceField name="download_as" inline small onlyName onChange={this.downloadStreamRaw}
                                          keys={["nl_separated", "only_client", "only_server", "pwntools"]}
