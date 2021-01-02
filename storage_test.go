@@ -147,6 +147,39 @@ func TestSimpleInsertManyAndFindMany(t *testing.T) {
 	wrapper.Destroy(t)
 }
 
+func TestSimpleInsertManyAndFindTraverse(t *testing.T) {
+	wrapper := NewTestStorageWrapper(t)
+	collectionName := "simple_insert_many_find_traverse"
+	wrapper.AddCollection(collectionName)
+
+	insertOp := wrapper.Storage.Insert(collectionName).Context(wrapper.Context)
+	simpleDocs := []interface{}{
+		UnorderedDocument{"key": "a"},
+		UnorderedDocument{"_id": "idb", "key": "b"},
+		UnorderedDocument{"key": "c"},
+	}
+	ids, err := insertOp.Many(simpleDocs)
+	assert.Nil(t, err)
+	assert.Len(t, ids, 3)
+	assert.Equal(t, "idb", ids[1])
+
+	results := make([]UnorderedDocument, 0)
+	findOp := wrapper.Storage.Find(collectionName).Context(wrapper.Context)
+
+	f := func(elem interface{}) bool {
+		results = append(results, elem.(UnorderedDocument))
+		return true
+	}
+	err = findOp.Sort("key", true).Traverse(func() interface{} { return UnorderedDocument{} }, f)
+	assert.Nil(t, err)
+	assert.Len(t, results, 3)
+	assert.Equal(t, "a", results[0]["key"])
+	assert.Equal(t, "b", results[1]["key"])
+	assert.Equal(t, "c", results[2]["key"])
+
+	wrapper.Destroy(t)
+}
+
 func TestSimpleUpdateOneUpdateMany(t *testing.T) {
 	wrapper := NewTestStorageWrapper(t)
 	collectionName := "simple_update_one_update_many"
