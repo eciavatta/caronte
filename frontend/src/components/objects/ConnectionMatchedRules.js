@@ -42,7 +42,7 @@ class ConnectionMatchedRules extends Component {
         return (
             <tr className="connection-matches">
                 <td className="row-label">matched_rules:</td>
-                <td className="rule-buttons" colSpan={9}>{matchedRules}</td>
+                <td className="rule-buttons" colSpan={11}>{matchedRules}</td>
             </tr>
         );
     }
