@@ -23,6 +23,7 @@ import ButtonField from "./fields/ButtonField";
 import AdvancedFilters from "./filters/AdvancedFilters";
 import BooleanConnectionsFilter from "./filters/BooleanConnectionsFilter";
 import ExitSearchFilter from "./filters/ExitSearchFilter";
+import ExitSimilarityFilter from "./filters/ExitSimilarityFilter";
 import RulesConnectionsFilter from "./filters/RulesConnectionsFilter";
 import StringConnectionsFilter from "./filters/StringConnectionsFilter";
 import "./Header.scss";
@@ -57,38 +58,39 @@ class Header extends Component {
                     </h1>
 
                     {this.props.configured &&
-                        <div className="filters-bar">
-                            <StringConnectionsFilter filterName="service_port"
-                                                     defaultFilterValue="all_ports"
-                                                     replaceFunc={cleanNumber}
-                                                     validateFunc={validatePort}
-                                                     key="service_port_filter"
-                                                     width={200} small inline/>
-                            <RulesConnectionsFilter/>
-                            <BooleanConnectionsFilter filterName={"marked"}/>
-                            <ExitSearchFilter/>
-                            <AdvancedFilters onClick={this.props.onOpenFilters}/>
-                        </div>
+                    <div className="filters-bar">
+                        <StringConnectionsFilter filterName="service_port"
+                                                 defaultFilterValue="all_ports"
+                                                 replaceFunc={cleanNumber}
+                                                 validateFunc={validatePort}
+                                                 key="service_port_filter"
+                                                 width={200} small inline/>
+                        <RulesConnectionsFilter/>
+                        <BooleanConnectionsFilter filterName={"marked"}/>
+                        <ExitSearchFilter/>
+                        <ExitSimilarityFilter/>
+                        <AdvancedFilters onClick={this.props.onOpenFilters}/>
+                    </div>
                     }
 
                     {this.props.configured &&
-                        <div className="header-buttons">
-                            <Link to={"/searches" + this.props.location.search}>
-                                <ButtonField variant="pink" name="searches" bordered/>
-                            </Link>
-                            <Link to={"/pcaps" + this.props.location.search}>
-                                <ButtonField variant="purple" name="pcaps" bordered/>
-                            </Link>
-                            <Link to={"/rules" + this.props.location.search}>
-                                <ButtonField variant="deep-purple" name="rules" bordered/>
-                            </Link>
-                            <Link to={"/services" + this.props.location.search}>
-                                <ButtonField variant="indigo" name="services" bordered/>
-                            </Link>
-                            <Link to={"/stats" + this.props.location.search}>
-                                <ButtonField variant="blue" name="stats" bordered/>
-                            </Link>
-                        </div>
+                    <div className="header-buttons">
+                        <Link to={"/searches" + this.props.location.search}>
+                            <ButtonField variant="pink" name="searches" bordered/>
+                        </Link>
+                        <Link to={"/pcaps" + this.props.location.search}>
+                            <ButtonField variant="purple" name="pcaps" bordered/>
+                        </Link>
+                        <Link to={"/rules" + this.props.location.search}>
+                            <ButtonField variant="deep-purple" name="rules" bordered/>
+                        </Link>
+                        <Link to={"/services" + this.props.location.search}>
+                            <ButtonField variant="indigo" name="services" bordered/>
+                        </Link>
+                        <Link to={"/stats" + this.props.location.search}>
+                            <ButtonField variant="blue" name="stats" bordered/>
+                        </Link>
+                    </div>
                     }
                 </div>
             </header>

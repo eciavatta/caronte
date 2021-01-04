@@ -18,7 +18,13 @@
 import React, {Component} from "react";
 import backend from "../../backend";
 import dispatcher from "../../dispatcher";
-import {dateTimeToTime, durationBetween, formatSize} from "../../utils";
+import {
+    calculateSimilarityScores,
+    dateTimeToTime,
+    durationBetween,
+    formatSize,
+    generateSimilarityProps
+} from "../../utils";
 import CommentDialog from "../dialogs/CommentDialog";
 import ButtonField from "../fields/ButtonField";
 import TextField from "../fields/TextField";
@@ -71,6 +77,9 @@ class Connection extends Component {
             {conn.comment && <TextField rows={3} value={conn.comment} readonly/>}
         </div>;
 
+        const distanceScores = this.props.selectedSimilarityProps &&
+            calculateSimilarityScores(this.props.selectedSimilarityProps, generateSimilarityProps(conn));
+
         return (
             <tr className={classNames("connection", {"connection-selected": this.props.selected},
                 {"has-matched-rules": conn.matched_rules.length > 0})}>
@@ -91,6 +100,26 @@ class Connection extends Component {
                 <td className="clickable" onClick={this.props.onSelected}>{durationBetween(startedAt, closedAt)}</td>
                 <td className="clickable" onClick={this.props.onSelected}>{formatSize(conn["client_bytes"])}</td>
                 <td className="clickable" onClick={this.props.onSelected}>{formatSize(conn["server_bytes"])}</td>
+                <td>
+                    {(distanceScores &&
+                        <LinkPopover text={<span onClick={() => dispatcher.dispatch("connections_filters",
+                            {"similar_to_id": null, "client_similar_to_id": conn["id"], "server_similar_to_id": null})}>
+                            {distanceScores["clientSimilarityScore"]["score"]}</span>}
+                                     content={<>Click to find <strong>similar</strong> connections with this client
+                                         connection stream<br/><br/>
+                                         {JSON.stringify(distanceScores["clientSimilarityScore"])}</>}
+                                     placement="right"/>) || "-"}
+                </td>
+                <td>
+                    {(distanceScores &&
+                        <LinkPopover text={<span onClick={() => dispatcher.dispatch("connections_filters",
+                            {"similar_to_id": null, "client_similar_to_id": null, "server_similar_to_id": conn["id"]})}>
+                            {distanceScores["serverSimilarityScore"]["score"]}</span>}
+                                     content={<>Click to find <strong>similar</strong> connections with this server
+                                         connection stream<br/><br/>
+                                         {JSON.stringify(distanceScores["serverSimilarityScore"])}</>}
+                                     placement="right"/>) || "-"}
+                </td>
                 <td className="connection-actions">
                     <LinkPopover text={<span className={classNames("connection-icon", {"icon-enabled": conn.marked})}
                                              onClick={() => this.handleAction("mark")}>!!</span>}
@@ -105,7 +134,14 @@ class Connection extends Component {
                         <CommentDialog onSave={(comment) => this.handleAction("comment", comment)}
                                        initialComment={conn.comment} connectionId={conn.id}/>
                     }
-
+                    <LinkPopover text={<span className={classNames("connection-icon")}
+                                             onClick={() => dispatcher.dispatch("connections_filters",
+                                                 {
+                                                     "similar_to_id": conn["id"],
+                                                     "client_similar_to_id": null,
+                                                     "server_similar_to_id": null
+                                                 })}>$</span>}
+                                 content={<>Click to find <strong>similar</strong> connections</>}/>
                 </td>
             </tr>
         );

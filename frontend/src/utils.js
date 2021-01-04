@@ -15,6 +15,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+import DigestHashBuilder from "tlsh/lib/digests/digest-hash-builder";
+import log from "./log";
+
+const b2a = require("base64-arraybuffer");
+const pako = require("pako");
+
 const timeRegex = /^(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$/;
 
 export function createCurlCommand(subCommand, method = null, json = null, data = null) {
@@ -163,4 +169,68 @@ export function updateParams(urlParams, payload) {
     });
 
     return params;
+}
+
+export function generateSimilarityProps(connection) {
+    return {
+        clientSize: connection["client_bytes"],
+        clientTlshHash: new DigestHashBuilder().withHash(connection["client_tlsh_hash"]).build(),
+        clientByteHistogramHash: inflateBase64(connection["client_byte_histogram_hash"]),
+        serverSize: connection["server_bytes"],
+        serverTlshHash: new DigestHashBuilder().withHash(connection["server_tlsh_hash"]).build(),
+        serverByteHistogramHash: inflateBase64(connection["server_byte_histogram_hash"]),
+    };
+}
+
+export function calculateSimilarityScores(similarityProps1, similarityProps2) {
+    return {
+        clientSimilarityScore: calculateSimilarityScore(similarityProps1, similarityProps2, "client"),
+        serverSimilarityScore: calculateSimilarityScore(similarityProps1, similarityProps2, "server")
+    };
+}
+
+// NOT EXPORTED
+
+function calculateSimilarityScore(similarityProps1, similarityProps2, type) {
+    const minSize = Math.min(similarityProps1[type + "Size"], similarityProps2[type + "Size"]);
+    const maxSize = Math.max(similarityProps1[type + "Size"], similarityProps2[type + "Size"]);
+
+    const tlshDistance = similarityProps1[type + "TlshHash"].calculateDifference(similarityProps2[type + "TlshHash"], true);
+    const bhDistance = byteHistogramDistance(similarityProps1[type + "ByteHistogramHash"],
+        similarityProps2[type + "ByteHistogramHash"]);
+
+    let score;
+    const tlshScore = 0.99 ** tlshDistance;
+    const bhScore = Math.max(1. - (bhDistance / maxSize), 0.);
+    if (minSize <= 128) {
+        score = bhScore;
+    } else if (maxSize > 4096) {
+        score = tlshScore;
+    } else {
+        score = (tlshScore + bhScore) / 2.;
+    }
+
+    return {
+        tlshDistance: tlshDistance,
+        byteHistogramDistance: bhDistance,
+        score: score.toFixed(2)
+    };
+}
+
+function inflateBase64(str) {
+    try {
+        return pako.inflate(b2a.decode(str));
+    } catch (e) {
+        log.error(e);
+        return [];
+    }
+}
+
+function byteHistogramDistance(h1, h2) {
+    let sum = 0;
+    for (let i = 0; i < h1.length; i++) {
+        sum += Math.abs(h1[i] - h2[i]);
+    }
+
+    return sum;
 }

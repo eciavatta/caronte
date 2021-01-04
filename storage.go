@@ -290,6 +290,7 @@ type FindOperation interface {
 	MaxTime(duration time.Duration) FindOperation
 	First(result interface{}) error
 	All(results interface{}) error
+	Traverse(constructor func() interface{}, f func(interface{}) bool) error
 }
 
 type MongoFindOperation struct {
@@ -382,6 +383,38 @@ func (fo MongoFindOperation) All(results interface{}) error {
 		return err
 	}
 	return nil
+}
+
+func (fo MongoFindOperation) Traverse(constructor func() interface{}, f func(interface{}) bool) error {
+	if fo.err != nil {
+		return fo.err
+	}
+
+	var limit int64
+	if fo.optFind.Limit != nil {
+		limit = *fo.optFind.Limit
+		fo.optFind.SetLimit(0)
+	}
+	cursor, err := fo.collection.Find(fo.ctx, fo.filter, fo.optFind)
+	if err != nil {
+		return err
+	}
+
+	var counter int64
+	for cursor.Next(fo.ctx) {
+		obj := constructor()
+		if err := cursor.Decode(obj); err != nil {
+			return err
+		}
+		if matches := f(obj); matches {
+			counter++
+		}
+		if limit > 0 && counter >= limit {
+			break
+		}
+	}
+
+	return cursor.Err()
 }
 
 func (storage *MongoStorage) Find(collectionName string) FindOperation {

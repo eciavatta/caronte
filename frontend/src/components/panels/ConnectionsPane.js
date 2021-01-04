@@ -22,7 +22,7 @@ import {withRouter} from "react-router-dom";
 import backend from "../../backend";
 import dispatcher from "../../dispatcher";
 import log from "../../log";
-import {updateParams} from "../../utils";
+import {generateSimilarityProps, updateParams} from "../../utils";
 import ButtonField from "../fields/ButtonField";
 import Connection from "../objects/Connection";
 import ConnectionMatchedRules from "../objects/ConnectionMatchedRules";
@@ -119,7 +119,7 @@ class ConnectionsPane extends Component {
 
     connectionSelected = (c) => {
         this.connectionSelectedRedirect = true;
-        this.setState({selected: c.id});
+        this.setState({selected: c});
         this.props.onSelected(c);
         log.debug(`Connection ${c.id} selected`);
     };
@@ -236,7 +236,7 @@ class ConnectionsPane extends Component {
     render() {
         let redirect;
         if (this.connectionSelectedRedirect) {
-            redirect = <Redirect push to={`/connections/${this.state.selected}?${this.state.urlParams}`}/>;
+            redirect = <Redirect push to={`/connections/${this.state.selected.id}?${this.state.urlParams}`}/>;
             this.connectionSelectedRedirect = false;
         } else if (this.queryStringRedirect) {
             redirect = <Redirect push to={`${this.props.location.pathname}?${this.state.urlParams}`}/>;
@@ -278,6 +278,8 @@ class ConnectionsPane extends Component {
                             <th>duration</th>
                             <th>up</th>
                             <th>down</th>
+                            <th>csc</th>
+                            <th>ssc</th>
                             <th>actions</th>
                         </tr>
                         </thead>
@@ -285,10 +287,13 @@ class ConnectionsPane extends Component {
                         {
                             this.state.connections.flatMap((c) => {
                                 return [<Connection key={c.id} data={c} onSelected={() => this.connectionSelected(c)}
-                                                    selected={this.state.selected === c.id}
+                                                    selected={this.state.selected === c}
                                                     onMarked={(marked) => c.marked = marked}
                                                     onCommented={(comment) => c.comment = comment}
-                                                    services={this.state.services}/>,
+                                                    services={this.state.services}
+                                                    selectedSimilarityProps={this.state.selected &&
+                                                    this.state.selected["port_dst"] === c["port_dst"] &&
+                                                    generateSimilarityProps(this.state.selected)}/>,
                                     c.matched_rules.length > 0 &&
                                     <ConnectionMatchedRules key={c.id + "_m"} matchedRules={c.matched_rules}
                                                             rules={this.state.rules}/>

@@ -211,18 +211,22 @@ func (ch *connectionHandlerImpl) Complete(handler *StreamHandler) {
 
 	connectionID := CustomRowID(ch.connectionFlow.Hash(), startedAt)
 	connection := Connection{
-		ID:              connectionID,
-		SourceIP:        ch.connectionFlow[0].String(),
-		DestinationIP:   ch.connectionFlow[1].String(),
-		SourcePort:      binary.BigEndian.Uint16(ch.connectionFlow[2].Raw()),
-		DestinationPort: binary.BigEndian.Uint16(ch.connectionFlow[3].Raw()),
-		StartedAt:       startedAt,
-		ClosedAt:        closedAt,
-		ClientBytes:     client.streamLength,
-		ServerBytes:     server.streamLength,
-		ClientDocuments: len(client.documentsIDs),
-		ServerDocuments: len(server.documentsIDs),
-		ProcessedAt:     time.Now(),
+		ID:                      connectionID,
+		SourceIP:                ch.connectionFlow[0].String(),
+		DestinationIP:           ch.connectionFlow[1].String(),
+		SourcePort:              binary.BigEndian.Uint16(ch.connectionFlow[2].Raw()),
+		DestinationPort:         binary.BigEndian.Uint16(ch.connectionFlow[3].Raw()),
+		StartedAt:               startedAt,
+		ClosedAt:                closedAt,
+		ClientBytes:             client.streamLength,
+		ServerBytes:             server.streamLength,
+		ClientDocuments:         len(client.documentsIDs),
+		ServerDocuments:         len(server.documentsIDs),
+		ProcessedAt:             time.Now(),
+		ClientTlshHash:          client.tlshHash,
+		ClientByteHistogramHash: client.byteHistogramHash,
+		ServerTlshHash:          server.tlshHash,
+		ServerByteHistogramHash: server.byteHistogramHash,
 	}
 	ch.factory.rulesManager.FillWithMatchedRules(&connection, client.patternMatches, server.patternMatches)
 
