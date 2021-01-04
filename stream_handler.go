@@ -19,9 +19,12 @@ package main
 
 import (
 	"bytes"
+	"github.com/eciavatta/caronte/similarity"
 	"github.com/flier/gohs/hyperscan"
+	"github.com/glaslos/tlsh"
 	"github.com/google/gopacket/tcpassembly"
 	log "github.com/sirupsen/logrus"
+	"io"
 	"strings"
 	"time"
 )
@@ -35,21 +38,23 @@ const InitialPatternSliceSize = 8
 // a common pattern to do this by starting a goroutine in the factory's New
 // method:
 type StreamHandler struct {
-	connection      ConnectionHandler
-	streamFlow      StreamFlow
-	buffer          *bytes.Buffer
-	indexes         []int
-	timestamps      []time.Time
-	lossBlocks      []bool
-	currentIndex    int
-	firstPacketSeen time.Time
-	lastPacketSeen  time.Time
-	documentsIDs    []RowID
-	streamLength    int
-	patternStream   hyperscan.Stream
-	patternMatches  map[uint][]PatternSlice
-	scanner         Scanner
-	isClient        bool
+	connection        ConnectionHandler
+	streamFlow        StreamFlow
+	buffer            *bytes.Buffer
+	indexes           []int
+	timestamps        []time.Time
+	lossBlocks        []bool
+	currentIndex      int
+	firstPacketSeen   time.Time
+	lastPacketSeen    time.Time
+	documentsIDs      []RowID
+	streamLength      int
+	patternStream     hyperscan.Stream
+	patternMatches    map[uint][]PatternSlice
+	scanner           Scanner
+	isClient          bool
+	tlshHash          string
+	byteHistogramHash []byte
 }
 
 // NewReaderStream returns a new StreamHandler object.
@@ -61,7 +66,7 @@ func NewStreamHandler(connection ConnectionHandler, streamFlow StreamFlow, scann
 		indexes:        make([]int, 0, InitialBlockCount),
 		timestamps:     make([]time.Time, 0, InitialBlockCount),
 		lossBlocks:     make([]bool, 0, InitialBlockCount),
-		documentsIDs:   make([]RowID, 0, 1),               // most of the time the stream fit in one document
+		documentsIDs:   make([]RowID, 0, 1), // most of the time the stream fit in one document
 		patternMatches: make(map[uint][]PatternSlice, connection.PatternsDatabaseSize()),
 		scanner:        scanner,
 		isClient:       isClient,
@@ -97,7 +102,7 @@ func (sh *StreamHandler) Reassembled(reassembly []tcpassembly.Reassembly) {
 			skip = 0
 		}
 
-		if sh.buffer.Len()+len(r.Bytes)-skip > MaxDocumentSize {
+		if sh.buffer.Len()+len(r.Bytes)-skip > MaxDocumentSize*(len(sh.documentsIDs)+1) {
 			sh.storageCurrentDocument()
 			sh.resetCurrentDocument()
 		}
@@ -133,11 +138,19 @@ func (sh *StreamHandler) ReassemblyComplete() {
 	if sh.currentIndex > 0 {
 		sh.storageCurrentDocument()
 	}
+
+	if tlshHash, err := tlsh.HashBytes(sh.buffer.Bytes()); err == nil {
+		sh.tlshHash = tlshHash.String()
+	} else if err != io.EOF {
+		log.WithError(err).Error("failed to hash stream with tlsh")
+	}
+
+	sh.byteHistogramHash = similarity.ByteHistogramDigest(sh.buffer.Bytes()).Digest()
+
 	sh.connection.Complete(sh)
 }
 
 func (sh *StreamHandler) resetCurrentDocument() {
-	sh.buffer.Reset()
 	sh.indexes = sh.indexes[:0]
 	sh.timestamps = sh.timestamps[:0]
 	sh.lossBlocks = sh.lossBlocks[:0]
@@ -173,13 +186,15 @@ func (sh *StreamHandler) storageCurrentDocument() {
 	payload := sh.streamFlow.Hash()&uint64(0xffffffffffffff00) | uint64(len(sh.documentsIDs)) // LOL
 	streamID := CustomRowID(payload, sh.firstPacketSeen)
 
+	bufferStart := len(sh.documentsIDs) * MaxDocumentSize
+	bufferEnd := bufferStart + sh.currentIndex
 	if _, err := sh.connection.Storage().Insert(ConnectionStreams).
 		One(ConnectionStream{
 			ID:               streamID,
 			ConnectionID:     ZeroRowID,
 			DocumentIndex:    len(sh.documentsIDs),
-			Payload:          sh.buffer.Bytes(),
-			PayloadString: 	  strings.ToValidUTF8(string(sh.buffer.Bytes()), ""),
+			Payload:          sh.buffer.Bytes()[bufferStart:bufferEnd],
+			PayloadString:    strings.ToValidUTF8(string(sh.buffer.Bytes()[bufferStart:bufferEnd]), ""),
 			BlocksIndexes:    sh.indexes,
 			BlocksTimestamps: sh.timestamps,
 			BlocksLoss:       sh.lossBlocks,

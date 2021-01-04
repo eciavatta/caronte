@@ -20,52 +20,66 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/eciavatta/caronte/similarity"
 	log "github.com/sirupsen/logrus"
 	"time"
 )
 
-const DefaultQueryLimit = 50
-const MaxQueryLimit = 200
+const (
+	DefaultQueryLimit               = 50
+	MaxQueryLimit                   = 200
+	SimilarToBoth                   = 0
+	SimilarToClient                 = 1
+	SimilarToServer                 = 2
+	MinSimilaritySizeRatioThreshold = 0.9
+)
 
 type Connection struct {
-	ID              RowID     `json:"id" bson:"_id"`
-	SourceIP        string    `json:"ip_src" bson:"ip_src"`
-	DestinationIP   string    `json:"ip_dst" bson:"ip_dst"`
-	SourcePort      uint16    `json:"port_src" bson:"port_src"`
-	DestinationPort uint16    `json:"port_dst" bson:"port_dst"`
-	StartedAt       time.Time `json:"started_at" bson:"started_at"`
-	ClosedAt        time.Time `json:"closed_at" bson:"closed_at"`
-	ClientBytes     int       `json:"client_bytes" bson:"client_bytes"`
-	ServerBytes     int       `json:"server_bytes" bson:"server_bytes"`
-	ClientDocuments int       `json:"client_documents" bson:"client_documents"`
-	ServerDocuments int       `json:"server_documents" bson:"server_documents"`
-	ProcessedAt     time.Time `json:"processed_at" bson:"processed_at"`
-	MatchedRules    []RowID   `json:"matched_rules" bson:"matched_rules"`
-	Hidden          bool      `json:"hidden" bson:"hidden,omitempty"`
-	Marked          bool      `json:"marked" bson:"marked,omitempty"`
-	Comment         string    `json:"comment" bson:"comment,omitempty"`
-	Service         Service   `json:"service" bson:"-"`
+	ID                      RowID     `json:"id" bson:"_id"`
+	SourceIP                string    `json:"ip_src" bson:"ip_src"`
+	DestinationIP           string    `json:"ip_dst" bson:"ip_dst"`
+	SourcePort              uint16    `json:"port_src" bson:"port_src"`
+	DestinationPort         uint16    `json:"port_dst" bson:"port_dst"`
+	StartedAt               time.Time `json:"started_at" bson:"started_at"`
+	ClosedAt                time.Time `json:"closed_at" bson:"closed_at"`
+	ClientBytes             int       `json:"client_bytes" bson:"client_bytes"`
+	ServerBytes             int       `json:"server_bytes" bson:"server_bytes"`
+	ClientDocuments         int       `json:"client_documents" bson:"client_documents"`
+	ServerDocuments         int       `json:"server_documents" bson:"server_documents"`
+	ProcessedAt             time.Time `json:"processed_at" bson:"processed_at"`
+	MatchedRules            []RowID   `json:"matched_rules" bson:"matched_rules"`
+	Hidden                  bool      `json:"hidden" bson:"hidden,omitempty"`
+	Marked                  bool      `json:"marked" bson:"marked,omitempty"`
+	Comment                 string    `json:"comment" bson:"comment,omitempty"`
+	Service                 Service   `json:"service" bson:"-"`
+	ClientTlshHash          string    `json:"client_tlsh_hash" bson:"client_tlsh_hash"`
+	ClientByteHistogramHash []byte    `json:"client_byte_histogram_hash" bson:"client_byte_histogram_hash"`
+	ServerTlshHash          string    `json:"server_tlsh_hash" bson:"server_tlsh_hash"`
+	ServerByteHistogramHash []byte    `json:"server_byte_histogram_hash" bson:"server_byte_histogram_hash"`
 }
 
 type ConnectionsFilter struct {
-	From            string   `form:"from" binding:"omitempty,hexadecimal,len=24"`
-	To              string   `form:"to" binding:"omitempty,hexadecimal,len=24"`
-	ServicePort     uint16   `form:"service_port"`
-	ClientAddress   string   `form:"client_address" binding:"omitempty,ip"`
-	ClientPort      uint16   `form:"client_port"`
-	MinDuration     uint     `form:"min_duration"`
-	MaxDuration     uint     `form:"max_duration" binding:"omitempty,gtefield=MinDuration"`
-	MinBytes        uint     `form:"min_bytes"`
-	MaxBytes        uint     `form:"max_bytes" binding:"omitempty,gtefield=MinBytes"`
-	StartedAfter    int64    `form:"started_after" `
-	StartedBefore   int64    `form:"started_before" binding:"omitempty,gtefield=StartedAfter"`
-	ClosedAfter     int64    `form:"closed_after" `
-	ClosedBefore    int64    `form:"closed_before" binding:"omitempty,gtefield=ClosedAfter"`
-	Hidden          bool     `form:"hidden"`
-	Marked          bool     `form:"marked"`
-	MatchedRules    []string `form:"matched_rules" binding:"dive,hexadecimal,len=24"`
-	PerformedSearch string   `form:"performed_search" binding:"omitempty,hexadecimal,len=24"`
-	Limit           int64    `form:"limit"`
+	From              string   `form:"from" binding:"omitempty,hexadecimal,len=24"`
+	To                string   `form:"to" binding:"omitempty,hexadecimal,len=24"`
+	ServicePort       uint16   `form:"service_port"`
+	ClientAddress     string   `form:"client_address" binding:"omitempty,ip"`
+	ClientPort        uint16   `form:"client_port"`
+	MinDuration       uint     `form:"min_duration"`
+	MaxDuration       uint     `form:"max_duration" binding:"omitempty,gtefield=MinDuration"`
+	MinBytes          uint     `form:"min_bytes"`
+	MaxBytes          uint     `form:"max_bytes" binding:"omitempty,gtefield=MinBytes"`
+	StartedAfter      int64    `form:"started_after" `
+	StartedBefore     int64    `form:"started_before" binding:"omitempty,gtefield=StartedAfter"`
+	ClosedAfter       int64    `form:"closed_after" `
+	ClosedBefore      int64    `form:"closed_before" binding:"omitempty,gtefield=ClosedAfter"`
+	Hidden            bool     `form:"hidden"`
+	Marked            bool     `form:"marked"`
+	MatchedRules      []string `form:"matched_rules" binding:"dive,hexadecimal,len=24"`
+	PerformedSearch   string   `form:"performed_search" binding:"omitempty,hexadecimal,len=24"`
+	Limit             int64    `form:"limit"`
+	SimilarToID       string   `form:"similar_to_id" binding:"omitempty,hexadecimal,len=24"`
+	ClientSimilarToID string   `form:"client_similar_to_id" binding:"omitempty,hexadecimal,len=24"`
+	ServerSimilarToID string   `form:"server_similar_to_id" binding:"omitempty,hexadecimal,len=24"`
 }
 
 type ConnectionsController struct {
@@ -155,13 +169,74 @@ func (cc ConnectionsController) GetConnections(c context.Context, filter Connect
 			query = query.Filter(OrderedDocument{{"_id", UnorderedDocument{"$in": performedSearch.AffectedConnections}}})
 		}
 	}
+	var limit int64
 	if filter.Limit > 0 && filter.Limit <= MaxQueryLimit {
-		query = query.Limit(filter.Limit)
+		limit = filter.Limit
 	} else {
-		query = query.Limit(DefaultQueryLimit)
+		limit = DefaultQueryLimit
+	}
+	query = query.Limit(limit)
+
+	var similarTo int
+	var similarToID RowID
+	if id, err := RowIDFromHex(filter.SimilarToID); err == nil {
+		similarTo = SimilarToBoth
+		similarToID = id
+	} else if id, err := RowIDFromHex(filter.ClientSimilarToID); err == nil {
+		similarTo = SimilarToClient
+		similarToID = id
+	} else if id, err := RowIDFromHex(filter.ServerSimilarToID); err == nil {
+		similarTo = SimilarToServer
+		similarToID = id
 	}
 
-	if err := query.All(&connections); err != nil {
+	var err error
+	if !similarToID.IsZero() {
+		if similarToConn, ok := cc.GetConnection(c, similarToID); ok {
+			connections = make([]Connection, 0, limit)
+			// enforce similarity on same service to reduce the number of documents extracted
+			query = query.Filter(OrderedDocument{{"port_dst", similarToConn.DestinationPort}})
+
+			if similarTo == SimilarToBoth || similarTo == SimilarToClient { // filter documents with similar client size
+				query = query.Filter(OrderedDocument{{"$expr", UnorderedDocument{
+					"$gt": []interface{}{
+						UnorderedDocument{"$divide": []UnorderedDocument{
+							{"$min": []interface{}{
+								"$client_bytes", similarToConn.ClientBytes + 1, // avoid division by zero
+							}},
+							{"$max": []interface{}{
+								"$client_bytes", similarToConn.ClientBytes + 1,
+							}},
+						}},
+						MinSimilaritySizeRatioThreshold,
+					},
+				}}})
+			}
+
+			if similarTo == SimilarToBoth || similarTo == SimilarToServer { // filter documents with similar server size
+				query = query.Filter(OrderedDocument{{"$expr", UnorderedDocument{
+					"$gt": []interface{}{
+						UnorderedDocument{"$divide": []UnorderedDocument{
+							{"$min": []interface{}{
+								"$server_bytes", similarToConn.ServerBytes + 1, // avoid division by zero
+							}},
+							{"$max": []interface{}{
+								"$server_bytes", similarToConn.ServerBytes + 1,
+							}},
+						}},
+						MinSimilaritySizeRatioThreshold,
+					},
+				}}})
+			}
+
+			err = query.Traverse(func() interface{} { return &Connection{} },
+				cc.buildSimilarityFunc(similarToConn, &connections, similarTo))
+		}
+	} else {
+		err = query.All(&connections)
+	}
+
+	if err != nil {
 		log.WithError(err).WithField("filter", filter).Panic("failed to get connections")
 	}
 
@@ -211,6 +286,59 @@ func (cc ConnectionsController) setProperty(c context.Context, id RowID, propert
 		log.WithError(err).WithField("id", id).Panic("failed to update a connection property")
 	}
 	return updated
+}
+
+func (cc ConnectionsController) buildSimilarityFunc(similarToConn Connection,
+	results *[]Connection, similarTo int) func(interface{}) bool {
+	connClientComparable := similarToConn.ClientStreamComparable()
+	connServerComparable := similarToConn.ServerStreamComparable()
+
+	// duplicated code for optimization
+	if similarTo == SimilarToClient {
+		return func(row interface{}) bool {
+			conn := row.(*Connection)
+			if connClientComparable.IsSimilarTo(conn.ClientStreamComparable()) {
+				*results = append(*results, *conn)
+				return true
+			}
+			return false
+		}
+	} else if similarTo == SimilarToClient {
+		return func(row interface{}) bool {
+			conn := row.(*Connection)
+			if connServerComparable.IsSimilarTo(conn.ServerStreamComparable()) {
+				*results = append(*results, *conn)
+				return true
+			}
+			return false
+		}
+	} else {
+		return func(row interface{}) bool {
+			conn := row.(*Connection)
+			if connClientComparable.IsSimilarTo(conn.ClientStreamComparable()) &&
+				connServerComparable.IsSimilarTo(conn.ServerStreamComparable()) {
+				*results = append(*results, *conn)
+				return true
+			}
+			return false
+		}
+	}
+}
+
+func (c Connection) ClientStreamComparable() similarity.ComparableStream {
+	return similarity.ComparableStream{
+		Size:          c.ClientBytes,
+		Tlsh:          similarity.ParseTlshDigest(c.ClientTlshHash),
+		ByteHistogram: similarity.ByteHistogramFromDigest(c.ClientByteHistogramHash),
+	}
+}
+
+func (c Connection) ServerStreamComparable() similarity.ComparableStream {
+	return similarity.ComparableStream{
+		Size:          c.ServerBytes,
+		Tlsh:          similarity.ParseTlshDigest(c.ServerTlshHash),
+		ByteHistogram: similarity.ByteHistogramFromDigest(c.ServerByteHistogramHash),
+	}
 }
 
 func reverseConnections(connections []Connection) []Connection {
