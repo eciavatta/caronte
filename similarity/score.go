@@ -20,14 +20,14 @@ package similarity
 import "github.com/glaslos/tlsh"
 
 const TlshMinSizeThreshold = 128
-const ByteCountingMaxSizeThreshold = 4096
+const ByteHistogramMaxSizeThreshold = 4096
 const TlshSimilarityThreshold = 50
-const ByteCountingScoreThreshold = 0.9
+const ByteHistogramScoreThreshold = 0.9
 
 type ComparableStream struct {
-	Size int
-	Tlsh *tlsh.Tlsh
-	ByteCounting *ByteCounting
+	Size          int
+	Tlsh          *tlsh.Tlsh
+	ByteHistogram *ByteHistogram
 }
 
 func (cs ComparableStream) IsSimilarTo(other ComparableStream) bool {
@@ -40,9 +40,9 @@ func (cs ComparableStream) IsSimilarTo(other ComparableStream) bool {
 		}
 	}
 
-	if maxSize < ByteCountingMaxSizeThreshold {
-		score := float32(cs.ByteCounting.Distance(other.ByteCounting)) / float32(maxSize)
-		if score < ByteCountingScoreThreshold {
+	if maxSize < ByteHistogramMaxSizeThreshold {
+		score := float32(cs.ByteHistogram.Distance(other.ByteHistogram)) / float32(maxSize)
+		if score < ByteHistogramScoreThreshold {
 			return true
 		}
 	}

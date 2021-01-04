@@ -22,24 +22,24 @@ import (
 	"testing"
 )
 
-func TestByteCounting(t *testing.T) {
+func TestByteHistogram(t *testing.T) {
 	data := []byte("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi ac sapien mi. " +
 		"Duis nec pretium sapien, a accumsan nisi. Maecenas ac ligula augue. Pellentesque turpis orci, " +
 		"faucibus sed rutrum in, elementum vitae diam. Vivamus laoreet dolor augue, " +
 		"non convallis magna placerat bibendum. Nullam consequat erat nec nisl semper, vel eleifend magna eleifend. " +
 		"Sed viverra augue quis lectus laoreet, quis consectetur eros hendrerit.")
 
-	bc := ByteCountingDigest(data)
-	assert.NotNil(t, bc)
-	emptyBc := ByteCountingDigest([]byte{})
+	bh := ByteHistogramDigest(data)
+	assert.NotNil(t, bh)
+	emptyBc := ByteHistogramDigest([]byte{})
 	assert.NotNil(t, emptyBc)
-	assert.Zero(t, bc.Distance(bc))
-	assert.Equal(t, len(data), bc.Distance(emptyBc))
-	assert.Equal(t, len(data), emptyBc.Distance(bc))
+	assert.Zero(t, bh.Distance(bh))
+	assert.Equal(t, len(data), bh.Distance(emptyBc))
+	assert.Equal(t, len(data), emptyBc.Distance(bh))
 
-	digest := bc.Digest()
-	assert.Equal(t, bc.digest, ByteCountingFromDigest(digest).digest)
-	assert.Equal(t, bc.digest, ByteCountingFromStringDigest(bc.StringDigest()).digest)
-	assert.Equal(t, bc.Digest(), ByteCountingFromDigest(digest).Digest())
-	assert.Equal(t, bc.StringDigest(), ByteCountingFromDigest(digest).StringDigest())
+	digest := bh.Digest()
+	assert.Equal(t, bh.digest, ByteHistogramFromDigest(digest).digest)
+	assert.Equal(t, bh.digest, ByteHistogramFromStringDigest(bh.StringDigest()).digest)
+	assert.Equal(t, bh.Digest(), ByteHistogramFromDigest(digest).Digest())
+	assert.Equal(t, bh.StringDigest(), ByteHistogramFromDigest(digest).StringDigest())
 }

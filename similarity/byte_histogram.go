@@ -21,23 +21,23 @@ import (
 	"encoding/base64"
 )
 
-type ByteCounting struct {
+type ByteHistogram struct {
 	digest []byte
 }
 
-func ByteCountingFromStringDigest(digest string) *ByteCounting {
+func ByteHistogramFromStringDigest(digest string) *ByteHistogram {
 	if buf, err := base64.StdEncoding.DecodeString(digest); err == nil {
-		return ByteCountingFromDigest(buf)
+		return ByteHistogramFromDigest(buf)
 	} else {
 		return nil
 	}
 }
 
-func ByteCountingFromDigest(digest []byte) *ByteCounting {
-	return &ByteCounting{digest: zlibInflate(digest)}
+func ByteHistogramFromDigest(digest []byte) *ByteHistogram {
+	return &ByteHistogram{digest: zlibInflate(digest)}
 }
 
-func ByteCountingDigest(buffer []byte) *ByteCounting {
+func ByteHistogramDigest(buffer []byte) *ByteHistogram {
 	digest := make([]byte, 256)
 	for _, b := range buffer {
 		if digest[b] < 255 {
@@ -45,21 +45,21 @@ func ByteCountingDigest(buffer []byte) *ByteCounting {
 		}
 	}
 
-	return &ByteCounting{digest}
+	return &ByteHistogram{digest}
 }
 
-func (bc *ByteCounting) StringDigest() string {
+func (bc *ByteHistogram) StringDigest() string {
 	digest := bc.Digest()
 	buf := make([]byte, base64.StdEncoding.EncodedLen(len(digest)))
 	base64.StdEncoding.Encode(buf, digest)
 	return string(buf)
 }
 
-func (bc *ByteCounting) Digest() []byte {
+func (bc *ByteHistogram) Digest() []byte {
 	return zlibDeflate(bc.digest)
 }
 
-func (bc *ByteCounting) Distance(other *ByteCounting) int {
+func (bc *ByteHistogram) Distance(other *ByteHistogram) int {
 	sum := 0
 	for i := range bc.digest {
 		if bc.digest[i] > other.digest[i] {
