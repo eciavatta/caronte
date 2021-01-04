@@ -224,7 +224,7 @@ func TestFillWithMatchedRules(t *testing.T) {
 	assert.ElementsMatch(t, []RowID{emptyRule}, conn.MatchedRules)
 
 	filterRule, err := rulesManager.AddRule(wrapper.Context, Rule{
-		Name: "filter",
+		Name:  "filter",
 		Color: "#fff",
 		Filter: Filter{
 			ServicePort:   80,
@@ -239,19 +239,19 @@ func TestFillWithMatchedRules(t *testing.T) {
 	require.NoError(t, err)
 	checkVersion(t, rulesManager, filterRule)
 	conn = &Connection{
-		SourceIP: "10.10.10.10",
-		SourcePort: 60000,
+		SourceIP:        "10.10.10.10",
+		SourcePort:      60000,
 		DestinationPort: 80,
-		ClientBytes: 32,
-		ServerBytes: 32,
-		StartedAt: time.Now(),
-		ClosedAt: time.Now().Add(3 * time.Second),
+		ClientBytes:     32,
+		ServerBytes:     32,
+		StartedAt:       time.Now(),
+		ClosedAt:        time.Now().Add(3 * time.Second),
 	}
 	rulesManager.FillWithMatchedRules(conn, map[uint][]PatternSlice{}, map[uint][]PatternSlice{})
 	assert.ElementsMatch(t, []RowID{emptyRule, filterRule}, conn.MatchedRules)
 
 	patternRule, err := rulesManager.AddRule(wrapper.Context, Rule{
-		Name: "pattern",
+		Name:  "pattern",
 		Color: "#fff",
 		Patterns: []Pattern{
 			{Regex: "pattern1", Direction: DirectionToClient, MinOccurrences: 1},
@@ -262,28 +262,28 @@ func TestFillWithMatchedRules(t *testing.T) {
 	require.NoError(t, err)
 	checkVersion(t, rulesManager, patternRule)
 	conn = &Connection{}
-	rulesManager.FillWithMatchedRules(conn, map[uint][]PatternSlice{2: {{0, 0},{0, 0}}, 3: {{0, 0}}},
+	rulesManager.FillWithMatchedRules(conn, map[uint][]PatternSlice{2: {{0, 0}, {0, 0}}, 3: {{0, 0}}},
 		map[uint][]PatternSlice{1: {{0, 0}}, 3: {{0, 0}}})
 	assert.ElementsMatch(t, []RowID{emptyRule, patternRule}, conn.MatchedRules)
 
-	rulesManager.FillWithMatchedRules(conn, map[uint][]PatternSlice{2: {{0, 0},{0, 0}}},
-		map[uint][]PatternSlice{1: {{0, 0}}, 3: {{0, 0},{0, 0}}})
+	rulesManager.FillWithMatchedRules(conn, map[uint][]PatternSlice{2: {{0, 0}, {0, 0}}},
+		map[uint][]PatternSlice{1: {{0, 0}}, 3: {{0, 0}, {0, 0}}})
 	assert.ElementsMatch(t, []RowID{emptyRule, patternRule}, conn.MatchedRules)
 
-	rulesManager.FillWithMatchedRules(conn, map[uint][]PatternSlice{2: {{0, 0},{0, 0}}, 3: {{0, 0},{0, 0}}},
+	rulesManager.FillWithMatchedRules(conn, map[uint][]PatternSlice{2: {{0, 0}, {0, 0}}, 3: {{0, 0}, {0, 0}}},
 		map[uint][]PatternSlice{1: {{0, 0}}})
 	assert.ElementsMatch(t, []RowID{emptyRule, patternRule}, conn.MatchedRules)
 
-	rulesManager.FillWithMatchedRules(conn, map[uint][]PatternSlice{2: {{0, 0},{0, 0}}, 3: {{0, 0}}},
+	rulesManager.FillWithMatchedRules(conn, map[uint][]PatternSlice{2: {{0, 0}, {0, 0}}, 3: {{0, 0}}},
 		map[uint][]PatternSlice{3: {{0, 0}}})
 	assert.ElementsMatch(t, []RowID{emptyRule}, conn.MatchedRules)
 
-	rulesManager.FillWithMatchedRules(conn, map[uint][]PatternSlice{2: {{0, 0},{0, 0},{0, 0}}, 3: {{0, 0}}},
+	rulesManager.FillWithMatchedRules(conn, map[uint][]PatternSlice{2: {{0, 0}, {0, 0}, {0, 0}}, 3: {{0, 0}}},
 		map[uint][]PatternSlice{1: {{0, 0}}, 3: {{0, 0}}})
 	assert.ElementsMatch(t, []RowID{emptyRule}, conn.MatchedRules)
 
-	rulesManager.FillWithMatchedRules(conn, map[uint][]PatternSlice{2: {{0, 0},{0, 0}}, 3: {{0, 0}}},
-		map[uint][]PatternSlice{1: {{0, 0}}, 3: {{0, 0},{0, 0}}})
+	rulesManager.FillWithMatchedRules(conn, map[uint][]PatternSlice{2: {{0, 0}, {0, 0}}, 3: {{0, 0}}},
+		map[uint][]PatternSlice{1: {{0, 0}}, 3: {{0, 0}, {0, 0}}})
 	assert.ElementsMatch(t, []RowID{emptyRule}, conn.MatchedRules)
 
 	wrapper.Destroy(t)

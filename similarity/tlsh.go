@@ -41,7 +41,7 @@ func ParseTlshDigest(digest string) *tlsh.Tlsh {
 	q2Ratio := qRatio & 0xF
 	code := [32]byte{}
 	for i := 3; i < len(buf); i++ {
-		code[i - 3] = buf[i]
+		code[i-3] = buf[i]
 	}
 
 	return tlsh.New(checksum, lValue, q1Ratio, q2Ratio, qRatio, code)

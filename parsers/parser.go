@@ -19,7 +19,6 @@ package parsers
 
 type Parser interface {
 	TryParse(content []byte) Metadata
-
 }
 
 type Metadata interface {
@@ -29,7 +28,7 @@ type BasicMetadata struct {
 	Type string `json:"type"`
 }
 
-var parsers = []Parser{	// order matter
+var parsers = []Parser{ // order matter
 	HTTPRequestParser{},
 	HTTPResponseParser{},
 }

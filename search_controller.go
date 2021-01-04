@@ -151,8 +151,7 @@ func (sc *SearchController) PerformSearch(c context.Context, options SearchOptio
 		if options.RegexSearch.Pattern != "" {
 			regex = UnorderedDocument{"$regex": options.RegexSearch.Pattern, "$options": regexOptions}
 		} else {
-			regex = UnorderedDocument{"$not":
-			UnorderedDocument{"$regex": options.RegexSearch.NotPattern, "$options": regexOptions}}
+			regex = UnorderedDocument{"$not": UnorderedDocument{"$regex": options.RegexSearch.NotPattern, "$options": regexOptions}}
 		}
 
 		findQuery = findQuery.Filter(OrderedDocument{{"payload_string", regex}})

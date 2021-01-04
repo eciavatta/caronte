@@ -116,7 +116,7 @@ func (sc *StatisticsController) GetTotalStatistics(context context.Context, filt
 	}
 
 	totalStats.RangeStart = statisticsPerMinute[0].RangeStart
-	totalStats.RangeEnd = statisticsPerMinute[len(statisticsPerMinute) - 1].RangeEnd
+	totalStats.RangeEnd = statisticsPerMinute[len(statisticsPerMinute)-1].RangeEnd
 
 	if statisticsPerMinute[0].ConnectionsPerService != nil {
 		totalStats.ConnectionsPerService = make(map[uint16]int64)

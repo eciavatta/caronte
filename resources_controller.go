@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	averageCPUPercentAlertThreshold = 90.0
+	averageCPUPercentAlertThreshold   = 90.0
 	averageCPUPercentAlertMinInterval = 120.0
 )
 

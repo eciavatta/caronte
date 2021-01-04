@@ -174,9 +174,9 @@ func TestConnectionFactory(t *testing.T) {
 	timeout := time.Tick(10 * time.Second)
 	for i := 0; i < n; i++ {
 		select {
-		case <- completed:
+		case <-completed:
 			continue
-		case <- timeout:
+		case <-timeout:
 			t.Fatal("timeout")
 		}
 	}

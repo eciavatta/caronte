@@ -149,7 +149,7 @@ func TestPcapImporterApi(t *testing.T) {
 	assert.Equal(t, http.StatusAccepted, toolkit.MakeRequest("DELETE", "/api/pcap/sessions/"+sessionID.Session,
 		nil).Code)
 
-	time.Sleep(1*time.Second) // wait for termination
+	time.Sleep(1 * time.Second) // wait for termination
 
 	toolkit.wrapper.Destroy(t)
 }

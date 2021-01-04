@@ -65,10 +65,10 @@ func CreateApplicationContext(storage Storage, version string) (*ApplicationCont
 	}
 
 	applicationContext := &ApplicationContext{
-		Storage:                storage,
-		Config:                 configWrapper.Config,
-		Accounts:               accountsWrapper.Accounts,
-		Version:                version,
+		Storage:  storage,
+		Config:   configWrapper.Config,
+		Accounts: accountsWrapper.Accounts,
+		Version:  version,
 	}
 
 	return applicationContext, nil

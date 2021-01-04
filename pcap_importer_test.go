@@ -45,7 +45,7 @@ func TestImportPcap(t *testing.T) {
 	duplicateSessionID, err := pcapImporter.ImportPcap(duplicatePcapFileName, false)
 	require.Error(t, err)
 	assert.Equal(t, sessionID, duplicateSessionID)
-	assert.Error(t, os.Remove(ProcessingPcapsBasePath + duplicatePcapFileName))
+	assert.Error(t, os.Remove(ProcessingPcapsBasePath+duplicatePcapFileName))
 
 	_, isPresent := pcapImporter.GetSession("invalid")
 	assert.False(t, isPresent)
@@ -58,8 +58,8 @@ func TestImportPcap(t *testing.T) {
 
 	checkSessionEquals(t, wrapper, session)
 
-	assert.Error(t, os.Remove(ProcessingPcapsBasePath + fileName))
-	assert.NoError(t, os.Remove(PcapsBasePath + session.ID + ".pcap"))
+	assert.Error(t, os.Remove(ProcessingPcapsBasePath+fileName))
+	assert.NoError(t, os.Remove(PcapsBasePath+session.ID+".pcap"))
 
 	wrapper.Destroy(t)
 }
@@ -85,8 +85,8 @@ func TestCancelImportSession(t *testing.T) {
 
 	checkSessionEquals(t, wrapper, session)
 
-	assert.Error(t, os.Remove(ProcessingPcapsBasePath + fileName))
-	assert.Error(t, os.Remove(PcapsBasePath + sessionID + ".pcap"))
+	assert.Error(t, os.Remove(ProcessingPcapsBasePath+fileName))
+	assert.Error(t, os.Remove(PcapsBasePath+sessionID+".pcap"))
 
 	wrapper.Destroy(t)
 }
@@ -108,8 +108,8 @@ func TestImportNoTcpPackets(t *testing.T) {
 
 	checkSessionEquals(t, wrapper, session)
 
-	assert.Error(t, os.Remove(ProcessingPcapsBasePath + fileName))
-	assert.NoError(t, os.Remove(PcapsBasePath + sessionID + ".pcap"))
+	assert.Error(t, os.Remove(ProcessingPcapsBasePath+fileName))
+	assert.NoError(t, os.Remove(PcapsBasePath+sessionID+".pcap"))
 
 	wrapper.Destroy(t)
 }
@@ -120,13 +120,13 @@ func newTestPcapImporter(wrapper *TestStorageWrapper, serverAddress string) *Pca
 	streamPool := tcpassembly.NewStreamPool(&testStreamFactory{})
 
 	return &PcapImporter{
-		storage:     wrapper.Storage,
-		streamPool:  streamPool,
-		assemblers:  make([]*tcpassembly.Assembler, 0, initialAssemblerPoolSize),
-		sessions:    make(map[string]ImportingSession),
-		mAssemblers: sync.Mutex{},
-		mSessions:   sync.Mutex{},
-		serverNet:   *ParseIPNet(serverAddress),
+		storage:                wrapper.Storage,
+		streamPool:             streamPool,
+		assemblers:             make([]*tcpassembly.Assembler, 0, initialAssemblerPoolSize),
+		sessions:               make(map[string]ImportingSession),
+		mAssemblers:            sync.Mutex{},
+		mSessions:              sync.Mutex{},
+		serverNet:              *ParseIPNet(serverAddress),
 		notificationController: NewNotificationController(nil),
 	}
 }
@@ -160,7 +160,7 @@ func checkSessionEquals(t *testing.T, wrapper *TestStorageWrapper, session Impor
 
 func copyToProcessing(t *testing.T, fileName string) string {
 	newFile := fmt.Sprintf("test-%v-%s", time.Now().UnixNano(), fileName)
-	require.NoError(t, CopyFile(ProcessingPcapsBasePath + newFile, "test_data/" + fileName))
+	require.NoError(t, CopyFile(ProcessingPcapsBasePath+newFile, "test_data/"+fileName))
 	return newFile
 }
 
