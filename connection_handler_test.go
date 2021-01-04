@@ -171,7 +171,7 @@ func TestConnectionFactory(t *testing.T) {
 		go testInteraction(serverClientNetFlow, serverClientTransportFlow, otherSeenChan, completed)
 	}
 
-	timeout := time.Tick(10 * time.Second)
+	timeout := time.Tick(30 * time.Second)
 	for i := 0; i < n; i++ {
 		select {
 		case <-completed:

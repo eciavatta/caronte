@@ -32,6 +32,7 @@ type TestStorageWrapper struct {
 	DbName  string
 	Storage *MongoStorage
 	Context context.Context
+	CancelFunc context.CancelFunc
 }
 
 func NewTestStorageWrapper(t *testing.T) *TestStorageWrapper {
@@ -51,12 +52,13 @@ func NewTestStorageWrapper(t *testing.T) *TestStorageWrapper {
 
 	storage, err := NewMongoStorage(mongoHost, port, dbName)
 	require.NoError(t, err)
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 30*time.Second)
 
 	return &TestStorageWrapper{
 		DbName:  dbName,
 		Storage: storage,
 		Context: ctx,
+		CancelFunc: cancelFunc,
 	}
 }
 
@@ -66,5 +68,6 @@ func (tsw TestStorageWrapper) AddCollection(collectionName string) {
 
 func (tsw TestStorageWrapper) Destroy(t *testing.T) {
 	err := tsw.Storage.client.Disconnect(tsw.Context)
+	tsw.CancelFunc()
 	require.NoError(t, err, "failed to disconnect to database")
 }
