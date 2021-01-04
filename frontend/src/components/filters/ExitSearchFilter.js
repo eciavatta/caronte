@@ -29,7 +29,7 @@ class ExitSearchFilter extends Component {
         this.setState({performedSearch: params.get("performed_search")});
 
         this.connectionsFiltersCallback = (payload) => {
-            if (this.state.performedSearch !== payload["performed_search"]) {
+            if ("performed_search" in payload && this.state.performedSearch !== payload["performed_search"]) {
                 this.setState({performedSearch: payload["performed_search"]});
             }
         };
