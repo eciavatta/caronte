@@ -21,11 +21,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"time"
 )
 
 // Collections names
@@ -46,6 +47,7 @@ type Storage interface {
 	Insert(collectionName string) InsertOperation
 	Update(collectionName string) UpdateOperation
 	Find(collectionName string) FindOperation
+	Delete(collectionName string) DeleteOperation
 }
 
 type MongoStorage struct {
@@ -398,4 +400,80 @@ func (storage *MongoStorage) Find(collectionName string) FindOperation {
 		op.err = errors.New("invalid collection: " + collectionName)
 	}
 	return op
+}
+
+// Delete one/many
+
+type DeleteOperation interface {
+	Context(ctx context.Context) DeleteOperation
+	Filter(filter OrderedDocument) DeleteOperation
+	One() error
+	Many() error
+}
+
+func (storage *MongoStorage) Delete(collectionName string) DeleteOperation {
+	collection, ok := storage.collections[collectionName]
+	op := MongoDeleteOperation{
+		collection: collection,
+		opts:       options.Delete(),
+	}
+	if !ok {
+		op.err = errors.New("invalid collection: " + collectionName)
+	}
+	return op
+}
+
+type MongoDeleteOperation struct {
+	collection *mongo.Collection
+	ctx        context.Context
+	opts       *options.DeleteOptions
+	filter     OrderedDocument
+	err        error
+}
+
+func (do MongoDeleteOperation) Context(ctx context.Context) DeleteOperation {
+	do.ctx = ctx
+	return do
+}
+
+func (do MongoDeleteOperation) Filter(filter OrderedDocument) DeleteOperation {
+	for _, elem := range filter {
+		do.filter = append(do.filter, primitive.E{Key: elem.Key, Value: elem.Value})
+	}
+
+	return do
+}
+
+func (do MongoDeleteOperation) One() error {
+	if do.err != nil {
+		return do.err
+	}
+
+	result, err := do.collection.DeleteOne(do.ctx, do.filter, do.opts)
+	if err != nil {
+		return err
+	}
+
+	if result.DeletedCount == 0 {
+		return errors.New("nothing to delete")
+	}
+
+	return nil
+}
+
+func (do MongoDeleteOperation) Many() error {
+	if do.err != nil {
+		return do.err
+	}
+
+	result, err := do.collection.DeleteMany(do.ctx, do.filter, do.opts)
+	if err != nil {
+		return err
+	}
+
+	if result.DeletedCount == 0 {
+		return errors.New("nothing to delete")
+	}
+
+	return nil
 }

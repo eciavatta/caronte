@@ -85,6 +85,19 @@ class ServicesPane extends Component {
         }
     };
 
+    deleteService = () => {
+        const service = this.state.currentService;
+        if (this.validateService(service)) {
+            backend.delete("/api/services", service).then((res) => {
+                this.reset();
+                this.setState({serviceStatusCode: res.status});
+                this.loadServices();
+            }).catch((res) => {
+                this.setState({serviceStatusCode: res.status, serviceResponse: JSON.stringify(res.json)});
+            });
+        }
+    };
+
     validateService = (service) => {
         let valid = true;
         if (!validation.isValidPort(service.port, true)) {
@@ -207,6 +220,8 @@ class ServicesPane extends Component {
                         <ButtonField variant={isUpdate ? "blue" : "green"}
                                      name={isUpdate ? "update_service" : "add_service"}
                                      bordered onClick={this.updateService}/>
+                        {isUpdate ? <ButtonField variant="blue" name= "delete_service"
+                                     bordered onClick={this.deleteService}/> : ""}
                     </div>
                 </div>
             </div>
