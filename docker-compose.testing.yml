@@ -6,6 +6,9 @@ services:
     networks:
       - acheronet
     restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "caronte"
+      MONGO_INITDB_ROOT_PASSWORD: "caronte"
 
   caronte:
     build:
@@ -22,6 +25,8 @@ services:
     environment:
       MONGO_HOST: mongo
       MONGO_PORT: 27017
+      DB_USERNAME: caronte
+      DB_PASSWORD: caronte
 
 networks:
   acheronet:

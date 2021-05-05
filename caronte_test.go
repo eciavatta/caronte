@@ -49,7 +49,17 @@ func NewTestStorageWrapper(t *testing.T) *TestStorageWrapper {
 	dbName := fmt.Sprintf("%x", time.Now().UnixNano())
 	log.WithField("dbName", dbName).Info("creating new storage")
 
-	storage, err := NewMongoStorage(mongoHost, port, dbName)
+	dbUsername, ok := os.LookupEnv("DB_USERNAME")
+	if !ok {
+		dbUsername = "caronte"
+	}
+
+	dbPassword, ok := os.LookupEnv("DB_PASSWORD")
+	if !ok {
+		dbPassword = "caronte"
+	}
+
+	storage, err := NewMongoStorage(mongoHost, port, dbName, dbUsername, dbPassword)
 	require.NoError(t, err)
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 
