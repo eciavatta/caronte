@@ -6,6 +6,9 @@ services:
     networks:
       - acheronet
     restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: SET_YOUR_CREDENTIAL
+      MONGO_INITDB_ROOT_PASSWORD: SET_YOUR_CREDENTIAL
 
   caronte:
     image: eciavatta/caronte:latest
@@ -15,7 +18,7 @@ services:
       - mongo
     networks:
       - acheronet
-    command: ./caronte -mongo-host mongo -mongo-port 27017 -assembly_memuse_log
+    command: ./caronte -mongo-host mongo -mongo-port 27017 -dbUsername SET_YOUR_CREDENTIAL -dbPassword SET_YOUR_CREDENTIAL -assembly_memuse_log
 
 networks:
   acheronet:

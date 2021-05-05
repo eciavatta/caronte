@@ -58,10 +58,16 @@ type UnorderedDocument = bson.M
 type Entry = bson.E
 type RowID = primitive.ObjectID
 
-func NewMongoStorage(uri string, port int, database string) (*MongoStorage, error) {
+func NewMongoStorage(uri string, port int, database string, username string, password string) (*MongoStorage, error) {
+
+	credential := options.Credential{
+		Username: username,
+		Password: password,
+	}
+
 	ctx := context.Background()
 	opt := options.Client()
-	opt.ApplyURI(fmt.Sprintf("mongodb://%s:%v", uri, port))
+	opt.ApplyURI(fmt.Sprintf("mongodb://%s:%v", uri, port)).SetAuth(credential)
 	client, err := mongo.NewClient(opt)
 	if err != nil {
 		return nil, err
