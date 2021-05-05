@@ -217,11 +217,11 @@ class ServicesPane extends Component {
 
                     <div className="section-footer">
                         {<ButtonField variant="red" name="cancel" bordered onClick={this.reset}/>}
+                        {isUpdate && <ButtonField variant="red" name= "delete_service"
+                                     bordered onClick={this.deleteService}/>}
                         <ButtonField variant={isUpdate ? "blue" : "green"}
                                      name={isUpdate ? "update_service" : "add_service"}
                                      bordered onClick={this.updateService}/>
-                        {isUpdate ? <ButtonField variant="blue" name= "delete_service"
-                                     bordered onClick={this.deleteService}/> : ""}
                     </div>
                 </div>
             </div>
