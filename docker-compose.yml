@@ -3,14 +3,12 @@ services:
 
   mongo:
     image: mongo:4
-    ports:
-      - "27017:27017"
     networks:
       - acheronet
     restart: always
 
   caronte:
-    image: caronte
+    image: eciavatta/caronte:latest
     ports:
       - "3333:3333"
     depends_on:
