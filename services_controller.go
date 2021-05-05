@@ -20,8 +20,9 @@ package main
 import (
 	"context"
 	"errors"
-	log "github.com/sirupsen/logrus"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type Service struct {
@@ -78,4 +79,16 @@ func (sc *ServicesController) GetServices() map[uint16]Service {
 	}
 	sc.mutex.Unlock()
 	return services
+}
+
+func (sc *ServicesController) DeleteService(c context.Context, service Service) error {
+	sc.mutex.Lock()
+	defer sc.mutex.Unlock()
+
+	if err := sc.storage.Delete(Services).Context(c).Filter(OrderedDocument{{"_id", service.Port}}).One(); err != nil {
+		return errors.New(err.Error())
+	} else {
+		delete(sc.services, service.Port)
+		return nil
+	}
 }

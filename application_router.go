@@ -20,14 +20,15 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/contrib/static"
-	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/gin-gonic/contrib/static"
+	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 func CreateApplicationRouter(applicationContext *ApplicationContext,
@@ -382,6 +383,20 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 				return
 			}
 			if err := applicationContext.ServicesController.SetService(c, service); err == nil {
+				success(c, service)
+				notificationController.Notify("services.edit", service)
+			} else {
+				unprocessableEntity(c, err)
+			}
+		})
+
+		api.DELETE("/services", func(c *gin.Context) {
+			var service Service
+			if err := c.ShouldBindJSON(&service); err != nil {
+				badRequest(c, err)
+				return
+			}
+			if err := applicationContext.ServicesController.DeleteService(c, service); err == nil {
 				success(c, service)
 				notificationController.Notify("services.edit", service)
 			} else {
