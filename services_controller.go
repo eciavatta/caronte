@@ -86,12 +86,8 @@ func (sc *ServicesController) DeleteService(c context.Context, service Service) 
 	defer sc.mutex.Unlock()
 
 	if err := sc.storage.Delete(Services).Context(c).Filter(OrderedDocument{{"_id", service.Port}}).One(); err != nil {
-		log.Println(service)
-		log.Println(err)
 		return errors.New(err.Error())
 	} else {
-		log.Println(err)
-		log.Println(sc.services)
 		delete(sc.services, service.Port)
 		return nil
 	}
