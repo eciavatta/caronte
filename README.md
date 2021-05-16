@@ -98,4 +98,4 @@ Below there are some screenshots showing the main features of the tool.
 ![Connection Content](https://raw.githubusercontent.com/eciavatta/caronte/main/frontend/screenshots/searches_pcaps.png)
 
 ## License
-caronte was created by [Emiliano Ciavatta](https://eciavatta.it) and is licensed under the [GPL-3.0 license](LICENSE).
+caronte was created by [Emiliano Ciavatta](https://eciavatta.dev) and is licensed under the [GPL-3.0 license](LICENSE).
