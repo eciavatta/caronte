@@ -17,7 +17,6 @@
     "eslint-config-react-app": "^5.2.1",
     "http-proxy-middleware": "^1.0.5",
     "lodash": "^4.17.20",
-    "node-sass": "^4.14.0",
     "pako": "^2.0.2",
     "pondjs": "^0.9.0",
     "react": "^16.13.1",
@@ -32,6 +31,7 @@
     "react-string-replace": "^0.4.4",
     "react-tag-autocomplete": "^6.0.0-beta.6",
     "react-timeseries-charts": "^0.16.1",
+    "sass": "^1.32.12",
     "tlsh": "^1.0.8",
     "typed.js": "^2.0.11"
   },

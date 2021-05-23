@@ -1,6 +1,6 @@
 # `caronte$`
 
-[![Build Status](https://travis-ci.com/eciavatta/caronte.svg?branch=develop)](https://travis-ci.com/eciavatta/caronte)
+[![Build Status](https://travis-ci.com/eciavatta/caronte.svg?branch=main)](https://travis-ci.com/eciavatta/caronte)
 [![Docker Status](https://img.shields.io/docker/cloud/build/eciavatta/caronte)](https://hub.docker.com/r/eciavatta/caronte)
 [![codecov](https://codecov.io/gh/eciavatta/caronte/branch/develop/graph/badge.svg)](https://codecov.io/gh/eciavatta/caronte)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/009dca44f4da4118a20aed2b9b7610c0)](https://www.codacy.com/manual/eciavatta/caronte?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=eciavatta/caronte&amp;utm_campaign=Badge_Grade)
@@ -98,4 +98,4 @@ Below there are some screenshots showing the main features of the tool.
 ![Connection Content](https://raw.githubusercontent.com/eciavatta/caronte/main/frontend/screenshots/searches_pcaps.png)
 
 ## License
-caronte was created by [Emiliano Ciavatta](https://eciavatta.it) and is licensed under the [GPL-3.0 license](LICENSE).
+caronte was created by [Emiliano Ciavatta](https://eciavatta.dev) and is licensed under the [GPL-3.0 license](LICENSE).
