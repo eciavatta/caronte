@@ -17,9 +17,8 @@ require (
 	github.com/shirou/gopsutil v2.20.9+incompatible
 	github.com/sirupsen/logrus v1.4.2
 	github.com/smartystreets/assertions v1.0.0 // indirect
-	github.com/stretchr/testify v1.4.0
-	go.mongodb.org/mongo-driver v1.3.1
-	golang.org/x/net v0.0.0-20190620200207-3b0461eec859 // indirect
+	github.com/stretchr/testify v1.6.1
+	go.mongodb.org/mongo-driver v1.5.1
 	golang.org/x/sys v0.0.0-20200406155108-e3b113bbe6a4 // indirect
 	moul.io/http2curl v1.0.0
 )
