@@ -46,13 +46,13 @@ jobs:
       - uses: actions/checkout@v2
       - name: Pull docker images
         run: docker-compose pull mongo
-      - name: Build docker images
-        run: docker-compose build test
+      - name: Build docker backend
+        run: docker-compose build test-backend
+      - name: Build docker frontend
+        run: docker-compose build test-frontend
       - name: Start MongoDB
         run: docker-compose up -d mongo
       - name: Test docker backend
         run: docker-compose run test-backend
-      - name: Test docker frontend
-        run: docker-compose run test-frontend
       - name: Destroy containers
         run: docker-compose down
