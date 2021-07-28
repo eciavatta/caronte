@@ -1,6 +1,6 @@
 {
   "name": "caronte-frontend",
-  "version": "0.1.0",
+  "version": "1.21.0",
   "private": false,
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.28",
