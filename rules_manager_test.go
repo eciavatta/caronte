@@ -18,10 +18,11 @@
 package main
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAddAndGetAllRules(t *testing.T) {
@@ -150,17 +151,17 @@ func TestLoadAndUpdateRules(t *testing.T) {
 	expectedIds := []RowID{NewRowID(), NewRowID(), NewRowID(), NewRowID()}
 	rules := []interface{}{
 		Rule{ID: expectedIds[0], Name: "rule1", Color: "#fff", Patterns: []Pattern{
-			{Regex: "pattern1", Flags: RegexFlags{Caseless: true}, Direction: DirectionToClient, internalID: 0},
+			{Regex: "/pattern1/", Flags: RegexFlags{Caseless: true}, Direction: DirectionToClient, internalID: 0},
 		}},
 		Rule{ID: expectedIds[1], Name: "rule2", Color: "#eee", Patterns: []Pattern{
-			{Regex: "pattern2", MinOccurrences: 1, MaxOccurrences: 3, Direction: DirectionToServer, internalID: 1},
+			{Regex: "/pattern2/", MinOccurrences: 1, MaxOccurrences: 3, Direction: DirectionToServer, internalID: 1},
 		}},
 		Rule{ID: expectedIds[2], Name: "rule3", Color: "#ddd", Patterns: []Pattern{
-			{Regex: "pattern2", Direction: DirectionBoth, internalID: 1},
-			{Regex: "pattern3", Flags: RegexFlags{MultiLine: true}, internalID: 2},
+			{Regex: "/pattern2/", Direction: DirectionBoth, internalID: 1},
+			{Regex: "/pattern3/", Flags: RegexFlags{MultiLine: true}, internalID: 2},
 		}},
 		Rule{ID: expectedIds[3], Name: "rule4", Color: "#ccc", Patterns: []Pattern{
-			{Regex: "pattern3", internalID: 3},
+			{Regex: "/pattern3/", internalID: 3},
 		}},
 	}
 	ids, err := wrapper.Storage.Insert(Rules).Context(wrapper.Context).Many(rules)

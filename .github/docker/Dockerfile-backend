@@ -1,0 +1,17 @@
+FROM golang:1.16
+
+RUN apt-get update && \
+	DEBIAN_FRONTEND=noninteractive apt-get install -qq \
+	git \
+	pkg-config \
+	libpcap-dev \
+	libhyperscan-dev
+
+WORKDIR /caronte
+
+COPY . ./
+
+RUN go mod download && \
+    go build
+
+ENTRYPOINT go test -v -race -covermode=atomic

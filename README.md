@@ -1,7 +1,7 @@
 # `caronte$`
 
-[![Build Status](https://travis-ci.com/eciavatta/caronte.svg?branch=main)](https://travis-ci.com/eciavatta/caronte)
-[![Docker Status](https://img.shields.io/docker/cloud/build/eciavatta/caronte)](https://hub.docker.com/r/eciavatta/caronte)
+[![Test Status](https://github.com/eciavatta/caronte/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/eciavatta/caronte/actions/workflows/test.yml)
+[![Deploy Status](https://github.com/eciavatta/caronte/actions/workflows/deploy.yml/badge.svg)](https://github.com/eciavatta/caronte/actions/workflows/deploy.yml)
 [![codecov](https://codecov.io/gh/eciavatta/caronte/branch/develop/graph/badge.svg)](https://codecov.io/gh/eciavatta/caronte)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/009dca44f4da4118a20aed2b9b7610c0)](https://www.codacy.com/manual/eciavatta/caronte?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=eciavatta/caronte&amp;utm_campaign=Badge_Grade)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/tag/eciavatta/caronte)
@@ -32,7 +32,7 @@ The connection flows are saved into a database and can be visualized with the we
     -   the performed searches are saved to be instantly repeated the following times
 -   the detected HTTP connections are automatically reconstructed
     -   HTTP requests can be replicated through `curl`, `fetch` and `python requests`
-    -   compressed HTTP responses (gzip/deflate) are automatically decompressed    
+    -   compressed HTTP responses (gzip/deflate) are automatically decompressed
 -   ability to export and view the content of connections in various formats, including hex and base64
 -   JSON content is displayed in a JSON tree viewer, HTML code can be rendered in a separate window
 -   occurrences of matched rules are highlighted in the connection content view
@@ -52,7 +52,7 @@ The only things to do are:
 
 ### Manually installation
 The first thing to do is to install the dependencies:
--   go >= 1.14 [https://golang.org/doc/install](https://golang.org/doc/install) 
+-   go >= 1.14 [https://golang.org/doc/install](https://golang.org/doc/install)
 -   node >= v12 [https://nodejs.org/it/download/](https://nodejs.org/it/download/)
 -   yarnpkg [https://classic.yarnpkg.com/en/docs/install/](https://classic.yarnpkg.com/en/docs/install/)
 -   hyperscan >= v5 [https://www.hyperscan.io/downloads/](https://www.hyperscan.io/downloads/)
