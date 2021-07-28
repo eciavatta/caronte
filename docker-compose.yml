@@ -2,20 +2,24 @@ version: "3.7"
 services:
 
   mongo:
-    image: mongo:4
+    image: mongo:4.4
     networks:
       - acheronet
-    restart: always
+    restart: unless-stopped
 
   caronte:
-    image: eciavatta/caronte:latest
+    image: ghcr.io/eciavatta/caronte:latest
+    build: .
     ports:
       - "3333:3333"
+    environment:
+      MONGO_HOST: mongo
+      MONGO_PORT: 27017
     depends_on:
       - mongo
     networks:
       - acheronet
-    command: ./caronte -mongo-host mongo -mongo-port 27017 -assembly_memuse_log
+    restart: unless-stopped
 
 networks:
   acheronet:

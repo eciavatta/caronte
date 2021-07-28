@@ -1,38 +1,54 @@
-# BUILD STAGE
-FROM ubuntu:20.04 AS BUILDSTAGE
+# Build backend with go
+FROM golang:1.16 AS BACKEND_BUILDER
 
 # Install tools and libraries
 RUN apt-get update && \
-	DEBIAN_FRONTEND=noninteractive apt-get install -qq git golang-1.14 pkg-config libpcap-dev libhyperscan-dev yarnpkg
-
-COPY . /caronte
+	DEBIAN_FRONTEND=noninteractive apt-get install -qq \
+	git \
+	pkg-config \
+	libpcap-dev \
+	libhyperscan-dev
 
 WORKDIR /caronte
 
-RUN ln -sf ../lib/go-1.14/bin/go /usr/bin/go && \
-    export VERSION=$(git describe --tags) && \
+COPY . ./
+
+RUN export VERSION=$(git describe --tags --abbrev=0) && \
     go mod download && \
     go build -ldflags "-X main.Version=$VERSION" && \
-    cd frontend && \
-	yarnpkg install && \
-	yarnpkg build --production=true && \
-	cd - && \
-	mkdir -p /caronte-build/frontend && \
-	cp -r caronte pcaps/ scripts/ shared/ test_data/ /caronte-build && \
-	cp -r frontend/build/ /caronte-build/frontend
+	mkdir -p build && \
+	cp -r caronte pcaps/ scripts/ shared/ test_data/ build/
+
+
+# Build frontend via yarn
+FROM node:16 as FRONTEND_BUILDER
+
+WORKDIR /caronte-frontend
+
+COPY ./frontend ./
+
+RUN yarnpkg install && yarnpkg build --production=true
 
 
 # LAST STAGE
 FROM ubuntu:20.04
 
-COPY --from=BUILDSTAGE /caronte-build /caronte
+COPY --from=BACKEND_BUILDER /caronte/build /opt/caronte
+
+COPY --from=FRONTEND_BUILDER /caronte-frontend/build /opt/caronte/frontend/build
 
 RUN apt-get update && \
-	DEBIAN_FRONTEND=noninteractive apt-get install -qq libpcap-dev libhyperscan-dev && \
+	DEBIAN_FRONTEND=noninteractive apt-get install -qq \
+	libpcap-dev \
+	libhyperscan-dev && \
 	rm -rf /var/lib/apt/lists/*
 
 ENV GIN_MODE release
 
-WORKDIR /caronte
+ENV MONGO_HOST mongo
 
-CMD ./caronte
+ENV MONGO_PORT 27017
+
+WORKDIR /opt/caronte
+
+ENTRYPOINT ./caronte -mongo-host ${MONGO_HOST} -mongo-port ${MONGO_PORT} -assembly_memuse_log

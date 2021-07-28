@@ -1,7 +1,5 @@
 name: Test
-
 on: [push, pull_request]
-
 jobs:
   test_backend:
     name: Build and test backend
