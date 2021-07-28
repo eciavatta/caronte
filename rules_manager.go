@@ -21,12 +21,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/flier/gohs/hyperscan"
 	"github.com/go-playground/validator/v10"
 	log "github.com/sirupsen/logrus"
-	"sort"
-	"sync"
-	"time"
 )
 
 const DirectionBoth = 0
@@ -336,7 +338,8 @@ func (rm *rulesManagerImpl) validateAndAddRuleLocal(rule *Rule) error {
 	startID := len(rm.patterns)
 	for id, pattern := range newPatterns {
 		rm.patterns = append(rm.patterns, pattern)
-		rm.patternsIds[pattern.String()] = uint(startID + id)
+		regex := pattern.String()
+		rm.patternsIds[regex[strings.IndexByte(regex, ':')+1:]] = uint(startID + id)
 	}
 
 	rm.rules[rule.ID] = *rule
@@ -363,7 +366,11 @@ func (rm *rulesManagerImpl) generateDatabase(version RowID) error {
 }
 
 func (p *Pattern) BuildPattern() (*hyperscan.Pattern, error) {
-	hp, err := hyperscan.ParsePattern(fmt.Sprintf("/%s/", p.Regex))
+	if !strings.HasPrefix(p.Regex, "/") || !strings.HasSuffix(p.Regex, "/") {
+		p.Regex = fmt.Sprintf("/%s/", p.Regex)
+	}
+
+	hp, err := hyperscan.ParsePattern(p.Regex)
 	if err != nil {
 		return nil, err
 	}
