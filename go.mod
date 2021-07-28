@@ -7,6 +7,7 @@ require (
 	github.com/flier/gohs v1.1.0
 	github.com/gin-gonic/contrib v0.0.0-20201101042839-6a891bf89f19
 	github.com/gin-gonic/gin v1.7.2
+	github.com/glaslos/tlsh v0.2.0
 	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/go-playground/validator/v10 v10.8.0
 	github.com/golang/protobuf v1.5.2 // indirect
