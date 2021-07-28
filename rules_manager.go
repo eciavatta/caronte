@@ -21,12 +21,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/flier/gohs/hyperscan"
 	"github.com/go-playground/validator/v10"
 	log "github.com/sirupsen/logrus"
-	"sort"
-	"sync"
-	"time"
 )
 
 const DirectionBoth = 0
@@ -313,11 +315,20 @@ func (rm *rulesManagerImpl) validateAndAddRuleLocal(rule *Rule) error {
 			return err
 		}
 
+		regex := pattern.Regex
+		if !strings.HasPrefix(regex, "/") {
+			regex = fmt.Sprintf("/%s", regex)
+		}
+		if !strings.HasSuffix(regex, "/") {
+			regex = fmt.Sprintf("%s/", regex)
+		}
+		rule.Patterns[i].Regex = regex
+
 		compiledPattern, err := pattern.BuildPattern()
 		if err != nil {
 			return err
 		}
-		regex := compiledPattern.String()
+		regex = compiledPattern.String()
 		if _, isPresent := duplicatePatterns[regex]; isPresent {
 			return errors.New("duplicate pattern")
 		}
@@ -336,7 +347,8 @@ func (rm *rulesManagerImpl) validateAndAddRuleLocal(rule *Rule) error {
 	startID := len(rm.patterns)
 	for id, pattern := range newPatterns {
 		rm.patterns = append(rm.patterns, pattern)
-		rm.patternsIds[pattern.String()] = uint(startID + id)
+		regex := pattern.String()
+		rm.patternsIds[regex[strings.IndexByte(regex, ':')+1:]] = uint(startID + id)
 	}
 
 	rm.rules[rule.ID] = *rule
@@ -363,7 +375,7 @@ func (rm *rulesManagerImpl) generateDatabase(version RowID) error {
 }
 
 func (p *Pattern) BuildPattern() (*hyperscan.Pattern, error) {
-	hp, err := hyperscan.ParsePattern(fmt.Sprintf("/%s/", p.Regex))
+	hp, err := hyperscan.ParsePattern(p.Regex)
 	if err != nil {
 		return nil, err
 	}

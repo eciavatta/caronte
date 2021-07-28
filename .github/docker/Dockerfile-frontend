@@ -1,0 +1,7 @@
+FROM node:16
+
+WORKDIR /caronte-frontend
+
+COPY ./frontend ./
+
+RUN yarn install && yarn build
