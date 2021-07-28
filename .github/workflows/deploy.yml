@@ -5,7 +5,7 @@ on:
       - published
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: caronte
+  IMAGE_NAME: eciavatta/caronte
 jobs:
   build_push_docker:
     runs-on: ubuntu-latest

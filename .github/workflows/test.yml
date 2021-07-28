@@ -1,5 +1,15 @@
 name: Test
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - feature/*
+      - release/*
+      - hotfix/*
+    tags-ignore:
+      - 1.*
+  pull_request:
 jobs:
   test_backend:
     name: Build and test backend
