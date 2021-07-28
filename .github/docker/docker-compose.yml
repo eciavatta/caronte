@@ -4,13 +4,19 @@ services:
   mongo:
     image: mongo:4.4
 
-  test:
+  test-backend:
     build:
       context: ../../
-      dockerfile: .github/docker/Dockerfile
-    image: caronte-test
+      dockerfile: .github/docker/Dockerfile-backend
+    image: caronte-test-backend
     depends_on:
       - mongo
     environment:
       MONGO_HOST: mongo
       MONGO_PORT: 27017
+
+  test-frontend:
+    build:
+      context: ../../
+      dockerfile: .github/docker/Dockerfile-frontend
+    image: caronte-test-frontend

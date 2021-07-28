@@ -50,7 +50,9 @@ jobs:
         run: docker-compose build test
       - name: Start MongoDB
         run: docker-compose up -d mongo
-      - name: Run tests
-        run: docker-compose run test
+      - name: Test docker backend
+        run: docker-compose run test-backend
+      - name: Test docker frontend
+        run: docker-compose run test-frontend
       - name: Destroy containers
         run: docker-compose down
