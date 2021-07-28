@@ -11,8 +11,7 @@ WORKDIR /caronte
 
 COPY . ./
 
-RUN export VERSION=$(git describe --tags --abbrev=0) && \
-    go mod download && \
-    go build -ldflags "-X main.Version=$VERSION"
+RUN go mod download && \
+    go build
 
 ENTRYPOINT go test -v -race -covermode=atomic

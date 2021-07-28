@@ -27,7 +27,7 @@ WORKDIR /caronte-frontend
 
 COPY ./frontend ./
 
-RUN yarnpkg install && yarnpkg build --production=true
+RUN yarn install && yarn build --production=true
 
 
 # LAST STAGE
