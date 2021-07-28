@@ -315,11 +315,20 @@ func (rm *rulesManagerImpl) validateAndAddRuleLocal(rule *Rule) error {
 			return err
 		}
 
+		regex := pattern.Regex
+		if !strings.HasPrefix(regex, "/") {
+			regex = fmt.Sprintf("/%s", regex)
+		}
+		if !strings.HasSuffix(regex, "/") {
+			regex = fmt.Sprintf("%s/", regex)
+		}
+		rule.Patterns[i].Regex = regex
+
 		compiledPattern, err := pattern.BuildPattern()
 		if err != nil {
 			return err
 		}
-		regex := compiledPattern.String()
+		regex = compiledPattern.String()
 		if _, isPresent := duplicatePatterns[regex]; isPresent {
 			return errors.New("duplicate pattern")
 		}
@@ -366,10 +375,6 @@ func (rm *rulesManagerImpl) generateDatabase(version RowID) error {
 }
 
 func (p *Pattern) BuildPattern() (*hyperscan.Pattern, error) {
-	if !strings.HasPrefix(p.Regex, "/") || !strings.HasSuffix(p.Regex, "/") {
-		p.Regex = fmt.Sprintf("/%s/", p.Regex)
-	}
-
 	hp, err := hyperscan.ParsePattern(p.Regex)
 	if err != nil {
 		return nil, err
