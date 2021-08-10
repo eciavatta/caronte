@@ -195,12 +195,64 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 			}
 		})
 
+		api.PUT("/pcap/live", func(c *gin.Context) {
+			var request struct {
+				Interface        string   `json:"interface" binding:"required"`
+				IncludedServices []uint16 `json:"included_services"`
+				ExcludedServices []uint16 `json:"excluded_services"`
+			}
+
+			if err := c.ShouldBindJSON(&request); err != nil {
+				badRequest(c, err)
+				return
+			}
+
+			if err := applicationContext.PcapImporter.StartCapturing(request.Interface,
+				request.IncludedServices, request.ExcludedServices); err != nil {
+				badRequest(c, err)
+				return
+			}
+
+			response := gin.H{"liveCapture": "started"}
+			c.JSON(http.StatusOK, response)
+			notificationController.Notify("pcap.live", response)
+		})
+
+		api.DELETE("/pcap/live", func(c *gin.Context) {
+			if err := applicationContext.PcapImporter.StopCapturing(); err != nil {
+				badRequest(c, err)
+				return
+			}
+
+			response := gin.H{"liveCapture": "stopped"}
+			c.JSON(http.StatusOK, response)
+			notificationController.Notify("pcap.live", response)
+		})
+
+		api.PUT("/pcap/live/interval", func(c *gin.Context) {
+			var request struct {
+				RotationInterval time.Duration `json:"rotation_interval" binding:"required"`
+			}
+
+			if err := c.ShouldBindJSON(&request); err != nil {
+				badRequest(c, err)
+				return
+			}
+
+			applicationContext.PcapImporter.SetSessionRotationInterval(request.RotationInterval * secondsToNano)
+			c.JSON(http.StatusOK, gin.H{"result": "ok"})
+		})
+
 		api.GET("/pcap/sessions", func(c *gin.Context) {
 			success(c, applicationContext.PcapImporter.GetSessions())
 		})
 
 		api.GET("/pcap/sessions/:id", func(c *gin.Context) {
-			sessionID := c.Param("id")
+			sessionID, err := RowIDFromHex(c.Param("id"))
+			if err != nil {
+				badRequest(c, err)
+				return
+			}
 			if session, isPresent := applicationContext.PcapImporter.GetSession(sessionID); isPresent {
 				success(c, session)
 			} else {
@@ -209,12 +261,16 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 		})
 
 		api.GET("/pcap/sessions/:id/download", func(c *gin.Context) {
-			sessionID := c.Param("id")
+			sessionID, err := RowIDFromHex(c.Param("id"))
+			if err != nil {
+				badRequest(c, err)
+				return
+			}
 			if _, isPresent := applicationContext.PcapImporter.GetSession(sessionID); isPresent {
-				if FileExists(PcapsBasePath + sessionID + ".pcap") {
-					c.FileAttachment(PcapsBasePath+sessionID+".pcap", sessionID[:16]+".pcap")
-				} else if FileExists(PcapsBasePath + sessionID + ".pcapng") {
-					c.FileAttachment(PcapsBasePath+sessionID+".pcapng", sessionID[:16]+".pcapng")
+				if FileExists(PcapsBasePath + sessionID.Hex() + ".pcap") {
+					c.FileAttachment(PcapsBasePath+sessionID.Hex()+".pcap", sessionID.Hex()+".pcap")
+				} else if FileExists(PcapsBasePath + sessionID.Hex() + ".pcapng") {
+					c.FileAttachment(PcapsBasePath+sessionID.Hex()+".pcapng", sessionID.Hex()+".pcapng")
 				} else {
 					log.WithField("sessionID", sessionID).Panic("pcap file not exists")
 				}
@@ -224,8 +280,12 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 		})
 
 		api.DELETE("/pcap/sessions/:id", func(c *gin.Context) {
-			sessionID := c.Param("id")
-			session := gin.H{"session": sessionID}
+			sessionID, err := RowIDFromHex(c.Param("id"))
+			if err != nil {
+				badRequest(c, err)
+				return
+			}
+			session := gin.H{"session": sessionID.Hex()}
 			if cancelled := applicationContext.PcapImporter.CancelSession(sessionID); cancelled {
 				c.JSON(http.StatusAccepted, session)
 				notificationController.Notify("sessions.delete", session)

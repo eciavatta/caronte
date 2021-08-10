@@ -20,38 +20,49 @@ package main
 import (
 	"context"
 	"errors"
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket/pcap"
-	"github.com/google/gopacket/tcpassembly"
-	log "github.com/sirupsen/logrus"
+	"fmt"
+	"io/ioutil"
 	"net"
 	"os"
 	"path"
 	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
 	"time"
+
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
+	"github.com/google/gopacket/pcap"
+	"github.com/google/gopacket/pcapgo"
+	"github.com/google/gopacket/tcpassembly"
+	log "github.com/sirupsen/logrus"
 )
 
 const PcapsBasePath = "pcaps/"
 const ProcessingPcapsBasePath = PcapsBasePath + "processing/"
 const initialAssemblerPoolSize = 16
-const importUpdateProgressInterval = 100 * time.Millisecond
+const initialSessionRotationInterval = 2 * time.Minute
+const snapshotLen = 1024
 
 type PcapImporter struct {
-	storage                Storage
-	streamPool             *tcpassembly.StreamPool
-	assemblers             []*tcpassembly.Assembler
-	sessions               map[string]ImportingSession
-	mAssemblers            sync.Mutex
-	mSessions              sync.Mutex
-	serverNet              net.IPNet
-	notificationController *NotificationController
+	storage                 Storage
+	streamPool              *tcpassembly.StreamPool
+	assemblers              []*tcpassembly.Assembler
+	sessions                map[RowID]*ImportingSession
+	mAssemblers             sync.Mutex
+	mSessions               sync.Mutex
+	serverNet               net.IPNet
+	notificationController  *NotificationController
+	liveCaptureHandle       *pcap.Handle
+	mLiveCapture            sync.Mutex
+	currentLiveSession      *ImportingSession
+	sessionRotationInterval time.Duration
 }
 
 type ImportingSession struct {
-	ID                string               `json:"id" bson:"_id"`
+	ID                RowID                `json:"id" bson:"_id"`
+	Hash              string               `json:"hash" bson:"hash"`
 	StartedAt         time.Time            `json:"started_at" bson:"started_at"`
 	Size              int64                `json:"size" bson:"size"`
 	CompletedAt       time.Time            `json:"completed_at" bson:"completed_at,omitempty"`
@@ -60,7 +71,6 @@ type ImportingSession struct {
 	PacketsPerService map[uint16]flowCount `json:"packets_per_service" bson:"packets_per_service"`
 	ImportingError    string               `json:"importing_error" bson:"importing_error,omitempty"`
 	cancelFunc        context.CancelFunc
-	completed         chan string
 }
 
 type flowCount [2]int
@@ -73,20 +83,22 @@ func NewPcapImporter(storage Storage, serverNet net.IPNet, rulesManager RulesMan
 	if err := storage.Find(ImportingSessions).All(&result); err != nil {
 		log.WithError(err).Panic("failed to retrieve importing sessions")
 	}
-	sessions := make(map[string]ImportingSession)
+	sessions := make(map[RowID]*ImportingSession)
 	for _, session := range result {
-		sessions[session.ID] = session
+		sessions[session.ID] = &session
 	}
 
 	return &PcapImporter{
-		storage:                storage,
-		streamPool:             streamPool,
-		assemblers:             make([]*tcpassembly.Assembler, 0, initialAssemblerPoolSize),
-		sessions:               sessions,
-		mAssemblers:            sync.Mutex{},
-		mSessions:              sync.Mutex{},
-		serverNet:              serverNet,
-		notificationController: notificationController,
+		storage:                 storage,
+		streamPool:              streamPool,
+		assemblers:              make([]*tcpassembly.Assembler, 0, initialAssemblerPoolSize),
+		sessions:                sessions,
+		mAssemblers:             sync.Mutex{},
+		mSessions:               sync.Mutex{},
+		serverNet:               serverNet,
+		notificationController:  notificationController,
+		mLiveCapture:            sync.Mutex{},
+		sessionRotationInterval: initialSessionRotationInterval,
 	}
 }
 
@@ -105,40 +117,107 @@ func (pi *PcapImporter) ImportPcap(fileName string, flushAll bool) (string, erro
 
 	hash, err := Sha256Sum(ProcessingPcapsBasePath + fileName)
 	if err != nil {
-		log.WithError(err).Panic("failed to calculate pcap sha256")
 		deleteProcessingFile(fileName)
+		log.WithError(err).Panic("failed to calculate pcap sha256")
 	}
 
 	pi.mSessions.Lock()
-	if _, isPresent := pi.sessions[hash]; isPresent {
+	isPresent := false
+	for _, session := range pi.sessions {
+		if session.Hash == hash {
+			isPresent = true
+			break
+		}
+	}
+	if isPresent {
 		pi.mSessions.Unlock()
 		deleteProcessingFile(fileName)
 		return hash, errors.New("pcap already processed")
 	}
 
-	ctx, cancelFunc := context.WithCancel(context.Background())
-	session := ImportingSession{
-		ID:                hash,
-		StartedAt:         time.Now(),
-		Size:              FileSize(ProcessingPcapsBasePath + fileName),
-		PacketsPerService: make(map[uint16]flowCount),
-		cancelFunc:        cancelFunc,
-		completed:         make(chan string),
+	handle, err := pcap.OpenOffline(ProcessingPcapsBasePath + fileName)
+	if err != nil {
+		pi.mSessions.Unlock()
+		deleteProcessingFile(fileName)
+		log.WithError(err).Panic("failed to process pcap")
 	}
 
-	pi.sessions[hash] = session
+	session, ctx := pi.newSession(false)
+	session.Hash = hash
+	session.Size = FileSize(ProcessingPcapsBasePath + fileName)
+
+	pi.sessions[session.ID] = session
 	pi.mSessions.Unlock()
 
-	go pi.parsePcap(session, fileName, flushAll, ctx)
+	go pi.handle(handle, session, flushAll, ctx, func(canceled bool) {
+		handle.Close()
+		if canceled {
+			deleteProcessingFile(fileName)
+		} else {
+			moveProcessingFile(session, fileName)
+		}
+	})
 
 	return hash, nil
+}
+
+func (pi *PcapImporter) StartCapturing(iface string, includedServices []uint16,
+	excludedServices []uint16) error {
+	pi.mLiveCapture.Lock()
+	defer pi.mLiveCapture.Unlock()
+
+	if pi.liveCaptureHandle != nil {
+		return errors.New("live capture is already in progress")
+	}
+
+	handle, err := pcap.OpenLive(iface, 1600, true, pcap.BlockForever)
+	if err != nil {
+		return err
+	}
+
+	bffFilter := "tcp"
+	if includedServices != nil {
+		bffFilter += " and port " + strings.Trim(strings.Join(
+			strings.Fields(fmt.Sprint(includedServices)), " and port "), "[]")
+	}
+
+	if excludedServices != nil {
+		bffFilter += " and not port " + strings.Trim(strings.Join(
+			strings.Fields(fmt.Sprint(excludedServices)), " and not port "), "[]")
+	}
+
+	if err := handle.SetBPFFilter(bffFilter); err != nil {
+		return err
+	}
+
+	pi.liveCaptureHandle = handle
+	go pi.handle(handle, nil, true, nil, func(_ bool) {
+		handle.Close()
+	})
+
+	return nil
+}
+
+func (pi *PcapImporter) StopCapturing() error {
+	pi.mLiveCapture.Lock()
+	defer pi.mLiveCapture.Unlock()
+
+	if pi.liveCaptureHandle == nil {
+		return errors.New("live capture is already stopped")
+	}
+
+	pi.currentLiveSession.cancelFunc()
+	pi.liveCaptureHandle.Close()
+	pi.liveCaptureHandle = nil
+
+	return nil
 }
 
 func (pi *PcapImporter) GetSessions() []ImportingSession {
 	pi.mSessions.Lock()
 	sessions := make([]ImportingSession, 0, len(pi.sessions))
 	for _, session := range pi.sessions {
-		sessions = append(sessions, session)
+		sessions = append(sessions, *session)
 	}
 	sort.Slice(sessions, func(i, j int) bool {
 		return sessions[i].StartedAt.Before(sessions[j].StartedAt)
@@ -147,14 +226,17 @@ func (pi *PcapImporter) GetSessions() []ImportingSession {
 	return sessions
 }
 
-func (pi *PcapImporter) GetSession(sessionID string) (ImportingSession, bool) {
+func (pi *PcapImporter) GetSession(sessionID RowID) (ImportingSession, bool) {
 	pi.mSessions.Lock()
 	defer pi.mSessions.Unlock()
-	session, isPresent := pi.sessions[sessionID]
-	return session, isPresent
+	if session, isPresent := pi.sessions[sessionID]; isPresent {
+		return *session, true
+	} else {
+		return ImportingSession{}, false
+	}
 }
 
-func (pi *PcapImporter) CancelSession(sessionID string) bool {
+func (pi *PcapImporter) CancelSession(sessionID RowID) bool {
 	pi.mSessions.Lock()
 	session, isPresent := pi.sessions[sessionID]
 	if isPresent {
@@ -174,32 +256,62 @@ func (pi *PcapImporter) FlushConnections(olderThen time.Time, closeAll bool) (fl
 	return
 }
 
-// Read the pcap and save the tcp stream flow to the database
-func (pi *PcapImporter) parsePcap(session ImportingSession, fileName string, flushAll bool, ctx context.Context) {
-	handle, err := pcap.OpenOffline(ProcessingPcapsBasePath + fileName)
-	if err != nil {
-		pi.progressUpdate(session, fileName, false, "failed to process pcap")
-		log.WithError(err).WithFields(log.Fields{"session": session, "fileName": fileName}).
-			Error("failed to open pcap")
-		return
-	}
+func (pi *PcapImporter) SetSessionRotationInterval(interval time.Duration) {
+	pi.mLiveCapture.Lock()
+	pi.sessionRotationInterval = interval
+	pi.mLiveCapture.Unlock()
+}
 
+func (pi *PcapImporter) handle(handle *pcap.Handle, initialSession *ImportingSession,
+	flushAll bool, ctx context.Context, onComplete func(canceled bool)) {
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 	packetSource.NoCopy = true
 	assembler := pi.takeAssembler()
 	packets := packetSource.Packets()
-	updateProgressInterval := time.Tick(importUpdateProgressInterval)
+
+	var currentFile *os.File
+	var currentWriter *pcapgo.Writer
+
+	sessionRotationInterval := time.Tick(pi.sessionRotationInterval)
+	isOnline := false
+	session := initialSession
+	if initialSession == nil {
+		isOnline = true
+		session, ctx = pi.newSession(true)
+		currentFile, currentWriter = createNewPcap(handle)
+	}
+
+	offlineLock := func() {
+		if !isOnline {
+			pi.mSessions.Lock()
+		}
+	}
+	offlineUnlock := func() {
+		if !isOnline {
+			pi.mSessions.Unlock()
+		}
+	}
+
+	rotateSession := func(isEnd bool) {
+		if isOnline {
+			savePcap(session, currentFile)
+
+			pi.mSessions.Lock()
+			pi.sessions[session.ID] = session
+			pi.mSessions.Unlock()
+
+			log.WithField("id", session.ID).WithField("hash", session.Hash).Debug("session rotated")
+
+			if !isEnd {
+				pi.notificationController.Notify("pcap.rotation", session)
+				pi.saveSession(session, "")
+				session, ctx = pi.newSession(true)
+				currentFile, currentWriter = createNewPcap(handle)
+			}
+		}
+	}
 
 	for {
-		select {
-		case <-ctx.Done():
-			handle.Close()
-			pi.releaseAssembler(assembler)
-			pi.progressUpdate(session, fileName, false, "import process cancelled")
-			return
-		default:
-		}
-
 		select {
 		case packet := <-packets:
 			if packet == nil { // completed
@@ -207,19 +319,23 @@ func (pi *PcapImporter) parsePcap(session ImportingSession, fileName string, flu
 					connectionsClosed := assembler.FlushAll()
 					log.Debugf("connections closed after flush: %v", connectionsClosed)
 				}
-				handle.Close()
 				pi.releaseAssembler(assembler)
-				pi.progressUpdate(session, fileName, true, "")
+				pi.saveSession(session, "")
 				pi.notificationController.Notify("pcap.completed", session)
+				rotateSession(true)
+				onComplete(false)
 
 				return
 			}
 
+			offlineLock()
 			session.ProcessedPackets++
 
 			if packet.NetworkLayer() == nil || packet.TransportLayer() == nil ||
 				packet.TransportLayer().LayerType() != layers.LayerTypeTCP { // invalid packet
 				session.InvalidPackets++
+				offlineUnlock()
+
 				continue
 			}
 
@@ -237,6 +353,8 @@ func (pi *PcapImporter) parsePcap(session ImportingSession, fileName string, flu
 				index = 1
 			} else {
 				session.InvalidPackets++
+				offlineUnlock()
+
 				continue
 			}
 			fCount, isPresent := session.PacketsPerService[servicePort]
@@ -245,40 +363,34 @@ func (pi *PcapImporter) parsePcap(session ImportingSession, fileName string, flu
 			}
 			fCount[index]++
 			session.PacketsPerService[servicePort] = fCount
+			offlineUnlock()
+
+			if isOnline {
+				currentWriter.WritePacket(packet.Metadata().CaptureInfo, packet.Data())
+			}
 
 			assembler.AssembleWithTimestamp(packet.NetworkLayer().NetworkFlow(), tcp, packet.Metadata().Timestamp)
-		case <-updateProgressInterval:
-			pi.progressUpdate(session, fileName, false, "")
+		case <-sessionRotationInterval:
+			rotateSession(false)
+		case <-ctx.Done():
+			pi.releaseAssembler(assembler)
+			pi.saveSession(session, "import process cancelled")
+			pi.notificationController.Notify("pcap.canceled", session)
+			onComplete(true)
+
+			return
 		}
 	}
 }
 
-func (pi *PcapImporter) progressUpdate(session ImportingSession, fileName string, completed bool, err string) {
-	if completed {
-		session.CompletedAt = time.Now()
-	}
-	session.ImportingError = err
-
-	packetsPerService := session.PacketsPerService
-	session.PacketsPerService = make(map[uint16]flowCount, len(packetsPerService))
-	for key, value := range packetsPerService {
-		session.PacketsPerService[key] = value
-	}
-
+func (pi *PcapImporter) saveSession(session *ImportingSession, err string) {
 	pi.mSessions.Lock()
-	pi.sessions[session.ID] = session
+	session.CompletedAt = time.Now()
+	session.ImportingError = err
 	pi.mSessions.Unlock()
 
-	if completed || session.ImportingError != "" {
-		if _, _err := pi.storage.Insert(ImportingSessions).One(session); _err != nil {
-			log.WithError(_err).WithField("session", session).Error("failed to insert importing stats")
-		}
-		if completed {
-			moveProcessingFile(session.ID, fileName)
-		} else {
-			deleteProcessingFile(fileName)
-		}
-		close(session.completed)
+	if _, _err := pi.storage.Insert(ImportingSessions).One(session); _err != nil {
+		log.WithError(_err).WithField("session", session).Error("failed to insert importing stats")
 	}
 }
 
@@ -303,14 +415,59 @@ func (pi *PcapImporter) releaseAssembler(assembler *tcpassembly.Assembler) {
 	pi.mAssemblers.Unlock()
 }
 
+func (pi *PcapImporter) newSession(isOnline bool) (*ImportingSession, context.Context) {
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	session := &ImportingSession{
+		ID:                NewRowID(),
+		StartedAt:         time.Now(),
+		PacketsPerService: make(map[uint16]flowCount),
+		cancelFunc:        cancelFunc,
+	}
+
+	if isOnline {
+		pi.mLiveCapture.Lock()
+		pi.currentLiveSession = session
+		pi.mLiveCapture.Unlock()
+	}
+
+	return session, ctx
+}
+
+func createNewPcap(handle *pcap.Handle) (*os.File, *pcapgo.Writer) {
+	currentFile, err := ioutil.TempFile(ProcessingPcapsBasePath, "live-*.pcap")
+	if err != nil {
+		log.WithError(err).Panic("failed to create a pcap temp file")
+	}
+	currentWriter := pcapgo.NewWriter(currentFile)
+	currentWriter.WriteFileHeader(snapshotLen, handle.LinkType())
+
+	return currentFile, currentWriter
+}
+
+func savePcap(session *ImportingSession, file *os.File) {
+	if err := file.Close(); err != nil {
+		log.WithError(err).Panic("failed to close live pcap file")
+	}
+	filePath := file.Name()
+	hash, err := Sha256Sum(filePath)
+	if err != nil {
+		log.WithError(err).Panic("failed to calculate pcap sha256")
+	}
+	session.Hash = hash
+	session.Size = FileSize(filePath)
+
+	moveProcessingFile(session, filepath.Base(filePath))
+}
+
 func deleteProcessingFile(fileName string) {
 	if err := os.Remove(ProcessingPcapsBasePath + fileName); err != nil {
 		log.WithError(err).Error("failed to delete processing file")
 	}
 }
 
-func moveProcessingFile(sessionID string, fileName string) {
-	if err := os.Rename(ProcessingPcapsBasePath+fileName, PcapsBasePath+sessionID+path.Ext(fileName)); err != nil {
+func moveProcessingFile(session *ImportingSession, fileName string) {
+	if err := os.Rename(ProcessingPcapsBasePath+fileName,
+		PcapsBasePath+session.ID.Hex()+path.Ext(fileName)); err != nil {
 		log.WithError(err).Error("failed to move processed file")
 	}
 }
