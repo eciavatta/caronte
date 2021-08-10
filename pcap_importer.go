@@ -207,7 +207,6 @@ func (pi *PcapImporter) StopCapturing() error {
 	}
 
 	pi.currentLiveSession.cancelFunc()
-	pi.liveCaptureHandle.Close()
 	pi.liveCaptureHandle = nil
 
 	return nil
@@ -311,18 +310,21 @@ func (pi *PcapImporter) handle(handle *pcap.Handle, initialSession *ImportingSes
 		}
 	}
 
+	flushAllIfNecessary := func() {
+		if flushAll {
+			connectionsClosed := assembler.FlushAll()
+			log.Debugf("connections closed after flush: %v", connectionsClosed)
+		}
+	}
+
 	for {
 		select {
 		case packet := <-packets:
 			if packet == nil { // completed
-				if flushAll {
-					connectionsClosed := assembler.FlushAll()
-					log.Debugf("connections closed after flush: %v", connectionsClosed)
-				}
+				flushAllIfNecessary()
 				pi.releaseAssembler(assembler)
 				pi.saveSession(session, "")
 				pi.notificationController.Notify("pcap.completed", session)
-				rotateSession(true)
 				onComplete(false)
 
 				return
@@ -373,9 +375,18 @@ func (pi *PcapImporter) handle(handle *pcap.Handle, initialSession *ImportingSes
 		case <-sessionRotationInterval:
 			rotateSession(false)
 		case <-ctx.Done():
+			flushAllIfNecessary()
 			pi.releaseAssembler(assembler)
-			pi.saveSession(session, "import process cancelled")
-			pi.notificationController.Notify("pcap.canceled", session)
+
+			rotateSession(true)
+
+			if isOnline {
+				pi.saveSession(session, "")
+			} else {
+				pi.saveSession(session, "import process cancelled")
+				pi.notificationController.Notify("pcap.canceled", session)
+			}
+
 			onComplete(true)
 
 			return
