@@ -106,13 +106,13 @@ func NewPcapImporter(storage Storage, serverNet net.IPNet, rulesManager RulesMan
 // going to be imported or if it has been already imported in the past the function returns an error. Otherwise it
 // create a new session and starts to import the pcap, and returns immediately the session name (that is the sha256
 // of the pcap).
-func (pi *PcapImporter) ImportPcap(fileName string, flushAll bool) (string, error) {
+func (pi *PcapImporter) ImportPcap(fileName string, flushAll bool) (RowID, error) {
 	switch filepath.Ext(fileName) {
 	case ".pcap":
 	case ".pcapng":
 	default:
 		deleteProcessingFile(fileName)
-		return "", errors.New("invalid file extension")
+		return EmptyRowID(), errors.New("invalid file extension")
 	}
 
 	hash, err := Sha256Sum(ProcessingPcapsBasePath + fileName)
@@ -132,7 +132,7 @@ func (pi *PcapImporter) ImportPcap(fileName string, flushAll bool) (string, erro
 	if isPresent {
 		pi.mSessions.Unlock()
 		deleteProcessingFile(fileName)
-		return hash, errors.New("pcap already processed")
+		return EmptyRowID(), errors.New("pcap already processed")
 	}
 
 	handle, err := pcap.OpenOffline(ProcessingPcapsBasePath + fileName)
@@ -158,7 +158,7 @@ func (pi *PcapImporter) ImportPcap(fileName string, flushAll bool) (string, erro
 		}
 	})
 
-	return hash, nil
+	return session.ID, nil
 }
 
 func (pi *PcapImporter) StartCapturing(iface string, includedServices []uint16,
@@ -396,8 +396,11 @@ func (pi *PcapImporter) handle(handle *pcap.Handle, initialSession *ImportingSes
 
 func (pi *PcapImporter) saveSession(session *ImportingSession, err string) {
 	pi.mSessions.Lock()
-	session.CompletedAt = time.Now()
-	session.ImportingError = err
+	if err == "" {
+		session.CompletedAt = time.Now()
+	} else {
+		session.ImportingError = err
+	}
 	pi.mSessions.Unlock()
 
 	if _, _err := pi.storage.Insert(ImportingSessions).One(session); _err != nil {

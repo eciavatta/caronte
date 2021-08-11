@@ -155,7 +155,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 			if sessionID, err := applicationContext.PcapImporter.ImportPcap(fileName, flushAll); err != nil {
 				unprocessableEntity(c, err)
 			} else {
-				response := gin.H{"session": sessionID}
+				response := gin.H{"session": sessionID.Hex()}
 				c.JSON(http.StatusAccepted, response)
 				notificationController.Notify("pcap.upload", response)
 			}
@@ -189,7 +189,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 				}
 				unprocessableEntity(c, err)
 			} else {
-				response := gin.H{"session": sessionID}
+				response := gin.H{"session": sessionID.Hex()}
 				c.JSON(http.StatusAccepted, response)
 				notificationController.Notify("pcap.file", response)
 			}

@@ -20,14 +20,15 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSetupApplication(t *testing.T) {
@@ -125,7 +126,6 @@ func TestPcapImporterApi(t *testing.T) {
 	var sessionID struct{ Session string }
 	assert.Equal(t, http.StatusAccepted, w.Code)
 	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &sessionID))
-	assert.Equal(t, "369ef4b6abb6214b4ee2e0c81ecb93c49e275c26c85e30493b37727d408cf280", sessionID.Session)
 	assert.Equal(t, http.StatusUnprocessableEntity, toolkit.MakeRequest("POST", "/api/pcap/file",
 		gin.H{"file": "test_data/ping_pong_10000.pcap"}).Code) // duplicate
 
@@ -135,16 +135,16 @@ func TestPcapImporterApi(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &sessions))
 	assert.Len(t, sessions, 1)
-	assert.Equal(t, sessionID.Session, sessions[0].ID)
+	assert.Equal(t, sessionID.Session, sessions[0].ID.Hex())
 
 	// Get session
 	var session ImportingSession
 	w = toolkit.MakeRequest("GET", "/api/pcap/sessions/"+sessionID.Session, nil)
 	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &session))
-	assert.Equal(t, sessionID.Session, session.ID)
+	assert.Equal(t, sessionID.Session, session.ID.Hex())
 
 	// Cancel session
-	assert.Equal(t, http.StatusNotFound, toolkit.MakeRequest("DELETE", "/api/pcap/sessions/invalidSession",
+	assert.Equal(t, http.StatusNotFound, toolkit.MakeRequest("DELETE", "/api/pcap/sessions/"+EmptyRowID().Hex(),
 		nil).Code)
 	assert.Equal(t, http.StatusAccepted, toolkit.MakeRequest("DELETE", "/api/pcap/sessions/"+sessionID.Session,
 		nil).Code)
@@ -170,6 +170,7 @@ func NewRouterTestToolkit(t *testing.T, withSetup bool) *RouterTestToolkit {
 	gin.SetMode(gin.ReleaseMode)
 	notificationController := NewNotificationController(appContext)
 	go notificationController.Run()
+	appContext.SetNotificationController(notificationController)
 	resourcesController := NewResourcesController(notificationController)
 	router := CreateApplicationRouter(appContext, notificationController, resourcesController)
 
