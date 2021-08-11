@@ -18,10 +18,11 @@
 package main
 
 import (
-	"github.com/stretchr/testify/assert"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type a struct {
@@ -92,12 +93,12 @@ func TestSimpleInsertAndFind(t *testing.T) {
 
 	var result UnorderedDocument
 	findOp := wrapper.Storage.Find(collectionName).Context(wrapper.Context)
-	err = findOp.Filter(OrderedDocument{{"key", "a"}}).First(&result)
+	err = findOp.Filter(OrderedDocument{{Key: "key", Value: "a"}}).First(&result)
 	assert.Nil(t, err)
 	assert.Equal(t, idA, result["_id"])
 	assert.Equal(t, simpleDocA["key"], result["key"])
 
-	err = findOp.Filter(OrderedDocument{{"_id", idB}}).First(&result)
+	err = findOp.Filter(OrderedDocument{{Key: "_id", Value: idB}}).First(&result)
 	assert.Nil(t, err)
 	assert.Equal(t, idB, result["_id"])
 	assert.Equal(t, simpleDocB["key"], result["key"])
@@ -137,7 +138,7 @@ func TestSimpleInsertManyAndFindMany(t *testing.T) {
 	assert.Equal(t, "b", results[1]["key"])
 	assert.Equal(t, "a", results[0]["key"])
 
-	err = findOp.Filter(OrderedDocument{{"key", OrderedDocument{{"$gte", "b"}}}}).
+	err = findOp.Filter(OrderedDocument{{Key: "key", Value: OrderedDocument{{Key: "$gte", Value: "b"}}}}).
 		Sort("key", true).All(&results) // test filter
 	assert.Nil(t, err)
 	assert.Len(t, results, 2)
@@ -195,19 +196,19 @@ func TestSimpleUpdateOneUpdateMany(t *testing.T) {
 	assert.Nil(t, err)
 
 	updateOp := wrapper.Storage.Update(collectionName).Context(wrapper.Context)
-	isUpdated, err := updateOp.Filter(OrderedDocument{{"_id", "ida"}}).
-		One(OrderedDocument{{"key", "aa"}})
+	isUpdated, err := updateOp.Filter(OrderedDocument{{Key: "_id", Value: "ida"}}).
+		One(OrderedDocument{{Key: "key", Value: "aa"}})
 	assert.Nil(t, err)
 	assert.True(t, isUpdated)
 
-	updated, err := updateOp.Filter(OrderedDocument{{"key", OrderedDocument{{"$gte", "b"}}}}).
-		Many(OrderedDocument{{"key", "bb"}})
+	updated, err := updateOp.Filter(OrderedDocument{{Key: "key", Value: OrderedDocument{{Key: "$gte", Value: "b"}}}}).
+		Many(OrderedDocument{{Key: "key", Value: "bb"}})
 	assert.Nil(t, err)
 	assert.Equal(t, int64(2), updated)
 
 	var upsertID interface{}
-	isUpdated, err = updateOp.Upsert(&upsertID).Filter(OrderedDocument{{"key", "d"}}).
-		One(OrderedDocument{{"key", "d"}})
+	isUpdated, err = updateOp.Upsert(&upsertID).Filter(OrderedDocument{{Key: "key", Value: "d"}}).
+		One(OrderedDocument{{Key: "key", Value: "d"}})
 	assert.Nil(t, err)
 	assert.False(t, isUpdated)
 	assert.NotNil(t, upsertID)

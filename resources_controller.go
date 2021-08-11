@@ -19,13 +19,14 @@ package main
 
 import (
 	"context"
+	"sync"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/mem"
 	log "github.com/sirupsen/logrus"
-	"sync"
-	"time"
 )
 
 const (
@@ -97,7 +98,7 @@ func (csc *ResourcesController) Run() {
 		csc.mutex.Unlock()
 
 		avg := Average(cpuPercent)
-		if avg > averageCPUPercentAlertThreshold && time.Now().Sub(lastAlertTime).Seconds() > averageCPUPercentAlertMinInterval {
+		if avg > averageCPUPercentAlertThreshold && time.Since(lastAlertTime).Seconds() > averageCPUPercentAlertMinInterval {
 			csc.notificationController.Notify("resources.cpu_alert", gin.H{
 				"cpu_percent": cpuPercent,
 			})

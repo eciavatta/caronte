@@ -48,7 +48,7 @@ func CreateApplicationContext(storage Storage, version string) (*ApplicationCont
 	var configWrapper struct {
 		Config Config
 	}
-	if err := storage.Find(Settings).Filter(OrderedDocument{{"_id", "config"}}).
+	if err := storage.Find(Settings).Filter(OrderedDocument{{Key: "_id", Value: "config"}}).
 		First(&configWrapper); err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func CreateApplicationContext(storage Storage, version string) (*ApplicationCont
 		Accounts gin.Accounts
 	}
 
-	if err := storage.Find(Settings).Filter(OrderedDocument{{"_id", "accounts"}}).
+	if err := storage.Find(Settings).Filter(OrderedDocument{{Key: "_id", Value: "accounts"}}).
 		First(&accountsWrapper); err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func (sm *ApplicationContext) SetConfig(config Config) {
 	sm.Configure()
 	var upsertResults interface{}
 	if _, err := sm.Storage.Update(Settings).Upsert(&upsertResults).
-		Filter(OrderedDocument{{"_id", "config"}}).One(UnorderedDocument{"config": config}); err != nil {
+		Filter(OrderedDocument{{Key: "_id", Value: "config"}}).One(UnorderedDocument{"config": config}); err != nil {
 		log.WithError(err).WithField("config", config).Error("failed to update config")
 	}
 }
@@ -88,7 +88,7 @@ func (sm *ApplicationContext) SetAccounts(accounts gin.Accounts) {
 	sm.Accounts = accounts
 	var upsertResults interface{}
 	if _, err := sm.Storage.Update(Settings).Upsert(&upsertResults).
-		Filter(OrderedDocument{{"_id", "accounts"}}).One(UnorderedDocument{"accounts": accounts}); err != nil {
+		Filter(OrderedDocument{{Key: "_id", Value: "accounts"}}).One(UnorderedDocument{"accounts": accounts}); err != nil {
 		log.WithError(err).Error("failed to update accounts")
 	}
 }

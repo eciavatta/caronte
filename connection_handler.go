@@ -20,14 +20,15 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/flier/gohs/hyperscan"
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/tcpassembly"
-	log "github.com/sirupsen/logrus"
 	"hash/fnv"
 	"net"
 	"sync"
 	"time"
+
+	"github.com/flier/gohs/hyperscan"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/tcpassembly"
+	log "github.com/sirupsen/logrus"
 )
 
 const initialConnectionsCapacity = 1024
@@ -84,28 +85,26 @@ func NewBiDirectionalStreamFactory(storage Storage, serverNet net.IPNet,
 
 func (factory *BiDirectionalStreamFactory) updateRulesDatabaseService() {
 	for {
-		select {
-		case rulesDatabase, ok := <-factory.rulesManager.DatabaseUpdateChannel():
-			if !ok {
-				return
-			}
-			factory.mRulesDatabase.Lock()
-			scanners := factory.scanners
-			factory.scanners = factory.scanners[:0]
-
-			for _, s := range scanners {
-				err := s.scratch.Realloc(rulesDatabase.database)
-				if err != nil {
-					log.WithError(err).Error("failed to realloc an existing scanner")
-				} else {
-					s.version = rulesDatabase.version
-					factory.scanners = append(factory.scanners, s)
-				}
-			}
-
-			factory.rulesDatabase = rulesDatabase
-			factory.mRulesDatabase.Unlock()
+		rulesDatabase, ok := <-factory.rulesManager.DatabaseUpdateChannel()
+		if !ok {
+			return
 		}
+		factory.mRulesDatabase.Lock()
+		scanners := factory.scanners
+		factory.scanners = factory.scanners[:0]
+
+		for _, s := range scanners {
+			err := s.scratch.Realloc(rulesDatabase.database)
+			if err != nil {
+				log.WithError(err).Error("failed to realloc an existing scanner")
+			} else {
+				s.version = rulesDatabase.version
+				factory.scanners = append(factory.scanners, s)
+			}
+		}
+
+		factory.rulesDatabase = rulesDatabase
+		factory.mRulesDatabase.Unlock()
 	}
 }
 
@@ -239,7 +238,7 @@ func (ch *connectionHandlerImpl) Complete(handler *StreamHandler) {
 	streamsIDs := append(client.documentsIDs, server.documentsIDs...)
 	if len(streamsIDs) > 0 {
 		n, err := ch.Storage().Update(ConnectionStreams).
-			Filter(OrderedDocument{{"_id", UnorderedDocument{"$in": streamsIDs}}}).
+			Filter(OrderedDocument{{Key: "_id", Value: UnorderedDocument{"$in": streamsIDs}}}).
 			Many(UnorderedDocument{"connection_id": connectionID})
 		if err != nil {
 			log.WithError(err).WithField("connection", connection).Error("failed to update connection streams")
@@ -274,7 +273,7 @@ func (ch *connectionHandlerImpl) UpdateStatistics(connection Connection) {
 
 	var results interface{}
 	if _, err := ch.Storage().Update(Statistics).Upsert(&results).
-		Filter(OrderedDocument{{"_id", time.Unix(rangeStart*60, 0)}}).
+		Filter(OrderedDocument{{Key: "_id", Value: time.Unix(rangeStart*60, 0)}}).
 		OneComplex(UnorderedDocument{"$inc": updateDocument}); err != nil {
 		log.WithError(err).WithField("connection", connection).Error("failed to update connection statistics")
 	}

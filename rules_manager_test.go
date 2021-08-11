@@ -111,7 +111,7 @@ func TestAddAndGetAllRules(t *testing.T) {
 	checkRule := func(expected Rule, patternIDs []int) {
 		var rule Rule
 		err := wrapper.Storage.Find(Rules).Context(wrapper.Context).
-			Filter(OrderedDocument{{"_id", expected.ID}}).First(&rule)
+			Filter(OrderedDocument{{Key: "_id", Value: expected.ID}}).First(&rule)
 		require.NoError(t, err)
 
 		for i, id := range patternIDs {

@@ -21,10 +21,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/eciavatta/caronte/parsers"
-	log "github.com/sirupsen/logrus"
 	"strings"
 	"time"
+
+	"github.com/eciavatta/caronte/parsers"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -303,8 +304,8 @@ func (csc ConnectionStreamsController) DownloadConnectionMessages(c context.Cont
 
 func (csc ConnectionStreamsController) getConnection(c context.Context, connectionID RowID) Connection {
 	var connection Connection
-	if err := csc.storage.Find(Connections).Context(c).Filter(OrderedDocument{{"_id", connectionID}}).
-		First(&connection); err != nil {
+	if err := csc.storage.Find(Connections).Context(c).
+		Filter(OrderedDocument{{Key: "_id", Value: connectionID}}).First(&connection); err != nil {
 		log.WithError(err).WithField("id", connectionID).Panic("failed to get connection")
 	}
 	return connection
@@ -314,9 +315,9 @@ func (csc ConnectionStreamsController) getConnectionStream(c context.Context, co
 	documentIndex int) ConnectionStream {
 	var result ConnectionStream
 	if err := csc.storage.Find(ConnectionStreams).Filter(OrderedDocument{
-		{"connection_id", connectionID},
-		{"from_client", fromClient},
-		{"document_index", documentIndex},
+		{Key: "connection_id", Value: connectionID},
+		{Key: "from_client", Value: fromClient},
+		{Key: "document_index", Value: documentIndex},
 	}).Context(c).First(&result); err != nil {
 		log.WithError(err).WithField("connection_id", connectionID).Panic("failed to get a ConnectionStream")
 	}

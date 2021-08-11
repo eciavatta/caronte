@@ -189,7 +189,7 @@ func (rm *rulesManagerImpl) UpdateRule(context context.Context, id RowID, rule R
 		return false, errors.New("already exists another rule with the same name")
 	}
 
-	updated, err := rm.storage.Update(Rules).Context(context).Filter(OrderedDocument{{"_id", id}}).
+	updated, err := rm.storage.Update(Rules).Context(context).Filter(OrderedDocument{{Key: "_id", Value: id}}).
 		One(UnorderedDocument{"name": rule.Name, "color": rule.Color})
 	if err != nil {
 		log.WithError(err).WithField("rule", rule).Panic("failed to update rule on database")

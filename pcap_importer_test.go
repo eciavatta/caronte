@@ -142,7 +142,7 @@ func waitSessionCompletion(t *testing.T, pcapImporter *PcapImporter, sessionID R
 	count := 0
 	for session.CompletedAt.IsZero() && count < 100 && session.ImportingError == "" {
 		time.Sleep(100 * time.Millisecond)
-		count += 1
+		count++
 		session, isPresent = pcapImporter.GetSession(sessionID)
 	}
 	assert.NotEqual(t, 100, count, "waitSessionCompletition timeout")

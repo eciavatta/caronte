@@ -86,7 +86,7 @@ func NewMongoStorage(uri string, port int, database string) (*MongoStorage, erro
 	}
 
 	if _, err := collections[Services].Indexes().CreateOne(ctx, mongo.IndexModel{
-		Keys:    bson.D{{"name", 1}},
+		Keys:    bson.D{{Key: "name", Value: 1}},
 		Options: options.Index().SetUnique(true),
 	}); err != nil {
 		return nil, err
@@ -94,10 +94,10 @@ func NewMongoStorage(uri string, port int, database string) (*MongoStorage, erro
 
 	if _, err := collections[ConnectionStreams].Indexes().CreateMany(ctx, []mongo.IndexModel{
 		{
-			Keys: bson.D{{"connection_id", -1}}, // descending
+			Keys: bson.D{{Key: "connection_id", Value: -1}}, // descending
 		},
 		{
-			Keys: bson.D{{"payload_string", "text"}},
+			Keys: bson.D{{Key: "payload_string", Value: "text"}},
 		},
 	}); err != nil {
 		return nil, err
@@ -271,7 +271,7 @@ func (storage *MongoStorage) Update(collectionName string) UpdateOperation {
 	op := MongoUpdateOperation{
 		collection: collection,
 		filter:     OrderedDocument{},
-		update:     OrderedDocument{{"$set", nil}},
+		update:     OrderedDocument{{Key: "$set", Value: nil}},
 		opt:        options.Update(),
 	}
 	if !ok {

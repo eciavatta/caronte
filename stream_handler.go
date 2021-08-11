@@ -19,14 +19,15 @@ package main
 
 import (
 	"bytes"
+	"io"
+	"strings"
+	"time"
+
 	"github.com/eciavatta/caronte/similarity"
 	"github.com/flier/gohs/hyperscan"
 	"github.com/glaslos/tlsh"
 	"github.com/google/gopacket/tcpassembly"
 	log "github.com/sirupsen/logrus"
-	"io"
-	"strings"
-	"time"
 )
 
 const MaxDocumentSize = 1024 * 1024
@@ -156,8 +157,8 @@ func (sh *StreamHandler) resetCurrentDocument() {
 	sh.lossBlocks = sh.lossBlocks[:0]
 	sh.currentIndex = 0
 
-	for _, val := range sh.patternMatches {
-		val = val[:0]
+	for i := range sh.patternMatches {
+		sh.patternMatches[i] = sh.patternMatches[i][:0]
 	}
 }
 

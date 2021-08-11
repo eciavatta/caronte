@@ -19,10 +19,11 @@ package main
 
 import (
 	"context"
-	log "github.com/sirupsen/logrus"
 	"strings"
 	"sync"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -108,7 +109,8 @@ func (sc *SearchController) GetPerformedSearch(id RowID) PerformedSearch {
 }
 
 func (sc *SearchController) PerformSearch(c context.Context, options SearchOptions) PerformedSearch {
-	findQuery := sc.storage.Find(ConnectionStreams).Projection(OrderedDocument{{"connection_id", 1}}).Context(c)
+	findQuery := sc.storage.Find(ConnectionStreams).
+		Projection(OrderedDocument{{Key: "connection_id", Value: 1}}).Context(c)
 	timeout := options.Timeout * secondsToNano
 	if timeout <= 0 || timeout > maxSearchTimeout {
 		timeout = maxSearchTimeout
@@ -126,7 +128,7 @@ func (sc *SearchController) PerformSearch(c context.Context, options SearchOptio
 			}
 		}
 
-		findQuery = findQuery.Filter(OrderedDocument{{"$text", UnorderedDocument{
+		findQuery = findQuery.Filter(OrderedDocument{{Key: "$text", Value: UnorderedDocument{
 			"$search":             text,
 			"$language":           "none",
 			"$caseSensitive":      options.TextSearch.CaseSensitive,
@@ -154,7 +156,7 @@ func (sc *SearchController) PerformSearch(c context.Context, options SearchOptio
 			regex = UnorderedDocument{"$not": UnorderedDocument{"$regex": options.RegexSearch.NotPattern, "$options": regexOptions}}
 		}
 
-		findQuery = findQuery.Filter(OrderedDocument{{"payload_string", regex}})
+		findQuery = findQuery.Filter(OrderedDocument{{Key: "payload_string", Value: regex}})
 	}
 
 	var connections []ConnectionStream

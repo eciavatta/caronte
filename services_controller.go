@@ -60,7 +60,7 @@ func (sc *ServicesController) SetService(c context.Context, service Service) err
 	sc.mutex.Lock()
 	defer sc.mutex.Unlock()
 	var upsert interface{}
-	updated, err := sc.storage.Update(Services).Context(c).Filter(OrderedDocument{{"_id", service.Port}}).
+	updated, err := sc.storage.Update(Services).Context(c).Filter(OrderedDocument{{Key: "_id", Value: service.Port}}).
 		Upsert(&upsert).One(service)
 	if err != nil {
 		return errors.New("duplicate name")
@@ -85,8 +85,8 @@ func (sc *ServicesController) DeleteService(c context.Context, service Service) 
 	sc.mutex.Lock()
 	defer sc.mutex.Unlock()
 
-	if err := sc.storage.Delete(Services).Context(c).Filter(OrderedDocument{{"_id", service.Port}}).
-		One(); err != nil {
+	if err := sc.storage.Delete(Services).Context(c).
+		Filter(OrderedDocument{{Key: "_id", Value: service.Port}}).One(); err != nil {
 		return errors.New(err.Error())
 	} else {
 		delete(sc.services, service.Port)

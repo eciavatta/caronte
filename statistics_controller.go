@@ -20,8 +20,9 @@ package main
 import (
 	"context"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type StatisticRecord struct {
@@ -60,15 +61,15 @@ func (sc *StatisticsController) GetStatistics(context context.Context, filter St
 	var statisticRecords []StatisticRecord
 	query := sc.storage.Find(Statistics).Context(context).Sort("_id", true)
 	if !filter.RangeFrom.IsZero() {
-		query = query.Filter(OrderedDocument{{"_id", UnorderedDocument{"$lt": filter.RangeFrom}}})
+		query = query.Filter(OrderedDocument{{Key: "_id", Value: UnorderedDocument{"$lt": filter.RangeFrom}}})
 	}
 	if !filter.RangeTo.IsZero() {
-		query = query.Filter(OrderedDocument{{"_id", UnorderedDocument{"$gt": filter.RangeTo}}})
+		query = query.Filter(OrderedDocument{{Key: "_id", Value: UnorderedDocument{"$gt": filter.RangeTo}}})
 	}
 	for _, port := range filter.Ports {
 		for _, metric := range sc.servicesMetrics {
 			if filter.Metric == "" || filter.Metric == metric {
-				query = query.Projection(OrderedDocument{{fmt.Sprintf("%s.%d", metric, port), 1}})
+				query = query.Projection(OrderedDocument{{Key: fmt.Sprintf("%s.%d", metric, port), Value: 1}})
 			}
 		}
 
@@ -76,19 +77,19 @@ func (sc *StatisticsController) GetStatistics(context context.Context, filter St
 	if filter.Metric != "" && len(filter.Ports) == 0 {
 		for _, metric := range sc.servicesMetrics {
 			if filter.Metric == metric {
-				query = query.Projection(OrderedDocument{{metric, 1}})
+				query = query.Projection(OrderedDocument{{Key: metric, Value: 1}})
 			}
 		}
 	}
 	for _, ruleID := range filter.RulesIDs {
 		if filter.Metric == "" || filter.Metric == "matched_rules" {
-			query = query.Projection(OrderedDocument{{fmt.Sprintf("matched_rules.%s", ruleID), 1}})
+			query = query.Projection(OrderedDocument{{Key: fmt.Sprintf("matched_rules.%s", ruleID), Value: 1}})
 		}
 
 	}
 	if filter.Metric != "" && len(filter.RulesIDs) == 0 {
 		if filter.Metric == "matched_rules" {
-			query = query.Projection(OrderedDocument{{"matched_rules", 1}})
+			query = query.Projection(OrderedDocument{{Key: "matched_rules", Value: 1}})
 		}
 	}
 
@@ -100,7 +101,7 @@ func (sc *StatisticsController) GetStatistics(context context.Context, filter St
 		return []StatisticRecord{}
 	}
 
-	for i, _ := range statisticRecords {
+	for i := range statisticRecords {
 		statisticRecords[i].RangeEnd = statisticRecords[i].RangeStart.Add(time.Minute)
 	}
 

@@ -116,7 +116,13 @@ func TestConnectionFactory(t *testing.T) {
 		time.Sleep(time.Duration(rand.Intn(1000)) * time.Millisecond)
 		stream := factory.New(netFlow, transportFlow)
 		seen := time.Now()
-		stream.Reassembled([]tcpassembly.Reassembly{{[]byte{}, 0, true, true, seen}})
+		stream.Reassembled([]tcpassembly.Reassembly{{
+			Bytes: []byte{},
+			Skip:  0,
+			Start: true,
+			End:   true,
+			Seen:  seen,
+		}})
 		stream.ReassemblyComplete()
 
 		var startedAt, closedAt time.Time
@@ -141,7 +147,7 @@ func TestConnectionFactory(t *testing.T) {
 		connectionFlow := StreamFlow{netFlow.Src(), netFlow.Dst(), transportFlow.Src(), transportFlow.Dst()}
 		connectionID := CustomRowID(connectionFlow.Hash(), startedAt)
 		op := wrapper.Storage.Find(Connections).Context(wrapper.Context)
-		err := op.Filter(OrderedDocument{{"_id", connectionID}}).First(&result)
+		err := op.Filter(OrderedDocument{{Key: "_id", Value: connectionID}}).First(&result)
 		require.NoError(t, err)
 
 		assert.NotNil(t, result)

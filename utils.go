@@ -24,12 +24,13 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	log "github.com/sirupsen/logrus"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"io"
 	"net"
 	"os"
 	"time"
+
+	log "github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func Sha256Sum(fileName string) (string, error) {
@@ -95,7 +96,7 @@ func FileSize(filename string) int64 {
 }
 
 func byID(id RowID) OrderedDocument {
-	return OrderedDocument{{"_id", id}}
+	return OrderedDocument{{Key: "_id", Value: id}}
 }
 
 func DecodeBytes(buffer []byte, format string) string {

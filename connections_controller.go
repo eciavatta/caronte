@@ -20,9 +20,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/eciavatta/caronte/similarity"
 	log "github.com/sirupsen/logrus"
-	"time"
 )
 
 const (
@@ -103,52 +104,52 @@ func (cc ConnectionsController) GetConnections(c context.Context, filter Connect
 
 	from, _ := RowIDFromHex(filter.From)
 	if !from.IsZero() {
-		query = query.Filter(OrderedDocument{{"_id", UnorderedDocument{"$lte": from}}})
+		query = query.Filter(OrderedDocument{{Key: "_id", Value: UnorderedDocument{"$lte": from}}})
 	}
 	to, _ := RowIDFromHex(filter.To)
 	if !to.IsZero() {
-		query = query.Filter(OrderedDocument{{"_id", UnorderedDocument{"$gte": to}}})
+		query = query.Filter(OrderedDocument{{Key: "_id", Value: UnorderedDocument{"$gte": to}}})
 	} else {
 		query = query.Sort("_id", false)
 	}
 	if filter.ServicePort > 0 {
-		query = query.Filter(OrderedDocument{{"port_dst", filter.ServicePort}})
+		query = query.Filter(OrderedDocument{{Key: "port_dst", Value: filter.ServicePort}})
 	}
 	if len(filter.ClientAddress) > 0 {
-		query = query.Filter(OrderedDocument{{"ip_src", filter.ClientAddress}})
+		query = query.Filter(OrderedDocument{{Key: "ip_src", Value: filter.ClientAddress}})
 	}
 	if filter.ClientPort > 0 {
-		query = query.Filter(OrderedDocument{{"port_src", filter.ClientPort}})
+		query = query.Filter(OrderedDocument{{Key: "port_src", Value: filter.ClientPort}})
 	}
 	if filter.MinDuration > 0 {
-		query = query.Filter(OrderedDocument{{"$where", fmt.Sprintf("this.closed_at - this.started_at >= %v", filter.MinDuration)}})
+		query = query.Filter(OrderedDocument{{Key: "$where", Value: fmt.Sprintf("this.closed_at - this.started_at >= %v", filter.MinDuration)}})
 	}
 	if filter.MaxDuration > 0 {
-		query = query.Filter(OrderedDocument{{"$where", fmt.Sprintf("this.closed_at - this.started_at <= %v", filter.MaxDuration)}})
+		query = query.Filter(OrderedDocument{{Key: "$where", Value: fmt.Sprintf("this.closed_at - this.started_at <= %v", filter.MaxDuration)}})
 	}
 	if filter.MinBytes > 0 {
-		query = query.Filter(OrderedDocument{{"$where", fmt.Sprintf("this.client_bytes + this.server_bytes >= %v", filter.MinBytes)}})
+		query = query.Filter(OrderedDocument{{Key: "$where", Value: fmt.Sprintf("this.client_bytes + this.server_bytes >= %v", filter.MinBytes)}})
 	}
 	if filter.MaxBytes > 0 {
-		query = query.Filter(OrderedDocument{{"$where", fmt.Sprintf("this.client_bytes + this.server_bytes <= %v", filter.MaxBytes)}})
+		query = query.Filter(OrderedDocument{{Key: "$where", Value: fmt.Sprintf("this.client_bytes + this.server_bytes <= %v", filter.MaxBytes)}})
 	}
 	if filter.StartedAfter > 0 {
-		query = query.Filter(OrderedDocument{{"started_at", UnorderedDocument{"$gt": time.Unix(filter.StartedAfter, 0)}}})
+		query = query.Filter(OrderedDocument{{Key: "started_at", Value: UnorderedDocument{"$gt": time.Unix(filter.StartedAfter, 0)}}})
 	}
 	if filter.StartedBefore > 0 {
-		query = query.Filter(OrderedDocument{{"started_at", UnorderedDocument{"$lt": time.Unix(filter.StartedBefore, 0)}}})
+		query = query.Filter(OrderedDocument{{Key: "started_at", Value: UnorderedDocument{"$lt": time.Unix(filter.StartedBefore, 0)}}})
 	}
 	if filter.ClosedAfter > 0 {
-		query = query.Filter(OrderedDocument{{"closed_at", UnorderedDocument{"$gt": time.Unix(filter.ClosedAfter, 0)}}})
+		query = query.Filter(OrderedDocument{{Key: "closed_at", Value: UnorderedDocument{"$gt": time.Unix(filter.ClosedAfter, 0)}}})
 	}
 	if filter.ClosedBefore > 0 {
-		query = query.Filter(OrderedDocument{{"closed_at", UnorderedDocument{"$lt": time.Unix(filter.ClosedBefore, 0)}}})
+		query = query.Filter(OrderedDocument{{Key: "closed_at", Value: UnorderedDocument{"$lt": time.Unix(filter.ClosedBefore, 0)}}})
 	}
 	if filter.Hidden {
-		query = query.Filter(OrderedDocument{{"hidden", true}})
+		query = query.Filter(OrderedDocument{{Key: "hidden", Value: true}})
 	}
 	if filter.Marked {
-		query = query.Filter(OrderedDocument{{"marked", true}})
+		query = query.Filter(OrderedDocument{{Key: "marked", Value: true}})
 	}
 	if filter.MatchedRules != nil && len(filter.MatchedRules) > 0 {
 		matchedRules := make([]RowID, len(filter.MatchedRules))
@@ -160,13 +161,13 @@ func (cc ConnectionsController) GetConnections(c context.Context, filter Connect
 			}
 		}
 
-		query = query.Filter(OrderedDocument{{"matched_rules", UnorderedDocument{"$all": matchedRules}}})
+		query = query.Filter(OrderedDocument{{Key: "matched_rules", Value: UnorderedDocument{"$all": matchedRules}}})
 	}
 	performedSearchID, _ := RowIDFromHex(filter.PerformedSearch)
 	if !performedSearchID.IsZero() {
 		performedSearch := cc.searchController.GetPerformedSearch(performedSearchID)
 		if !performedSearch.ID.IsZero() && len(performedSearch.AffectedConnections) > 0 {
-			query = query.Filter(OrderedDocument{{"_id", UnorderedDocument{"$in": performedSearch.AffectedConnections}}})
+			query = query.Filter(OrderedDocument{{Key: "_id", Value: UnorderedDocument{"$in": performedSearch.AffectedConnections}}})
 		}
 	}
 	var limit int64
@@ -195,10 +196,10 @@ func (cc ConnectionsController) GetConnections(c context.Context, filter Connect
 		if similarToConn, ok := cc.GetConnection(c, similarToID); ok {
 			connections = make([]Connection, 0, limit)
 			// enforce similarity on same service to reduce the number of documents extracted
-			query = query.Filter(OrderedDocument{{"port_dst", similarToConn.DestinationPort}})
+			query = query.Filter(OrderedDocument{{Key: "port_dst", Value: similarToConn.DestinationPort}})
 
 			if similarTo == SimilarToBoth || similarTo == SimilarToClient { // filter documents with similar client size
-				query = query.Filter(OrderedDocument{{"$expr", UnorderedDocument{
+				query = query.Filter(OrderedDocument{{Key: "$expr", Value: UnorderedDocument{
 					"$gt": []interface{}{
 						UnorderedDocument{"$divide": []UnorderedDocument{
 							{"$min": []interface{}{
@@ -214,7 +215,7 @@ func (cc ConnectionsController) GetConnections(c context.Context, filter Connect
 			}
 
 			if similarTo == SimilarToBoth || similarTo == SimilarToServer { // filter documents with similar server size
-				query = query.Filter(OrderedDocument{{"$expr", UnorderedDocument{
+				query = query.Filter(OrderedDocument{{Key: "$expr", Value: UnorderedDocument{
 					"$gt": []interface{}{
 						UnorderedDocument{"$divide": []UnorderedDocument{
 							{"$min": []interface{}{
@@ -303,7 +304,7 @@ func (cc ConnectionsController) buildSimilarityFunc(similarToConn Connection,
 			}
 			return false
 		}
-	} else if similarTo == SimilarToClient {
+	} else if similarTo == SimilarToServer {
 		return func(row interface{}) bool {
 			conn := row.(*Connection)
 			if connServerComparable.IsSimilarTo(conn.ServerStreamComparable()) {
