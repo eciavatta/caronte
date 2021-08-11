@@ -9,9 +9,9 @@ RUN apt-get update && \
 
 WORKDIR /caronte
 
-COPY . ./
+COPY ./backend/ ./
 
 RUN go mod download && \
     go build
 
-ENTRYPOINT go test -v -race -covermode=atomic
+ENTRYPOINT go test -v -race -covermode=atomic ./...

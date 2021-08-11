@@ -14,6 +14,9 @@ jobs:
   test_backend:
     name: Build and test backend
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
     services:
       mongo:
         image: mongo:4.4
@@ -28,7 +31,7 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get install pkg-config libpcap-dev libhyperscan-dev
       - name: Test backend
-        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic
+        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
       - name: Upload coverage
         run: bash <(curl -s https://codecov.io/bash)
   build_frontend:

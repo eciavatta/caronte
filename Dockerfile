@@ -14,10 +14,11 @@ WORKDIR /caronte
 COPY . ./
 
 RUN export VERSION=$(git describe --tags --abbrev=0) && \
+	cd backend/ && \
     go mod download && \
     go build -ldflags "-X main.Version=$VERSION" && \
-	mkdir -p build && \
-	cp -r caronte pcaps/ scripts/ shared/ test_data/ build/
+	mkdir -p build/pcaps/processing build/shared && \
+	cp -r caronte build/
 
 
 # Build frontend via yarn
@@ -33,7 +34,7 @@ RUN yarn install && yarn build --production=true
 # LAST STAGE
 FROM ubuntu:20.04
 
-COPY --from=BACKEND_BUILDER /caronte/build /opt/caronte
+COPY --from=BACKEND_BUILDER /caronte/backend/build /opt/caronte
 
 COPY --from=FRONTEND_BUILDER /caronte-frontend/build /opt/caronte/frontend/build
 
