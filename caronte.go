@@ -20,6 +20,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -35,8 +37,11 @@ func main() {
 
 	flag.Parse()
 
+	dbUsername, _ := os.LookupEnv("DB_USERNAME")
+	dbPassword, _ := os.LookupEnv("DB_PASSWORD")
+
 	logFields := log.Fields{"host": *mongoHost, "port": *mongoPort, "dbName": *dbName}
-	storage, err := NewMongoStorage(*mongoHost, *mongoPort, *dbName)
+	storage, err := NewMongoStorage(*mongoHost, *mongoPort, *dbName, dbUsername, dbPassword)
 	if err != nil {
 		log.WithError(err).WithFields(logFields).Fatal("failed to connect to MongoDB")
 	}

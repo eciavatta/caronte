@@ -45,7 +45,7 @@ RUN apt-get update && \
 
 ENV GIN_MODE release
 
-ENV MONGO_HOST mongo
+ENV MONGO_HOST 127.0.0.1
 
 ENV MONGO_PORT 27017
 

@@ -20,18 +20,19 @@ package main
 import (
 	"context"
 	"fmt"
-	log "github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/require"
 	"os"
 	"strconv"
 	"testing"
 	"time"
+
+	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/require"
 )
 
 type TestStorageWrapper struct {
-	DbName  string
-	Storage *MongoStorage
-	Context context.Context
+	DbName     string
+	Storage    *MongoStorage
+	Context    context.Context
 	CancelFunc context.CancelFunc
 }
 
@@ -50,14 +51,14 @@ func NewTestStorageWrapper(t *testing.T) *TestStorageWrapper {
 	dbName := fmt.Sprintf("%x", time.Now().UnixNano())
 	log.WithField("dbName", dbName).Info("creating new storage")
 
-	storage, err := NewMongoStorage(mongoHost, port, dbName)
+	storage, err := NewMongoStorage(mongoHost, port, dbName, "", "")
 	require.NoError(t, err)
 	ctx, cancelFunc := context.WithTimeout(context.Background(), 30*time.Second)
 
 	return &TestStorageWrapper{
-		DbName:  dbName,
-		Storage: storage,
-		Context: ctx,
+		DbName:     dbName,
+		Storage:    storage,
+		Context:    ctx,
 		CancelFunc: cancelFunc,
 	}
 }

@@ -3,3 +3,8 @@ pcaps/*.pcap
 pcaps/*.pcapng
 pcaps/processing/*.pcap
 pcaps/processing/*.pcapng
+
+# docker
+Dockerfile
+docker-compose.yml
+.dockerignore
