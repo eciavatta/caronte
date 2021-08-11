@@ -196,19 +196,13 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 		})
 
 		api.PUT("/pcap/live", func(c *gin.Context) {
-			var request struct {
-				Interface        string   `json:"interface" binding:"required"`
-				IncludedServices []uint16 `json:"included_services"`
-				ExcludedServices []uint16 `json:"excluded_services"`
-			}
-
-			if err := c.ShouldBindJSON(&request); err != nil {
+			var captureOptions CaptureOptions
+			if err := c.ShouldBindJSON(&captureOptions); err != nil {
 				badRequest(c, err)
 				return
 			}
 
-			if err := applicationContext.PcapImporter.StartCapturing(request.Interface,
-				request.IncludedServices, request.ExcludedServices); err != nil {
+			if err := applicationContext.PcapImporter.StartCapturing(captureOptions); err != nil {
 				badRequest(c, err)
 				return
 			}
@@ -229,6 +223,14 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 			notificationController.Notify("pcap.live", response)
 		})
 
+		api.POST("/pcap/live/interfaces", func(c *gin.Context) {
+			if interfaces, err := applicationContext.PcapImporter.ListInterfaces(); err != nil {
+				badRequest(c, err)
+			} else {
+				c.JSON(http.StatusOK, interfaces)
+			}
+		})
+
 		api.PUT("/pcap/live/interval", func(c *gin.Context) {
 			var request struct {
 				RotationInterval time.Duration `json:"rotation_interval" binding:"required"`
@@ -241,6 +243,42 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 
 			applicationContext.PcapImporter.SetSessionRotationInterval(request.RotationInterval * secondsToNano)
 			c.JSON(http.StatusOK, gin.H{"result": "ok"})
+		})
+
+		api.PUT("/pcap/remote", func(c *gin.Context) {
+			var request struct {
+				SSHConfig      SSHConfig      `json:"ssh_config" binding:"required"`
+				CaptureOptions CaptureOptions `json:"capture_options" binding:"required"`
+			}
+
+			if err := c.ShouldBindJSON(&request); err != nil {
+				badRequest(c, err)
+				return
+			}
+
+			if err := applicationContext.PcapImporter.StartRemoteCapturing(request.SSHConfig,
+				request.CaptureOptions); err != nil {
+				badRequest(c, err)
+				return
+			}
+
+			response := gin.H{"liveRemoteCapture": "started"}
+			c.JSON(http.StatusOK, response)
+			notificationController.Notify("pcap.remote", response)
+		})
+
+		api.POST("/pcap/remote/interfaces", func(c *gin.Context) {
+			var sshConfig SSHConfig
+			if err := c.ShouldBindJSON(&sshConfig); err != nil {
+				badRequest(c, err)
+				return
+			}
+
+			if interfaces, err := applicationContext.PcapImporter.ListRemoteInterfaces(sshConfig); err != nil {
+				badRequest(c, err)
+			} else {
+				c.JSON(http.StatusOK, interfaces)
+			}
 		})
 
 		api.GET("/pcap/sessions", func(c *gin.Context) {

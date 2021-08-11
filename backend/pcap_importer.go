@@ -18,9 +18,11 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"os"
@@ -29,6 +31,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/google/gopacket"
@@ -37,6 +40,7 @@ import (
 	"github.com/google/gopacket/pcapgo"
 	"github.com/google/gopacket/tcpassembly"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/crypto/ssh"
 )
 
 const PcapsBasePath = "pcaps/"
@@ -44,6 +48,7 @@ const ProcessingPcapsBasePath = PcapsBasePath + "processing/"
 const initialAssemblerPoolSize = 16
 const initialSessionRotationInterval = 2 * time.Minute
 const snapshotLen = 1024
+const remoteCapturePipeName = "remote-pipe.pcap"
 
 type PcapImporter struct {
 	storage                 Storage
@@ -71,6 +76,22 @@ type ImportingSession struct {
 	PacketsPerService map[uint16]flowCount `json:"packets_per_service" bson:"packets_per_service"`
 	ImportingError    string               `json:"importing_error" bson:"importing_error,omitempty"`
 	cancelFunc        context.CancelFunc
+}
+
+type CaptureOptions struct {
+	Interface        string   `json:"interface" binding:"required"`
+	IncludedServices []uint16 `json:"included_services"`
+	ExcludedServices []uint16 `json:"excluded_services"`
+}
+
+type SSHConfig struct {
+	Host            string `json:"host" binding:"required"`
+	Port            uint16 `json:"port"`
+	User            string `json:"user"`
+	Password        string `json:"password"`
+	PrivateKey      string `json:"private_key"`
+	Passphrase      string `json:"passphrase"`
+	ServerPublicKey string `json:"server_public_key"`
 }
 
 type flowCount [2]int
@@ -161,8 +182,7 @@ func (pi *PcapImporter) ImportPcap(fileName string, flushAll bool) (RowID, error
 	return session.ID, nil
 }
 
-func (pi *PcapImporter) StartCapturing(iface string, includedServices []uint16,
-	excludedServices []uint16) error {
+func (pi *PcapImporter) StartCapturing(captureOptions CaptureOptions) error {
 	pi.mLiveCapture.Lock()
 	defer pi.mLiveCapture.Unlock()
 
@@ -170,23 +190,12 @@ func (pi *PcapImporter) StartCapturing(iface string, includedServices []uint16,
 		return errors.New("live capture is already in progress")
 	}
 
-	handle, err := pcap.OpenLive(iface, 1600, true, pcap.BlockForever)
+	handle, err := pcap.OpenLive(captureOptions.Interface, 1600, true, pcap.BlockForever)
 	if err != nil {
 		return err
 	}
 
-	bffFilter := "tcp"
-	if includedServices != nil {
-		bffFilter += " and port " + strings.Trim(strings.Join(
-			strings.Fields(fmt.Sprint(includedServices)), " and port "), "[]")
-	}
-
-	if excludedServices != nil {
-		bffFilter += " and not port " + strings.Trim(strings.Join(
-			strings.Fields(fmt.Sprint(excludedServices)), " and not port "), "[]")
-	}
-
-	if err := handle.SetBPFFilter(bffFilter); err != nil {
+	if err := handle.SetBPFFilter(generateBffFilters(captureOptions)); err != nil {
 		return err
 	}
 
@@ -210,6 +219,106 @@ func (pi *PcapImporter) StopCapturing() error {
 	pi.liveCaptureHandle = nil
 
 	return nil
+}
+
+func (pi *PcapImporter) ListInterfaces() ([]string, error) {
+	ifs, err := pcap.FindAllDevs()
+	if err != nil {
+		return nil, err
+	}
+
+	interfaces := make([]string, len(ifs))
+	for i := range ifs {
+		interfaces[i] = ifs[i].Name
+	}
+
+	return interfaces, nil
+}
+
+func (pi *PcapImporter) StartRemoteCapturing(sshConfig SSHConfig, captureOptions CaptureOptions) error {
+	client, err := createSSHClient(&sshConfig)
+	if err != nil {
+		return err
+	}
+
+	// check if tcpdump is present
+	session, err := client.NewSession()
+	if err != nil {
+		return err
+	}
+	if err = session.Run("tcpdump --version"); err != nil {
+		return err
+	}
+	if err = session.Close(); err != nil && err != io.EOF {
+		log.WithError(err).Panic("failed to close ssh session")
+	}
+
+	if FileExists(remoteCapturePipeName) {
+		deleteProcessingFile(remoteCapturePipeName)
+	}
+
+	pipeName := ProcessingPcapsBasePath + remoteCapturePipeName
+	if err = syscall.Mkfifo(pipeName, 0666); err != nil {
+		log.WithError(err).Panic("failed to create named pipe")
+	}
+
+	namedPipe, err := os.OpenFile(pipeName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
+	if err != nil {
+		log.WithError(err).Panic("failed to open named pipe")
+	}
+
+	session, err = client.NewSession()
+	if err != nil {
+		return err
+	}
+	session.Stdout = bufio.NewWriter(namedPipe)
+	captureOptions.ExcludedServices = append(captureOptions.ExcludedServices, sshConfig.Port)
+
+	go (func() {
+		if err = session.Run(fmt.Sprintf("tcpdump -s 0 -U -n -w - -i %s %s",
+			captureOptions.Interface, generateBffFilters(captureOptions))); err != nil {
+			log.WithError(err).Panic("failed to start tcpdump on remote host")
+		}
+		if err = session.Close(); err != nil && err != io.EOF {
+			log.WithError(err).Panic("failed to close ssh session")
+		}
+	})()
+
+	handle, err := pcap.OpenOfflineFile(namedPipe)
+	if err != nil {
+		return err
+	}
+
+	go pi.handle(handle, nil, true, nil, func(canceled bool) {
+		handle.Close()
+		deleteProcessingFile(remoteCapturePipeName)
+	})
+
+	return nil
+}
+
+func (pi *PcapImporter) ListRemoteInterfaces(sshConfig SSHConfig) ([]string, error) {
+	client, err := createSSHClient(&sshConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	session, err := client.NewSession()
+	if err != nil {
+		return nil, err
+	}
+
+	var interfaces []string
+	if output, err := session.CombinedOutput("/bin/ls /sys/class/net/"); err != nil {
+		return nil, err
+	} else {
+		interfaces = strings.Split(string(output), "\n")
+	}
+	if err = session.Close(); err != nil && err != io.EOF {
+		log.WithError(err).Panic("failed to close ssh session")
+	}
+
+	return interfaces[:len(interfaces)-1], nil
 }
 
 func (pi *PcapImporter) GetSessions() []ImportingSession {
@@ -471,6 +580,69 @@ func savePcap(session *ImportingSession, file *os.File) {
 	session.Size = FileSize(filePath)
 
 	moveProcessingFile(session, filepath.Base(filePath))
+}
+
+func createSSHClient(sshConfig *SSHConfig) (client *ssh.Client, err error) {
+	var authMethod ssh.AuthMethod
+	if sshConfig.Password != "" {
+		authMethod = ssh.Password(sshConfig.Password)
+	} else if sshConfig.PrivateKey != "" {
+		var signer ssh.Signer
+		if sshConfig.Passphrase != "" {
+			signer, err = ssh.ParsePrivateKeyWithPassphrase([]byte(sshConfig.PrivateKey), []byte(sshConfig.Passphrase))
+		} else {
+			signer, err = ssh.ParsePrivateKey([]byte(sshConfig.PrivateKey))
+		}
+		if err != nil {
+			return nil, err
+		}
+		authMethod = ssh.PublicKeys(signer)
+	} else {
+		return nil, errors.New("provide either a password or a passphrase to connect with ssh")
+	}
+	if sshConfig.Port == 0 {
+		sshConfig.Port = 22
+	}
+	if sshConfig.User == "" {
+		sshConfig.User = "root"
+	}
+
+	var hostKeyCallback ssh.HostKeyCallback
+	if sshConfig.ServerPublicKey != "" {
+		publicKey, err := ssh.ParsePublicKey([]byte(sshConfig.ServerPublicKey))
+		if err != nil {
+			return nil, err
+		}
+		hostKeyCallback = ssh.FixedHostKey(publicKey)
+	} else {
+		hostKeyCallback = ssh.InsecureIgnoreHostKey()
+	}
+
+	client, err = ssh.Dial("tcp", net.JoinHostPort(sshConfig.Host, fmt.Sprintf("%v", sshConfig.Port)), &ssh.ClientConfig{
+		User:            sshConfig.User,
+		HostKeyCallback: hostKeyCallback,
+		Auth:            []ssh.AuthMethod{authMethod},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return client, nil
+}
+
+func generateBffFilters(captureOptions CaptureOptions) string {
+	bffFilter := "tcp"
+	if captureOptions.IncludedServices != nil {
+		bffFilter += " and port " + strings.Trim(strings.Join(
+			strings.Fields(fmt.Sprint(captureOptions.IncludedServices)), " and port "), "[]")
+	}
+
+	if captureOptions.ExcludedServices != nil {
+		bffFilter += " and not port " + strings.Trim(strings.Join(
+			strings.Fields(fmt.Sprint(captureOptions.ExcludedServices)), " and not port "), "[]")
+	}
+
+	return bffFilter
 }
 
 func deleteProcessingFile(fileName string) {
