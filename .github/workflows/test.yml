@@ -22,6 +22,10 @@ jobs:
         image: mongo:4.4
         ports:
           - 27017:27017
+      test-environment:
+        image: ghcr.io/eciavatta/test-environment:latest
+        ports:
+          - 8080:8080
     steps:
       - uses: actions/checkout@v2
       - name: Set up Go
@@ -57,14 +61,16 @@ jobs:
       COMPOSE_FILE: .github/docker/docker-compose.yml
     steps:
       - uses: actions/checkout@v2
-      - name: Pull docker images
+      - name: Pull mongo image
         run: docker-compose pull mongo
+      - name: Build environment image
+        run: docker-compose build test-environment
       - name: Build docker backend
         run: docker-compose build test-backend
       - name: Build docker frontend
         run: docker-compose build test-frontend
-      - name: Start MongoDB
-        run: docker-compose up -d mongo
+      - name: Start dependencies
+        run: docker-compose up -d mongo test-environment
       - name: Test docker backend
         run: docker-compose run test-backend
       - name: Destroy containers

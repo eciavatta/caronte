@@ -4,6 +4,12 @@ services:
   mongo:
     image: mongo:4.4
 
+  test-environment:
+    build:
+      context: ../../
+      dockerfile: .github/docker/Dockerfile-environment
+    image: caronte-test-environment
+
   test-backend:
     build:
       context: ../../

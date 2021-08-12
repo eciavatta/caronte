@@ -20,6 +20,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"net/http"
 	"os"
 	"sync"
 	"testing"
@@ -116,8 +117,192 @@ func TestImportNoTcpPackets(t *testing.T) {
 	wrapper.Destroy(t)
 }
 
+func TestListInterfaces(t *testing.T) {
+	pcapImporter := newTestPcapImporter(nil, "127.0.0.1")
+
+	interfaces, err := pcapImporter.ListInterfaces()
+	require.NoError(t, err)
+	assert.NotEmpty(t, interfaces)
+	assert.Contains(t, interfaces, "lo", "loopback interface must always be present")
+}
+
+func TestListRemoteInterfaces(t *testing.T) {
+	pcapImporter := newTestPcapImporter(nil, "127.0.0.1")
+
+	interfaces, err := pcapImporter.ListRemoteInterfaces(validSSHConfig())
+	require.NoError(t, err)
+	assert.Contains(t, interfaces, "lo")
+	assert.Contains(t, interfaces, "eth0")
+}
+
+func TestRemoteSSHConnections(t *testing.T) {
+	pcapImporter := newTestPcapImporter(nil, "127.0.0.1")
+
+	_, err := pcapImporter.ListRemoteInterfaces(validSSHConfig())
+	require.NoError(t, err)
+
+	_, err = pcapImporter.ListRemoteInterfaces(SSHConfig{
+		Host:     "invalid",
+		Password: "invalid",
+	})
+	require.Error(t, err)
+
+	_, err = pcapImporter.ListRemoteInterfaces(SSHConfig{
+		Host:     "1.1.1.1",
+		Password: "invalid",
+	})
+	require.Error(t, err)
+
+	_, err = pcapImporter.ListRemoteInterfaces(SSHConfig{
+		Host:     "127.0.0.1",
+		Password: "invalid",
+	})
+	require.Error(t, err)
+
+	_, err = pcapImporter.ListRemoteInterfaces(SSHConfig{
+		Host: "127.0.0.1",
+		Port: 2222,
+	})
+	require.Error(t, err)
+
+	_, err = pcapImporter.ListRemoteInterfaces(SSHConfig{
+		Host:     "127.0.0.1",
+		Port:     2222,
+		User:     "invalid",
+		Password: "test",
+	})
+	require.Error(t, err)
+
+	_, err = pcapImporter.ListRemoteInterfaces(SSHConfig{
+		Host:     "127.0.0.1",
+		Port:     2222,
+		Password: "invalid",
+	})
+	require.Error(t, err)
+
+	_, err = pcapImporter.ListRemoteInterfaces(SSHConfig{
+		Host:       "127.0.0.1",
+		Port:       2222,
+		PrivateKey: "invalid",
+	})
+	require.Error(t, err)
+
+	_, err = pcapImporter.ListRemoteInterfaces(SSHConfig{
+		Host:       "127.0.0.1",
+		Port:       2222,
+		PrivateKey: "-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAACmFlczI1Ni1jdHIAAAAGYmNyeXB0AAAAGAAAABAmwQugAw\nGA4R4hFZj7qrsIAAAAZAAAAAEAAAAzAAAAC3NzaC1lZDI1NTE5AAAAIHg+iDsYjtx9Y7iD\nCzHX0xoHWaTDA6fVs2CVXnDI7DWFAAAAsBwIgJfamwWHbdYIyMjAfogJO6Nt1BbxrAlFyW\nHObm8k7OfIc8iAdlIeUDtV9RvWtTVF6URIXZfxGxzpzXnVIBBwZkqR9zI8dB6RP7rR0t3D\nD3P1yFtXz2ei1ssa1ueoGV/0pojClroc+WKZJZD4qCGYDJ/vagy2ZSoOGJxgRoFGFRtuUx\n/FWilPP8urJQcnu4eDYqaZAfp+YS8QnlbBfnYfFSCSPiGWarxmYbdw0kwr\n-----END OPENSSH PRIVATE KEY-----\n",
+	})
+	require.Error(t, err, "key require passphrase")
+
+	_, err = pcapImporter.ListRemoteInterfaces(SSHConfig{
+		Host:       "127.0.0.1",
+		Port:       2222,
+		PrivateKey: "invalid",
+	})
+	require.Error(t, err)
+
+	_, err = pcapImporter.ListRemoteInterfaces(SSHConfig{
+		Host:       "127.0.0.1",
+		Port:       2222,
+		PrivateKey: "-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW\nQyNTUxOQAAACDpvMt45cHBpPQ6+MbQSPbqX/M2PvpeIDjXU3TxYMGUiQAAAJgOkOvQDpDr\n0AAAAAtzc2gtZWQyNTUxOQAAACDpvMt45cHBpPQ6+MbQSPbqX/M2PvpeIDjXU3TxYMGUiQ\nAAAEBBk7B4xNF0kG6w+sw7kuTsQyvc3wrey+q4SjcYZzNpb+m8y3jlwcGk9Dr4xtBI9upf\n8zY++l4gONdTdPFgwZSJAAAAFWNhcm9udGVAZWNpYXZhdHRhLmRldg==\n-----END OPENSSH PRIVATE KEY-----\n",
+	})
+	require.NoError(t, err)
+
+	_, err = pcapImporter.ListRemoteInterfaces(SSHConfig{
+		Host:       "127.0.0.1",
+		Port:       2222,
+		PrivateKey: "-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAACmFlczI1Ni1jdHIAAAAGYmNyeXB0AAAAGAAAABAmwQugAw\nGA4R4hFZj7qrsIAAAAZAAAAAEAAAAzAAAAC3NzaC1lZDI1NTE5AAAAIHg+iDsYjtx9Y7iD\nCzHX0xoHWaTDA6fVs2CVXnDI7DWFAAAAsBwIgJfamwWHbdYIyMjAfogJO6Nt1BbxrAlFyW\nHObm8k7OfIc8iAdlIeUDtV9RvWtTVF6URIXZfxGxzpzXnVIBBwZkqR9zI8dB6RP7rR0t3D\nD3P1yFtXz2ei1ssa1ueoGV/0pojClroc+WKZJZD4qCGYDJ/vagy2ZSoOGJxgRoFGFRtuUx\n/FWilPP8urJQcnu4eDYqaZAfp+YS8QnlbBfnYfFSCSPiGWarxmYbdw0kwr\n-----END OPENSSH PRIVATE KEY-----\n",
+		Passphrase: "test",
+	})
+	require.NoError(t, err)
+}
+
+func TestRemoteCapture(t *testing.T) {
+	wrapper := NewTestStorageWrapper(t)
+	pcapImporter := newTestPcapImporter(wrapper, "172.0.0.0/8")
+
+	validCaptureOptions := CaptureOptions{
+		Interface:        "eth0",
+		IncludedServices: []uint16{8080},
+	}
+
+	err := pcapImporter.StartRemoteCapture(invalidSSHConfig(), validCaptureOptions)
+	require.Error(t, err)
+
+	err = pcapImporter.StartRemoteCapture(validSSHConfig(), CaptureOptions{
+		Interface: "invalid",
+	})
+	require.Error(t, err)
+
+	for i := 0; i < 3; i++ {
+		require.NoError(t, pcapImporter.StartRemoteCapture(validSSHConfig(), validCaptureOptions))
+		// one session per time
+		require.Error(t, pcapImporter.StartRemoteCapture(validSSHConfig(), validCaptureOptions))
+
+		time.Sleep(1 * time.Second)
+		resp, err := http.Get("http://localhost:8080/numbers")
+		assert.NoError(t, err)
+		assert.Equal(t, resp.StatusCode, http.StatusOK)
+
+		time.Sleep(2 * time.Second)
+		require.NoError(t, pcapImporter.StopCapture())
+		require.Error(t, pcapImporter.StopCapture())
+
+		time.Sleep(2 * time.Second)
+		sessions := pcapImporter.GetSessions()
+		assert.Len(t, sessions, i+1)
+		assert.Zero(t, sessions[i].ImportingError)
+		assert.Equal(t, 11, sessions[i].ProcessedPackets)
+		assert.Equal(t, 11, sessions[i].InvalidPackets) // todo: why invalid?
+
+		assert.NoError(t, os.Remove(PcapsBasePath+sessions[i].ID.Hex()+".pcap"))
+	}
+
+	wrapper.Destroy(t)
+}
+
+func TestPcapRotation(t *testing.T) {
+	wrapper := NewTestStorageWrapper(t)
+	pcapImporter := newTestPcapImporter(wrapper, "172.0.0.0/8")
+
+	pcapImporter.SetSessionRotationInterval(3 * time.Second)
+
+	require.NoError(t, pcapImporter.StartRemoteCapture(validSSHConfig(), CaptureOptions{
+		Interface:        "eth0",
+		IncludedServices: []uint16{8080},
+	}))
+
+	time.Sleep(time.Second)
+
+	for i := 0; i < 5; i++ {
+		resp, err := http.Get("http://localhost:8080/numbers")
+		assert.NoError(t, err)
+		assert.Equal(t, resp.StatusCode, http.StatusOK)
+
+		if i == 4 {
+			time.Sleep(1 * time.Second)
+			require.NoError(t, pcapImporter.StopCapture())
+		}
+
+		time.Sleep(3 * time.Second)
+		sessions := pcapImporter.GetSessions()
+		assert.Len(t, sessions, i+1)
+		assert.Zero(t, sessions[i].ImportingError)
+		assert.Equal(t, 11, sessions[i].ProcessedPackets)
+		assert.Equal(t, 11, sessions[i].InvalidPackets) // todo: why invalid?
+
+		assert.NoError(t, os.Remove(PcapsBasePath+sessions[i].ID.Hex()+".pcap"))
+	}
+
+	wrapper.Destroy(t)
+}
+
 func newTestPcapImporter(wrapper *TestStorageWrapper, serverAddress string) *PcapImporter {
-	wrapper.AddCollection(ImportingSessions)
+	var mongoStorage *MongoStorage
+	if wrapper != nil {
+		mongoStorage = wrapper.Storage
+		wrapper.AddCollection(ImportingSessions)
+	}
 
 	streamPool := tcpassembly.NewStreamPool(&testStreamFactory{})
 
@@ -125,7 +310,7 @@ func newTestPcapImporter(wrapper *TestStorageWrapper, serverAddress string) *Pca
 	go notificationController.Run()
 
 	return &PcapImporter{
-		storage:                wrapper.Storage,
+		storage:                mongoStorage,
 		streamPool:             streamPool,
 		assemblers:             make([]*tcpassembly.Assembler, 0, initialAssemblerPoolSize),
 		sessions:               make(map[RowID]*ImportingSession),
@@ -184,4 +369,22 @@ func (sf *testStreamFactory) New(_, _ gopacket.Flow) tcpassembly.Stream {
 		tcpreader.DiscardBytesToEOF(buffer)
 	}()
 	return &reader
+}
+
+func validSSHConfig() SSHConfig {
+	return SSHConfig{
+		Host:     "127.0.0.1",
+		Port:     2222,
+		User:     "root",
+		Password: "test",
+	}
+}
+
+func invalidSSHConfig() SSHConfig {
+	return SSHConfig{
+		Host:     "127.0.0.1",
+		Port:     2222,
+		User:     "root",
+		Password: "wrong",
+	}
 }

@@ -53,6 +53,7 @@ type Storage interface {
 type MongoStorage struct {
 	client      *mongo.Client
 	collections map[string]*mongo.Collection
+	database    *mongo.Database
 }
 
 type OrderedDocument = bson.D
@@ -114,6 +115,7 @@ func NewMongoStorage(uri string, port int, database, username, password string) 
 	return &MongoStorage{
 		client:      client,
 		collections: collections,
+		database:    db,
 	}, nil
 }
 

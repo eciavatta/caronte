@@ -19,13 +19,11 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strconv"
 	"testing"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 )
 
@@ -48,12 +46,13 @@ func NewTestStorageWrapper(t *testing.T) *TestStorageWrapper {
 	port, err := strconv.Atoi(mongoPort)
 	require.NoError(t, err, "invalid port")
 
-	dbName := fmt.Sprintf("%x", time.Now().UnixNano())
-	log.WithField("dbName", dbName).Info("creating new storage")
+	dbName := "caronte_test"
 
 	storage, err := NewMongoStorage(mongoHost, port, dbName, "", "")
 	require.NoError(t, err)
 	ctx, cancelFunc := context.WithTimeout(context.Background(), 30*time.Second)
+
+	require.NoError(t, storage.database.Drop(ctx))
 
 	return &TestStorageWrapper{
 		DbName:     dbName,

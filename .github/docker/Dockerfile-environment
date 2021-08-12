@@ -1,0 +1,21 @@
+FROM ubuntu:20.04
+
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -qq \
+    tcpdump \
+    openssh-server \
+    python3
+
+WORKDIR /root
+
+COPY ./scripts/http-test-server.py .
+
+RUN mkdir -p .ssh && \
+    echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOm8y3jlwcGk9Dr4xtBI9upf8zY++l4gONdTdPFgwZSJ caronte@eciavatta.dev" >> .ssh/authorized_keys && \
+    echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHg+iDsYjtx9Y7iDCzHX0xoHWaTDA6fVs2CVXnDI7DWF caronte-passphrase@eciavatta.dev" >> .ssh/authorized_keys && \
+    echo "root:test" | chpasswd && \
+    echo "\nPermitRootLogin yes\nPubkeyAuthentication yes\nPasswordAuthentication yes\n" >> /etc/ssh/sshd_config
+
+RUN service ssh start
+
+CMD service ssh start && python3 http-test-server.py 8080

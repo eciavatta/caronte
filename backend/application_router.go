@@ -202,7 +202,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 				return
 			}
 
-			if err := applicationContext.PcapImporter.StartCapturing(captureOptions); err != nil {
+			if err := applicationContext.PcapImporter.StartLocalCapture(captureOptions); err != nil {
 				badRequest(c, err)
 				return
 			}
@@ -213,7 +213,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 		})
 
 		api.DELETE("/pcap/live", func(c *gin.Context) {
-			if err := applicationContext.PcapImporter.StopCapturing(); err != nil {
+			if err := applicationContext.PcapImporter.StopCapture(); err != nil {
 				badRequest(c, err)
 				return
 			}
@@ -256,7 +256,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 				return
 			}
 
-			if err := applicationContext.PcapImporter.StartRemoteCapturing(request.SSHConfig,
+			if err := applicationContext.PcapImporter.StartRemoteCapture(request.SSHConfig,
 				request.CaptureOptions); err != nil {
 				badRequest(c, err)
 				return

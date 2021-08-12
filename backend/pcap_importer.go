@@ -182,7 +182,7 @@ func (pi *PcapImporter) ImportPcap(fileName string, flushAll bool) (RowID, error
 	return session.ID, nil
 }
 
-func (pi *PcapImporter) StartCapturing(captureOptions CaptureOptions) error {
+func (pi *PcapImporter) StartLocalCapture(captureOptions CaptureOptions) error {
 	pi.mLiveCapture.Lock()
 	defer pi.mLiveCapture.Unlock()
 
@@ -207,7 +207,7 @@ func (pi *PcapImporter) StartCapturing(captureOptions CaptureOptions) error {
 	return nil
 }
 
-func (pi *PcapImporter) StopCapturing() error {
+func (pi *PcapImporter) StopCapture() error {
 	pi.mLiveCapture.Lock()
 	defer pi.mLiveCapture.Unlock()
 
@@ -235,7 +235,14 @@ func (pi *PcapImporter) ListInterfaces() ([]string, error) {
 	return interfaces, nil
 }
 
-func (pi *PcapImporter) StartRemoteCapturing(sshConfig SSHConfig, captureOptions CaptureOptions) error {
+func (pi *PcapImporter) StartRemoteCapture(sshConfig SSHConfig, captureOptions CaptureOptions) error {
+	pi.mLiveCapture.Lock()
+	defer pi.mLiveCapture.Unlock()
+
+	if pi.liveCaptureHandle != nil {
+		return errors.New("live capture is already in progress")
+	}
+
 	client, err := createSSHClient(&sshConfig)
 	if err != nil {
 		return err
@@ -253,16 +260,31 @@ func (pi *PcapImporter) StartRemoteCapturing(sshConfig SSHConfig, captureOptions
 		log.WithError(err).Panic("failed to close ssh session")
 	}
 
-	if FileExists(remoteCapturePipeName) {
-		deleteProcessingFile(remoteCapturePipeName)
+	if interfaces, err := pi.ListRemoteInterfaces(sshConfig); err != nil {
+		return err
+	} else {
+		validInterface := false
+		for _, ifh := range interfaces {
+			if ifh == captureOptions.Interface {
+				validInterface = true
+			}
+		}
+
+		if !validInterface {
+			return errors.New("interface not present on remote host")
+		}
 	}
 
 	pipeName := ProcessingPcapsBasePath + remoteCapturePipeName
+	if FileExists(pipeName) {
+		deleteProcessingFile(remoteCapturePipeName)
+	}
+
 	if err = syscall.Mkfifo(pipeName, 0666); err != nil {
 		log.WithError(err).Panic("failed to create named pipe")
 	}
 
-	namedPipe, err := os.OpenFile(pipeName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
+	namedPipe, err := os.OpenFile(pipeName, os.O_RDWR|os.O_CREATE, 0777)
 	if err != nil {
 		log.WithError(err).Panic("failed to open named pipe")
 	}
@@ -274,24 +296,35 @@ func (pi *PcapImporter) StartRemoteCapturing(sshConfig SSHConfig, captureOptions
 	session.Stdout = bufio.NewWriter(namedPipe)
 	captureOptions.ExcludedServices = append(captureOptions.ExcludedServices, sshConfig.Port)
 
+	var handle *pcap.Handle
+
 	go (func() {
 		if err = session.Run(fmt.Sprintf("tcpdump -s 0 -U -n -w - -i %s %s",
 			captureOptions.Interface, generateBffFilters(captureOptions))); err != nil {
-			log.WithError(err).Panic("failed to start tcpdump on remote host")
-		}
-		if err = session.Close(); err != nil && err != io.EOF {
+			pi.currentLiveSession.cancelFunc()
+			pi.liveCaptureHandle = nil
+			log.WithError(err).Error("failed to start tcpdump on remote host")
+		} else if err = session.Close(); err != nil && err != io.EOF {
 			log.WithError(err).Panic("failed to close ssh session")
 		}
 	})()
 
-	handle, err := pcap.OpenOfflineFile(namedPipe)
+	handle, err = pcap.OpenOfflineFile(namedPipe)
 	if err != nil {
 		return err
 	}
 
+	pi.liveCaptureHandle = handle
 	go pi.handle(handle, nil, true, nil, func(canceled bool) {
-		handle.Close()
+		if err := session.Close(); err != nil {
+			log.WithError(err).Warn("failed to close ssh session")
+		}
+		if err := namedPipe.Close(); err != nil {
+			log.WithError(err).Panic("failed to close named pipe")
+		}
+
 		deleteProcessingFile(remoteCapturePipeName)
+		// handle.Close() hangs subroutine
 	})
 
 	return nil
@@ -439,6 +472,10 @@ func (pi *PcapImporter) handle(handle *pcap.Handle, initialSession *ImportingSes
 				return
 			}
 
+			if isOnline {
+				currentWriter.WritePacket(packet.Metadata().CaptureInfo, packet.Data())
+			}
+
 			offlineLock()
 			session.ProcessedPackets++
 
@@ -475,10 +512,6 @@ func (pi *PcapImporter) handle(handle *pcap.Handle, initialSession *ImportingSes
 			fCount[index]++
 			session.PacketsPerService[servicePort] = fCount
 			offlineUnlock()
-
-			if isOnline {
-				currentWriter.WritePacket(packet.Metadata().CaptureInfo, packet.Data())
-			}
 
 			assembler.AssembleWithTimestamp(packet.NetworkLayer().NetworkFlow(), tcp, packet.Metadata().Timestamp)
 		case <-sessionRotationInterval:
@@ -622,6 +655,7 @@ func createSSHClient(sshConfig *SSHConfig) (client *ssh.Client, err error) {
 		User:            sshConfig.User,
 		HostKeyCallback: hostKeyCallback,
 		Auth:            []ssh.AuthMethod{authMethod},
+		Timeout:         3 * time.Second,
 	})
 	if err != nil {
 		return nil, err
