@@ -21,11 +21,12 @@ jobs:
       mongo:
         image: mongo:4.4
         ports:
-          - 27017:27017
+          - "27017:27017"
       test-environment:
         image: ghcr.io/eciavatta/test-environment:latest
         ports:
-          - 8080:8080
+          - "2222:22"
+          - "8080:8080"
     steps:
       - uses: actions/checkout@v2
       - name: Set up Go
@@ -35,7 +36,7 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get install pkg-config libpcap-dev libhyperscan-dev
       - name: Test backend
-        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic
       - name: Upload coverage
         run: bash <(curl -s https://codecov.io/bash)
   build_frontend:

@@ -252,8 +252,8 @@ func TestRemoteCapture(t *testing.T) {
 		sessions := pcapImporter.GetSessions()
 		assert.Len(t, sessions, i+1)
 		assert.Zero(t, sessions[i].ImportingError)
-		assert.Equal(t, 11, sessions[i].ProcessedPackets)
-		assert.Equal(t, 11, sessions[i].InvalidPackets) // todo: why invalid?
+		assert.Less(t, 5, sessions[i].ProcessedPackets)
+		assert.Less(t, 5, sessions[i].InvalidPackets) // todo: why invalid?
 
 		assert.NoError(t, os.Remove(PcapsBasePath+sessions[i].ID.Hex()+".pcap"))
 	}
@@ -288,8 +288,8 @@ func TestPcapRotation(t *testing.T) {
 		sessions := pcapImporter.GetSessions()
 		assert.Len(t, sessions, i+1)
 		assert.Zero(t, sessions[i].ImportingError)
-		assert.Equal(t, 11, sessions[i].ProcessedPackets)
-		assert.Equal(t, 11, sessions[i].InvalidPackets) // todo: why invalid?
+		assert.Less(t, 5, sessions[i].ProcessedPackets)
+		assert.Less(t, 5, sessions[i].InvalidPackets) // todo: why invalid?
 
 		assert.NoError(t, os.Remove(PcapsBasePath+sessions[i].ID.Hex()+".pcap"))
 	}
