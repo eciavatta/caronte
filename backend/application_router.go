@@ -79,6 +79,10 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 	api.Use(SetupRequiredMiddleware(applicationContext))
 	api.Use(AuthRequiredMiddleware(applicationContext))
 	{
+		api.GET("/status", func(c *gin.Context) {
+			success(c, applicationContext.Status())
+		})
+
 		api.GET("/rules", func(c *gin.Context) {
 			success(c, applicationContext.RulesManager.GetRules())
 		})
@@ -195,7 +199,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 			}
 		})
 
-		api.PUT("/pcap/live", func(c *gin.Context) {
+		api.PUT("/capture/local", func(c *gin.Context) {
 			var captureOptions CaptureOptions
 			if err := c.ShouldBindJSON(&captureOptions); err != nil {
 				badRequest(c, err)
@@ -207,23 +211,23 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 				return
 			}
 
-			response := gin.H{"liveCapture": "started"}
+			response := gin.H{"capture": "local"}
 			c.JSON(http.StatusOK, response)
-			notificationController.Notify("pcap.live", response)
+			notificationController.Notify("capture.local", response)
 		})
 
-		api.DELETE("/pcap/live", func(c *gin.Context) {
+		api.DELETE("/capture", func(c *gin.Context) {
 			if err := applicationContext.PcapImporter.StopCapture(); err != nil {
 				badRequest(c, err)
 				return
 			}
 
-			response := gin.H{"liveCapture": "stopped"}
+			response := gin.H{"capture": "stop"}
 			c.JSON(http.StatusOK, response)
-			notificationController.Notify("pcap.live", response)
+			notificationController.Notify("capture.stop", response)
 		})
 
-		api.POST("/pcap/live/interfaces", func(c *gin.Context) {
+		api.POST("/capture/local/interfaces", func(c *gin.Context) {
 			if interfaces, err := applicationContext.PcapImporter.ListInterfaces(); err != nil {
 				badRequest(c, err)
 			} else {
@@ -231,7 +235,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 			}
 		})
 
-		api.PUT("/pcap/live/interval", func(c *gin.Context) {
+		api.PUT("/capture/interval", func(c *gin.Context) {
 			var request struct {
 				RotationInterval time.Duration `json:"rotation_interval" binding:"required"`
 			}
@@ -245,7 +249,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 			c.JSON(http.StatusOK, gin.H{"result": "ok"})
 		})
 
-		api.PUT("/pcap/remote", func(c *gin.Context) {
+		api.PUT("/capture/remote", func(c *gin.Context) {
 			var request struct {
 				SSHConfig      SSHConfig      `json:"ssh_config" binding:"required"`
 				CaptureOptions CaptureOptions `json:"capture_options" binding:"required"`
@@ -262,12 +266,12 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 				return
 			}
 
-			response := gin.H{"liveRemoteCapture": "started"}
+			response := gin.H{"capture": "remote"}
 			c.JSON(http.StatusOK, response)
-			notificationController.Notify("pcap.remote", response)
+			notificationController.Notify("capture.remote", response)
 		})
 
-		api.POST("/pcap/remote/interfaces", func(c *gin.Context) {
+		api.POST("/capture/remote/interfaces", func(c *gin.Context) {
 			var sshConfig SSHConfig
 			if err := c.ShouldBindJSON(&sshConfig); err != nil {
 				badRequest(c, err)

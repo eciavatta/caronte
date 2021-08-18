@@ -60,6 +60,7 @@ type PcapImporter struct {
 	serverNet               net.IPNet
 	notificationController  *NotificationController
 	liveCaptureHandle       *pcap.Handle
+	liveCaptureType         string
 	mLiveCapture            sync.Mutex
 	currentLiveSession      *ImportingSession
 	sessionRotationInterval time.Duration
@@ -200,6 +201,7 @@ func (pi *PcapImporter) StartLocalCapture(captureOptions CaptureOptions) error {
 	}
 
 	pi.liveCaptureHandle = handle
+	pi.liveCaptureType = "local"
 	go pi.handle(handle, nil, true, nil, func(_ bool) {
 		handle.Close()
 	})
@@ -217,6 +219,7 @@ func (pi *PcapImporter) StopCapture() error {
 
 	pi.currentLiveSession.cancelFunc()
 	pi.liveCaptureHandle = nil
+	pi.liveCaptureType = ""
 
 	return nil
 }
@@ -301,7 +304,7 @@ func (pi *PcapImporter) StartRemoteCapture(sshConfig SSHConfig, captureOptions C
 	go (func() {
 		if err = session.Run(fmt.Sprintf("tcpdump -s 0 -U -n -w - -i %s %s",
 			captureOptions.Interface, generateBffFilters(captureOptions))); err != nil {
-			pi.currentLiveSession.cancelFunc()
+			// pi.currentLiveSession.cancelFunc() TODO: check this
 			pi.liveCaptureHandle = nil
 			log.WithError(err).Error("failed to start tcpdump on remote host")
 		} else if err = session.Close(); err != nil && err != io.EOF {
@@ -315,6 +318,7 @@ func (pi *PcapImporter) StartRemoteCapture(sshConfig SSHConfig, captureOptions C
 	}
 
 	pi.liveCaptureHandle = handle
+	pi.liveCaptureType = "remote"
 	go pi.handle(handle, nil, true, nil, func(canceled bool) {
 		if err := session.Close(); err != nil {
 			log.WithError(err).Warn("failed to close ssh session")
@@ -352,6 +356,14 @@ func (pi *PcapImporter) ListRemoteInterfaces(sshConfig SSHConfig) ([]string, err
 	}
 
 	return interfaces[:len(interfaces)-1], nil
+}
+
+// returns "" when stopped, "local" or "remote" when running
+func (pi *PcapImporter) GetLiveCaptureStatus() string {
+	pi.mLiveCapture.Lock()
+	defer pi.mLiveCapture.Unlock()
+
+	return pi.liveCaptureType
 }
 
 func (pi *PcapImporter) GetSessions() []ImportingSession {

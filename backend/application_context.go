@@ -28,6 +28,12 @@ type Config struct {
 	AuthRequired  bool   `json:"auth_required" bson:"auth_required"`
 }
 
+type Status struct {
+	PcapsAnalyzed int    `json:"pcaps_analyzed"`
+	LiveCapture   string `json:"live_capture"`
+	Version       string `json:"version"`
+}
+
 type ApplicationContext struct {
 	Storage                     Storage
 	Config                      Config
@@ -121,4 +127,12 @@ func (sm *ApplicationContext) Configure() {
 	sm.ConnectionStreamsController = NewConnectionStreamsController(sm.Storage)
 	sm.StatisticsController = NewStatisticsController(sm.Storage)
 	sm.IsConfigured = true
+}
+
+func (sm *ApplicationContext) Status() Status {
+	return Status{
+		PcapsAnalyzed: len(sm.PcapImporter.GetSessions()),
+		LiveCapture:   sm.PcapImporter.GetLiveCaptureStatus(),
+		Version:       sm.Version,
+	}
 }
