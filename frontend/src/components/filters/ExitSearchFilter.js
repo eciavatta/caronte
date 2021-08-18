@@ -15,43 +15,49 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from "react";
-import {withRouter} from "react-router-dom";
-import dispatcher from "../../dispatcher";
-import CheckField from "../fields/CheckField";
+import PropTypes from 'prop-types';
+import React, {Component} from 'react';
+import {withRouter} from 'react-router-dom';
+import dispatcher from '../../dispatcher';
+import CheckField from '../fields/CheckField';
 
 class ExitSearchFilter extends Component {
+  state = {};
 
-    state = {};
+  static get propTypes() {
+    return {
+      location: PropTypes.object,
+      width: PropTypes.number,
+    };
+  }
 
-    componentDidMount() {
-        let params = new URLSearchParams(this.props.location.search);
-        this.setState({performedSearch: params.get("performed_search")});
+  componentDidMount() {
+    let params = new URLSearchParams(this.props.location.search);
+    this.setState({performedSearch: params.get('performed_search')});
 
-        this.connectionsFiltersCallback = (payload) => {
-            if ("performed_search" in payload && this.state.performedSearch !== payload["performed_search"]) {
-                this.setState({performedSearch: payload["performed_search"]});
-            }
-        };
-        dispatcher.register("connections_filters", this.connectionsFiltersCallback);
-    }
+    this.connectionsFiltersCallback = (payload) => {
+      if ('performed_search' in payload && this.state.performedSearch !== payload['performed_search']) {
+        this.setState({performedSearch: payload['performed_search']});
+      }
+    };
+    dispatcher.register('connections_filters', this.connectionsFiltersCallback);
+  }
 
-    componentWillUnmount() {
-        dispatcher.unregister(this.connectionsFiltersCallback);
-    }
+  componentWillUnmount() {
+    dispatcher.unregister(this.connectionsFiltersCallback);
+  }
 
-    render() {
-        return (
-            <>
-                {this.state.performedSearch &&
-                <div className="filter" style={{"width": `${this.props.width}px`}}>
-                    <CheckField checked={true} name="exit_search" onChange={() =>
-                        dispatcher.dispatch("connections_filters", {"performed_search": null})} small/>
-                </div>}
-            </>
-        );
-    }
-
+  render() {
+    return (
+      <>
+        {this.state.performedSearch && (
+          <div className="filter" style={{width: `${this.props.width}px`}}>
+            <CheckField checked={true} name="exit_search" onChange={() => dispatcher.dispatch('connections_filters', {performed_search: null})} small />
+          </div>
+        )}
+      </>
+    );
+  }
 }
 
 export default withRouter(ExitSearchFilter);

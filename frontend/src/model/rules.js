@@ -15,27 +15,26 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import backend from "../backend";
-import log from "../log";
-
-const _ = require("lodash");
+import _ from 'lodash';
+import backend from '../backend';
+import log from '../log';
 
 class Rules {
+  constructor() {
+    this.rules = [];
+    this.loadRules();
+  }
 
-    constructor() {
-        this.rules = [];
-        this.loadRules();
-    }
+  loadRules = () => {
+    backend
+      .get('/api/rules')
+      .then((res) => (this.rules = res.json))
+      .catch((err) => log.error('Failed to load rules', err));
+  };
 
-    loadRules = () => {
-        backend.get("/api/rules").then((res) => this.rules = res.json)
-            .catch((err) => log.error("Failed to load rules", err));
-    };
+  allRules = () => _.clone(this.rules);
 
-    allRules = () => _.clone(this.rules);
-
-    ruleById = (id) => _.clone(this.rules.find(r => r.id === id));
-
+  ruleById = (id) => _.clone(this.rules.find((r) => r.id === id));
 }
 
 const rules = new Rules();

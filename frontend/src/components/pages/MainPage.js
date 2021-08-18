@@ -15,10 +15,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, { Component } from 'react';
-import { ReflexContainer, ReflexElement, ReflexSplitter } from 'react-reflex';
+import PropTypes from 'prop-types';
+import React, {Component} from 'react';
+import {ReflexContainer, ReflexElement, ReflexSplitter} from 'react-reflex';
 import 'react-reflex/styles.css';
-import { Route, Switch } from 'react-router-dom';
+import {Route, Switch} from 'react-router-dom';
 import Filters from '../dialogs/Filters';
 import Header from '../Header';
 import CapturePane from '../panels/CapturePane';
@@ -40,6 +41,12 @@ class MainPage extends Component {
   state = {
     timelineHeight: 210,
   };
+
+  static get propTypes() {
+    return {
+      version: PropTypes.string,
+    };
+  }
 
   handleTimelineResize = (e) => {
     if (this.timelineTimeoutHandle) {
@@ -74,14 +81,30 @@ class MainPage extends Component {
 
             <ReflexElement className="pane details-pane">
               <Switch>
-                <Route path="/searches" children={<SearchPane />} />
-                <Route path="/pcaps" children={<PcapsPane />} />
-                <Route path="/rules" children={<RulesPane />} />
-                <Route path="/services" children={<ServicesPane />} />
-                <Route path="/stats" children={<StatsPane />} />
-                <Route path="/capture" children={<CapturePane />} />
-                <Route exact path="/connections/:id" children={<StreamsPane connection={this.state.selectedConnection} />} />
-                <Route children={<MainPane version={this.props.version} />} />
+                <Route path="/searches">
+                  <SearchPane />
+                </Route>
+                <Route path="/pcaps">
+                  <PcapsPane />
+                </Route>
+                <Route path="/rules">
+                  <RulesPane />
+                </Route>
+                <Route path="/services">
+                  <ServicesPane />
+                </Route>
+                <Route path="/stats">
+                  <StatsPane />
+                </Route>
+                <Route path="/capture">
+                  <CapturePane />
+                </Route>
+                <Route exact path="/connections/:id">
+                  <StreamsPane connection={this.state.selectedConnection} />
+                </Route>
+                <Route>
+                  <MainPane version={this.props.version} />
+                </Route>
               </Switch>
             </ReflexElement>
           </ReflexContainer>

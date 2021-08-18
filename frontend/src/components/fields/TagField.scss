@@ -1,4 +1,4 @@
-@import "../../colors.scss";
+@import '../../colors.scss';
 
 .tag-field {
   font-size: 0.9em;
@@ -69,7 +69,7 @@
 
   .react-tags__selected-tag::after {
     margin-left: 8px;
-    content: "\2715";
+    content: '\2715';
     color: $color-primary-3;
   }
 

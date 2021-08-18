@@ -15,12 +15,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, { Component } from "react";
-import { randomClassName } from "../../utils";
-import "./ChoiceField.scss";
-import "./common.scss";
-import classNames from "classnames";
-import PropTypes from "prop-types";
+import classNames from 'classnames';
+import PropTypes from 'prop-types';
+import React, {Component} from 'react';
+import {randomClassName} from '../../utils';
+import './ChoiceField.scss';
+import './common.scss';
 
 class ChoiceField extends Component {
   constructor(props) {
@@ -30,7 +30,7 @@ class ChoiceField extends Component {
       expanded: false,
     };
 
-    this.id = `field-${this.props.name || "noname"}-${randomClassName()}`;
+    this.id = `field-${this.props.name || 'noname'}-${randomClassName()}`;
   }
 
   static get propTypes() {
@@ -51,8 +51,8 @@ class ChoiceField extends Component {
     const name = this.props.name || null;
     const inline = this.props.inline;
 
-    const collapse = () => this.setState({ expanded: false });
-    const expand = () => this.setState({ expanded: true });
+    const collapse = () => this.setState({expanded: false});
+    const expand = () => this.setState({expanded: true});
 
     const handler = (key) => {
       collapse();
@@ -70,22 +70,22 @@ class ChoiceField extends Component {
       </span>
     ));
 
-    let fieldValue = "";
+    let fieldValue = '';
     if (inline && name) {
       fieldValue = name;
     }
     if (!this.props.onlyName && inline && name) {
-      fieldValue += ": ";
+      fieldValue += ': ';
     }
     if (!this.props.onlyName) {
-      fieldValue += this.props.value || "select a value";
+      fieldValue += this.props.value || 'select a value';
     }
 
     return (
-      <div className={classNames("field", "choice-field", { "field-inline": inline }, { "field-small": this.props.small })}>
+      <div className={classNames('field', 'choice-field', {'field-inline': inline}, {'field-small': this.props.small})}>
         {!inline && name && <label className="field-name">{name}:</label>}
         <div
-          className={classNames("field-select", { "select-expanded": this.state.expanded })}
+          className={classNames('field-select', {'select-expanded': this.state.expanded})}
           tabIndex={0}
           onBlur={collapse}
           onClick={() => (this.state.expanded ? collapse() : expand())}

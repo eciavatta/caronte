@@ -15,113 +15,132 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from "react";
-import {withRouter} from "react-router-dom";
-import dispatcher from "../../dispatcher";
-import InputField from "../fields/InputField";
+import PropTypes from 'prop-types';
+import React, {Component} from 'react';
+import {withRouter} from 'react-router-dom';
+import dispatcher from '../../dispatcher';
+import InputField from '../fields/InputField';
 
 class StringConnectionsFilter extends Component {
+  state = {
+    fieldValue: '',
+    filterValue: null,
+    timeoutHandle: null,
+    invalidValue: false,
+  };
 
-    state = {
-        fieldValue: "",
-        filterValue: null,
-        timeoutHandle: null,
-        invalidValue: false
+  static get propTypes() {
+    return {
+      decodeFunc: PropTypes.func,
+      defaultFilterValue: PropTypes.string,
+      encodeFunc: PropTypes.func,
+      filterName: PropTypes.string,
+      inline: PropTypes.bool,
+      location: PropTypes.object,
+      replaceFunc: PropTypes.func,
+      small: PropTypes.bool,
+      validateFunc: PropTypes.func,
+      width: PropTypes.number,
     };
+  }
 
-    componentDidMount() {
-        let params = new URLSearchParams(this.props.location.search);
-        this.updateStateFromFilterValue(params.get(this.props.filterName));
+  componentDidMount() {
+    let params = new URLSearchParams(this.props.location.search);
+    this.updateStateFromFilterValue(params.get(this.props.filterName));
 
-        this.connectionsFiltersCallback = (payload) => {
-            const name = this.props.filterName;
-            if (name in payload && this.state.filterValue !== payload[name]) {
-                this.updateStateFromFilterValue(payload[name]);
-            }
-        };
-        dispatcher.register("connections_filters", this.connectionsFiltersCallback);
+    this.connectionsFiltersCallback = (payload) => {
+      const name = this.props.filterName;
+      if (name in payload && this.state.filterValue !== payload[name]) {
+        this.updateStateFromFilterValue(payload[name]);
+      }
+    };
+    dispatcher.register('connections_filters', this.connectionsFiltersCallback);
+  }
+
+  componentWillUnmount() {
+    dispatcher.unregister(this.connectionsFiltersCallback);
+  }
+
+  updateStateFromFilterValue = (filterValue) => {
+    if (filterValue !== null) {
+      let fieldValue = filterValue;
+      if (typeof this.props.decodeFunc === 'function') {
+        fieldValue = this.props.decodeFunc(filterValue);
+      }
+      if (typeof this.props.replaceFunc === 'function') {
+        fieldValue = this.props.replaceFunc(fieldValue);
+      }
+      if (this.isValueValid(fieldValue)) {
+        this.setState({fieldValue, filterValue});
+      } else {
+        this.setState({fieldValue, invalidValue: true});
+      }
+    } else {
+      this.setState({fieldValue: '', filterValue: null});
+    }
+  };
+
+  isValueValid = (value) => {
+    return typeof this.props.validateFunc !== 'function' || (typeof this.props.validateFunc === 'function' && this.props.validateFunc(value));
+  };
+
+  changeFilterValue = (value) => {
+    const urlParams = {};
+    urlParams[this.props.filterName] = value;
+    dispatcher.dispatch('connections_filters', urlParams);
+  };
+
+  filterChanged = (fieldValue) => {
+    if (this.state.timeoutHandle) {
+      clearTimeout(this.state.timeoutHandle);
     }
 
-    componentWillUnmount() {
-        dispatcher.unregister(this.connectionsFiltersCallback);
+    if (typeof this.props.replaceFunc === 'function') {
+      fieldValue = this.props.replaceFunc(fieldValue);
     }
 
-    updateStateFromFilterValue = (filterValue) => {
-        if (filterValue !== null) {
-            let fieldValue = filterValue;
-            if (typeof this.props.decodeFunc === "function") {
-                fieldValue = this.props.decodeFunc(filterValue);
-            }
-            if (typeof this.props.replaceFunc === "function") {
-                fieldValue = this.props.replaceFunc(fieldValue);
-            }
-            if (this.isValueValid(fieldValue)) {
-                this.setState({fieldValue, filterValue});
-            } else {
-                this.setState({fieldValue, invalidValue: true});
-            }
-        } else {
-            this.setState({fieldValue: "", filterValue: null});
-        }
-    };
-
-    isValueValid = (value) => {
-        return typeof this.props.validateFunc !== "function" ||
-            (typeof this.props.validateFunc === "function" && this.props.validateFunc(value));
-    };
-
-    changeFilterValue = (value) => {
-        const urlParams = {};
-        urlParams[this.props.filterName] = value;
-        dispatcher.dispatch("connections_filters", urlParams);
-    };
-
-    filterChanged = (fieldValue) => {
-        if (this.state.timeoutHandle) {
-            clearTimeout(this.state.timeoutHandle);
-        }
-
-        if (typeof this.props.replaceFunc === "function") {
-            fieldValue = this.props.replaceFunc(fieldValue);
-        }
-
-        if (fieldValue === "") {
-            this.setState({fieldValue: "", filterValue: null, invalidValue: false});
-            return this.changeFilterValue(null);
-        }
-
-
-        if (this.isValueValid(fieldValue)) {
-            let filterValue = fieldValue;
-            if (filterValue !== "" && typeof this.props.encodeFunc === "function") {
-                filterValue = this.props.encodeFunc(filterValue);
-            }
-
-            this.setState({
-                fieldValue,
-                timeoutHandle: setTimeout(() => {
-                    this.setState({filterValue});
-                    this.changeFilterValue(filterValue);
-                }, 500),
-                invalidValue: false
-            });
-        } else {
-            this.setState({fieldValue, invalidValue: true});
-        }
-    };
-
-    render() {
-        let active = this.state.filterValue !== null;
-
-        return (
-            <div className="filter" style={{"width": `${this.props.width}px`}}>
-                <InputField active={active} invalid={this.state.invalidValue} name={this.props.filterName}
-                            placeholder={this.props.defaultFilterValue} onChange={this.filterChanged}
-                            value={this.state.fieldValue} inline={this.props.inline} small={this.props.small}/>
-            </div>
-        );
+    if (fieldValue === '') {
+      this.setState({fieldValue: '', filterValue: null, invalidValue: false});
+      return this.changeFilterValue(null);
     }
 
+    if (this.isValueValid(fieldValue)) {
+      let filterValue = fieldValue;
+      if (filterValue !== '' && typeof this.props.encodeFunc === 'function') {
+        filterValue = this.props.encodeFunc(filterValue);
+      }
+
+      this.setState({
+        fieldValue,
+        timeoutHandle: setTimeout(() => {
+          this.setState({filterValue});
+          this.changeFilterValue(filterValue);
+        }, 500),
+        invalidValue: false,
+      });
+    } else {
+      this.setState({fieldValue, invalidValue: true});
+    }
+  };
+
+  render() {
+    let active = this.state.filterValue !== null;
+
+    return (
+      <div className="filter" style={{width: `${this.props.width}px`}}>
+        <InputField
+          active={active}
+          invalid={this.state.invalidValue}
+          name={this.props.filterName}
+          placeholder={this.props.defaultFilterValue}
+          onChange={this.filterChanged}
+          value={this.state.fieldValue}
+          inline={this.props.inline}
+          small={this.props.small}
+        />
+      </div>
+    );
+  }
 }
 
 export default withRouter(StringConnectionsFilter);

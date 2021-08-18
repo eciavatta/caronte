@@ -15,55 +15,60 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from "react";
-import {Modal} from "react-bootstrap";
-import ButtonField from "../fields/ButtonField";
-import TextField from "../fields/TextField";
+import PropTypes from 'prop-types';
+import React, {Component} from 'react';
+import {Modal} from 'react-bootstrap';
+import ButtonField from '../fields/ButtonField';
+import TextField from '../fields/TextField';
 
 class CopyDialog extends Component {
+  state = {
+    copyButtonText: 'copy',
+  };
 
-    state = {
-        copyButtonText: "copy"
+  constructor(props) {
+    super(props);
+    this.textbox = React.createRef();
+  }
+
+  static get propTypes() {
+    return {
+      name: PropTypes.string,
+      onHide: PropTypes.func,
+      readonly: PropTypes.bool,
+      value: PropTypes.string,
     };
+  }
 
-    constructor(props) {
-        super(props);
-        this.textbox = React.createRef();
+  copyActionValue = () => {
+    this.textbox.current.select();
+    document.execCommand('copy');
+    this.setState({copyButtonText: 'copied!'});
+    this.timeoutHandle = setTimeout(() => this.setState({copyButtonText: 'copy'}), 3000);
+  };
+
+  componentWillUnmount() {
+    if (this.timeoutHandle) {
+      clearTimeout(this.timeoutHandle);
     }
+  }
 
-    copyActionValue = () => {
-        this.textbox.current.select();
-        document.execCommand("copy");
-        this.setState({copyButtonText: "copied!"});
-        this.timeoutHandle = setTimeout(() => this.setState({copyButtonText: "copy"}), 3000);
-    };
-
-    componentWillUnmount() {
-        if (this.timeoutHandle) {
-            clearTimeout(this.timeoutHandle);
-        }
-    }
-
-    render() {
-        return (
-            <Modal show={true} size="lg" aria-labelledby="message-action-dialog" centered>
-                <Modal.Header>
-                    <Modal.Title id="message-action-dialog">
-                        {this.props.name}
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <TextField readonly={this.props.readonly} value={this.props.value} textRef={this.textbox}
-                               rows={15}/>
-                </Modal.Body>
-                <Modal.Footer className="dialog-footer">
-                    <ButtonField variant="red" bordered onClick={this.props.onHide} name="close"/>
-                    <ButtonField variant="green" bordered onClick={this.copyActionValue}
-                                 name={this.state.copyButtonText}/>
-                </Modal.Footer>
-            </Modal>
-        );
-    }
+  render() {
+    return (
+      <Modal show={true} size="lg" aria-labelledby="message-action-dialog" centered>
+        <Modal.Header>
+          <Modal.Title id="message-action-dialog">{this.props.name}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <TextField readonly={this.props.readonly} value={this.props.value} textRef={this.textbox} rows={15} />
+        </Modal.Body>
+        <Modal.Footer className="dialog-footer">
+          <ButtonField variant="red" bordered onClick={this.props.onHide} name="close" />
+          <ButtonField variant="green" bordered onClick={this.copyActionValue} name={this.state.copyButtonText} />
+        </Modal.Footer>
+      </Modal>
+    );
+  }
 }
 
 export default CopyDialog;

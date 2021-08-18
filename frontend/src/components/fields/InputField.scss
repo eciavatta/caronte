@@ -1,4 +1,4 @@
-@import "../../colors.scss";
+@import '../../colors.scss';
 
 .input-field {
   font-size: 0.9em;
@@ -24,7 +24,7 @@
         background-color: $color-primary-2;
       }
 
-      input[type="file"] {
+      input[type='file'] {
         display: none;
       }
 
@@ -33,7 +33,7 @@
         top: 0;
         right: 0;
         padding: 7px 10px 7px 12px;
-        content: "Browse";
+        content: 'Browse';
         border-top-right-radius: 5px;
         border-bottom-right-radius: 5px;
         background-color: $color-primary-1;

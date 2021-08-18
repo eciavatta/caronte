@@ -15,34 +15,27 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, { Component } from "react";
-import { Link, withRouter } from "react-router-dom";
-import backend from "../backend";
-import dispatcher from "../dispatcher";
-import Typed from "typed.js";
-import { cleanNumber, validatePort } from "../utils";
-import ButtonField from "./fields/ButtonField";
-import CheckField from "./fields/CheckField";
-import AdvancedFilters from "./filters/AdvancedFilters";
-import BooleanConnectionsFilter from "./filters/BooleanConnectionsFilter";
-import ExitSearchFilter from "./filters/ExitSearchFilter";
-import ExitSimilarityFilter from "./filters/ExitSimilarityFilter";
-import RulesConnectionsFilter from "./filters/RulesConnectionsFilter";
-import StringConnectionsFilter from "./filters/StringConnectionsFilter";
-import LinkPopover from "./objects/LinkPopover";
-import "./StatusBar.scss";
-
-const classNames = require("classnames");
+import PropTypes from 'prop-types';
+import React, {Component} from 'react';
+import {Link, withRouter} from 'react-router-dom';
+import backend from '../backend';
+import CheckField from './fields/CheckField';
+import LinkPopover from './objects/LinkPopover';
+import './StatusBar.scss';
 
 class StatusBar extends Component {
   state = {
     status: {},
   };
 
+  static get propTypes() {
+    return {
+      location: PropTypes.object,
+    };
+  }
+
   componentDidMount() {
-    backend
-      .get("/api/status")
-      .then((res) => this.setState({ status: res.json }));
+    backend.get('/api/status').then((res) => this.setState({status: res.json}));
   }
 
   componentWillUnmount() {}
@@ -50,10 +43,9 @@ class StatusBar extends Component {
   render() {
     return (
       <div className="status-bar">
-        <Link to={"/capture" + this.props.location.search}>
+        <Link to={'/capture' + this.props.location.search}>
           <div className="live-capture-button">
-            {this.state.status.live_capture === "local" ||
-            this.state.status.live_capture === "remote" ? (
+            {this.state.status.live_capture === 'local' || this.state.status.live_capture === 'remote' ? (
               <>
                 <div className="ringring"></div>
                 <div className="circle"></div>
@@ -73,11 +65,7 @@ class StatusBar extends Component {
             <LinkPopover text="cps" content="connections per second" />: 421
           </div>
           <div className="record">
-            <LinkPopover
-              text="connections"
-              content="total number of connections"
-            />
-            : 231312
+            <LinkPopover text="connections" content="total number of connections" />: 231312
           </div>
           <div className="record">
             <LinkPopover text="pcaps" content="number of pcaps analyzed" />: {this.state.status.pcaps_analyzed}
@@ -91,11 +79,7 @@ class StatusBar extends Component {
         </div>
 
         <div className="version">
-          <a
-            href={`https://github.com/eciavatta/caronte/releases/tag/${this.state.status.version}`}
-          >
-            v{this.state.status.version}
-          </a>
+          <a href={`https://github.com/eciavatta/caronte/releases/tag/${this.state.status.version}`}>v{this.state.status.version}</a>
         </div>
       </div>
     );

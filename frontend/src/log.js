@@ -16,14 +16,14 @@
  */
 
 const log = {
-    debug: (...obj) => isDevelopment() && console.info(...obj),
-    info: (...obj) => console.info(...obj),
-    warn: (...obj) => console.warn(...obj),
-    error: (...obj) => console.error(obj)
+  debug: (...obj) => isDevelopment() && console.info(...obj),
+  info: (...obj) => console.info(...obj),
+  warn: (...obj) => console.warn(...obj),
+  error: (...obj) => console.error(obj),
 };
 
 function isDevelopment() {
-    return !process.env.NODE_ENV || process.env.NODE_ENV === "development";
+  return !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
 }
 
 export default log;

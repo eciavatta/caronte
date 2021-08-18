@@ -15,46 +15,75 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from "react";
-import {randomClassName} from "../../utils";
-import "./common.scss";
-import "./TextField.scss";
-
-const classNames = require("classnames");
+import classNames from 'classnames';
+import PropTypes from 'prop-types';
+import React, {Component} from 'react';
+import {randomClassName} from '../../utils';
+import './common.scss';
+import './TextField.scss';
 
 class TextField extends Component {
+  constructor(props) {
+    super(props);
 
-    constructor(props) {
-        super(props);
+    this.id = `field-${this.props.name || 'noname'}-${randomClassName()}`;
+  }
 
-        this.id = `field-${this.props.name || "noname"}-${randomClassName()}`;
-    }
+  static get propTypes() {
+    return {
+      active: PropTypes.bool,
+      defaultValue: PropTypes.string,
+      error: PropTypes.string,
+      invalid: PropTypes.bool,
+      name: PropTypes.string,
+      onChange: PropTypes.func,
+      readonly: PropTypes.bool,
+      rows: PropTypes.number,
+      small: PropTypes.bool,
+      textRef: PropTypes.object,
+      value: PropTypes.string,
+    };
+  }
 
-    render() {
-        const name = this.props.name || null;
-        const error = this.props.error || null;
-        const rows = this.props.rows || 3;
+  render() {
+    const name = this.props.name || null;
+    const error = this.props.error || null;
+    const rows = this.props.rows || 3;
 
-        const handler = (e) => {
-            if (this.props.onChange) {
-                if (e == null) {
-                    this.props.onChange("");
-                } else {
-                    this.props.onChange(e.target.value);
-                }
-            }
-        };
+    const handler = (e) => {
+      if (this.props.onChange) {
+        if (e == null) {
+          this.props.onChange('');
+        } else {
+          this.props.onChange(e.target.value);
+        }
+      }
+    };
 
-        return (
-            <div className={classNames("field", "text-field", {"field-active": this.props.active},
-                {"field-invalid": this.props.invalid}, {"field-small": this.props.small})}>
-                {name && <label htmlFor={this.id}>{name}:</label>}
-                <textarea id={this.id} placeholder={this.props.defaultValue} onChange={handler} rows={rows}
-                          readOnly={this.props.readonly} value={this.props.value} ref={this.props.textRef}/>
-                {error && <div className="field-error">error: {error}</div>}
-            </div>
-        );
-    }
+    return (
+      <div
+        className={classNames(
+          'field',
+          'text-field',
+          {'field-active': this.props.active},
+          {'field-invalid': this.props.invalid},
+          {'field-small': this.props.small}
+        )}
+      >
+        {name && <label htmlFor={this.id}>{name}:</label>}
+        <textarea
+          id={this.id}
+          placeholder={this.props.defaultValue}
+          onChange={handler}
+          rows={rows}
+          readOnly={this.props.readonly}
+          value={this.props.value}
+          ref={this.props.textRef}
+        />
+        {error && <div className="field-error">error: {error}</div>}
+      </div>
+    );
+  }
 }
 
 export default TextField;

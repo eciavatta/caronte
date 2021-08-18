@@ -15,10 +15,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-const {createProxyMiddleware} = require("http-proxy-middleware");
+import {createProxyMiddleware} from 'http-proxy-middleware';
 
-module.exports = function (app) {
-    app.use(createProxyMiddleware("/api", {target: "http://localhost:3333"}));
-    app.use(createProxyMiddleware("/setup", {target: "http://localhost:3333"}));
-    app.use(createProxyMiddleware("/ws", {target: "http://localhost:3333", ws: true}));
-};
+export default function (app) {
+  app.use(createProxyMiddleware('/api', {target: 'http://localhost:3333'}));
+  app.use(createProxyMiddleware('/setup', {target: 'http://localhost:3333'}));
+  app.use(createProxyMiddleware('/ws', {target: 'http://localhost:3333', ws: true}));
+}

@@ -15,53 +15,69 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from "react";
-import "./ButtonField.scss";
-import "./common.scss";
-
-const classNames = require("classnames");
+import classNames from 'classnames';
+import PropTypes from 'prop-types';
+import React, {Component} from 'react';
+import './ButtonField.scss';
+import './common.scss';
 
 class ButtonField extends Component {
+  static get propTypes() {
+    return {
+      active: PropTypes.bool,
+      border: PropTypes.string,
+      bordered: PropTypes.bool,
+      color: PropTypes.string,
+      disabled: PropTypes.bool,
+      fullSpan: PropTypes.bool,
+      inline: PropTypes.bool,
+      name: PropTypes.string,
+      onClick: PropTypes.func,
+      rounded: PropTypes.bool,
+      small: PropTypes.bool,
+      variant: PropTypes.string,
+    };
+  }
 
-    render() {
-        const handler = () => {
-            if (typeof this.props.onClick === "function") {
-                this.props.onClick();
-            }
-        };
+  render() {
+    const handler = () => {
+      if (typeof this.props.onClick === 'function') {
+        this.props.onClick();
+      }
+    };
 
-        let buttonClassnames = {
-            "button-bordered": this.props.bordered,
-        };
-        if (this.props.variant) {
-            buttonClassnames[`button-variant-${this.props.variant}`] = true;
-        }
-
-        let buttonStyle = {};
-        if (this.props.color) {
-            buttonStyle["backgroundColor"] = this.props.color;
-        }
-        if (this.props.border) {
-            buttonStyle["borderColor"] = this.props.border;
-        }
-        if (this.props.fullSpan) {
-            buttonStyle["width"] = "100%";
-        }
-        if (this.props.rounded) {
-            buttonStyle["borderRadius"] = "3px";
-        }
-        if (this.props.inline) {
-            buttonStyle["marginTop"] = "8px";
-        }
-
-        return (
-            <div className={classNames("field", "button-field", {"field-small": this.props.small},
-                {"field-active": this.props.active})}>
-                <button type="button" className={classNames(buttonClassnames)}
-                        onClick={handler} style={buttonStyle} disabled={this.props.disabled}>{this.props.name}</button>
-            </div>
-        );
+    let buttonClassnames = {
+      'button-bordered': this.props.bordered,
+    };
+    if (this.props.variant) {
+      buttonClassnames[`button-variant-${this.props.variant}`] = true;
     }
+
+    let buttonStyle = {};
+    if (this.props.color) {
+      buttonStyle['backgroundColor'] = this.props.color;
+    }
+    if (this.props.border) {
+      buttonStyle['borderColor'] = this.props.border;
+    }
+    if (this.props.fullSpan) {
+      buttonStyle['width'] = '100%';
+    }
+    if (this.props.rounded) {
+      buttonStyle['borderRadius'] = '3px';
+    }
+    if (this.props.inline) {
+      buttonStyle['marginTop'] = '8px';
+    }
+
+    return (
+      <div className={classNames('field', 'button-field', {'field-small': this.props.small}, {'field-active': this.props.active})}>
+        <button type="button" className={classNames(buttonClassnames)} onClick={handler} style={buttonStyle} disabled={this.props.disabled}>
+          {this.props.name}
+        </button>
+      </div>
+    );
+  }
 }
 
 export default ButtonField;

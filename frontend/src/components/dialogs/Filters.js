@@ -15,71 +15,71 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from "react";
-import {Modal} from "react-bootstrap";
-import {cleanNumber, validateIpAddress, validateMin, validatePort} from "../../utils";
-import ButtonField from "../fields/ButtonField";
-import StringConnectionsFilter from "../filters/StringConnectionsFilter";
-import "./Filters.scss";
+import PropTypes from 'prop-types';
+import React, {Component} from 'react';
+import {Modal} from 'react-bootstrap';
+import {cleanNumber, validateIpAddress, validateMin, validatePort} from '../../utils';
+import ButtonField from '../fields/ButtonField';
+import StringConnectionsFilter from '../filters/StringConnectionsFilter';
+import './Filters.scss';
 
 class Filters extends Component {
+  static get propTypes() {
+    return {
+      onHide: PropTypes.func,
+    };
+  }
 
-    render() {
-        return (
-            <Modal
-                {...this.props}
-                show={true}
-                size="lg"
-                aria-labelledby="filters-dialog"
-                centered
-            >
-                <Modal.Header>
-                    <Modal.Title id="filters-dialog">
-                        ~/advanced_filters
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <div className="advanced-filters d-flex">
-                        <div className="flex-fill">
-                            <StringConnectionsFilter filterName="client_address"
-                                                     defaultFilterValue="all_addresses"
-                                                     validateFunc={validateIpAddress}
-                                                     key="client_address_filter"/>
-                            <StringConnectionsFilter filterName="min_duration"
-                                                     defaultFilterValue="0"
-                                                     replaceFunc={cleanNumber}
-                                                     validateFunc={validateMin(0)}
-                                                     key="min_duration_filter"/>
-                            <StringConnectionsFilter filterName="min_bytes"
-                                                     defaultFilterValue="0"
-                                                     replaceFunc={cleanNumber}
-                                                     validateFunc={validateMin(0)}
-                                                     key="min_bytes_filter"/>
-                        </div>
+  render() {
+    return (
+      <Modal {...this.props} show={true} size="lg" aria-labelledby="filters-dialog" centered>
+        <Modal.Header>
+          <Modal.Title id="filters-dialog">~/advanced_filters</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="advanced-filters d-flex">
+            <div className="flex-fill">
+              <StringConnectionsFilter
+                filterName="client_address"
+                defaultFilterValue="all_addresses"
+                validateFunc={validateIpAddress}
+                key="client_address_filter"
+              />
+              <StringConnectionsFilter
+                filterName="min_duration"
+                defaultFilterValue="0"
+                replaceFunc={cleanNumber}
+                validateFunc={validateMin(0)}
+                key="min_duration_filter"
+              />
+              <StringConnectionsFilter
+                filterName="min_bytes"
+                defaultFilterValue="0"
+                replaceFunc={cleanNumber}
+                validateFunc={validateMin(0)}
+                key="min_bytes_filter"
+              />
+            </div>
 
-                        <div className="flex-fill">
-                            <StringConnectionsFilter filterName="client_port"
-                                                     defaultFilterValue="all_ports"
-                                                     replaceFunc={cleanNumber}
-                                                     validateFunc={validatePort}
-                                                     key="client_port_filter"/>
-                            <StringConnectionsFilter filterName="max_duration"
-                                                     defaultFilterValue="∞"
-                                                     replaceFunc={cleanNumber}
-                                                     key="max_duration_filter"/>
-                            <StringConnectionsFilter filterName="max_bytes"
-                                                     defaultFilterValue="∞"
-                                                     replaceFunc={cleanNumber}
-                                                     key="max_bytes_filter"/>
-                        </div>
-                    </div>
-                </Modal.Body>
-                <Modal.Footer className="dialog-footer">
-                    <ButtonField variant="red" bordered onClick={this.props.onHide} name="close"/>
-                </Modal.Footer>
-            </Modal>
-        );
-    }
+            <div className="flex-fill">
+              <StringConnectionsFilter
+                filterName="client_port"
+                defaultFilterValue="all_ports"
+                replaceFunc={cleanNumber}
+                validateFunc={validatePort}
+                key="client_port_filter"
+              />
+              <StringConnectionsFilter filterName="max_duration" defaultFilterValue="∞" replaceFunc={cleanNumber} key="max_duration_filter" />
+              <StringConnectionsFilter filterName="max_bytes" defaultFilterValue="∞" replaceFunc={cleanNumber} key="max_bytes_filter" />
+            </div>
+          </div>
+        </Modal.Body>
+        <Modal.Footer className="dialog-footer">
+          <ButtonField variant="red" bordered onClick={this.props.onHide} name="close" />
+        </Modal.Footer>
+      </Modal>
+    );
+  }
 }
 
 export default Filters;

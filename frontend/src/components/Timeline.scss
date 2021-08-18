@@ -1,4 +1,4 @@
-@import "../colors";
+@import '../colors';
 
 .footer {
   padding: 15px;
@@ -21,7 +21,7 @@
   }
 
   svg text {
-    font-family: "Fira Code", monospace !important;
+    font-family: 'Fira Code', monospace !important;
     fill: $color-primary-4 !important;
   }
 }

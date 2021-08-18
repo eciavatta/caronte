@@ -1,9 +1,9 @@
-@import "../../colors.scss";
+@import '../../colors.scss';
 
 .field {
   input,
   textarea {
-    font-family: "Fira Code", monospace;
+    font-family: 'Fira Code', monospace;
     width: 100%;
     padding: 7px 10px;
     color: $color-primary-4;

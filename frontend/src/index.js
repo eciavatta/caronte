@@ -15,18 +15,18 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import "bootstrap/dist/css/bootstrap.css";
-import React from "react";
-import ReactDOM from "react-dom";
-import App from "./components/App";
-import "./index.scss";
-import notifications from "./notifications";
+import 'bootstrap/dist/css/bootstrap.css';
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './components/App';
+import './index.scss';
+import notifications from './notifications';
 
 notifications.createWebsocket();
 
 ReactDOM.render(
-    // <React.StrictMode>
-    <App/>,
-    // </React.StrictMode>,
-    document.getElementById("root")
+  // <React.StrictMode>
+  <App />,
+  // </React.StrictMode>,
+  document.getElementById('root')
 );

@@ -15,40 +15,43 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from "react";
-import {withRouter} from "react-router-dom";
-import dispatcher from "../../dispatcher";
-import {updateParams} from "../../utils";
-import ButtonField from "../fields/ButtonField";
+import PropTypes from 'prop-types';
+import React, {Component} from 'react';
+import {withRouter} from 'react-router-dom';
+import dispatcher from '../../dispatcher';
+import {updateParams} from '../../utils';
+import ButtonField from '../fields/ButtonField';
 
 class AdvancedFilters extends Component {
+  state = {};
 
-    state = {};
+  static get propTypes() {
+    return {
+      location: PropTypes.object,
+      onClick: PropTypes.func,
+    };
+  }
 
-    componentDidMount() {
-        this.urlParams = new URLSearchParams(this.props.location.search);
+  componentDidMount() {
+    this.urlParams = new URLSearchParams(this.props.location.search);
 
-        this.connectionsFiltersCallback = (payload) => {
-            this.urlParams = updateParams(this.urlParams, payload);
-            const active = ["client_address", "client_port", "min_duration", "max_duration", "min_bytes", "max_bytes"]
-                .some((f) => this.urlParams.has(f));
-            if (this.state.active !== active) {
-                this.setState({active});
-            }
-        };
-        dispatcher.register("connections_filters", this.connectionsFiltersCallback);
-    }
+    this.connectionsFiltersCallback = (payload) => {
+      this.urlParams = updateParams(this.urlParams, payload);
+      const active = ['client_address', 'client_port', 'min_duration', 'max_duration', 'min_bytes', 'max_bytes'].some((f) => this.urlParams.has(f));
+      if (this.state.active !== active) {
+        this.setState({active});
+      }
+    };
+    dispatcher.register('connections_filters', this.connectionsFiltersCallback);
+  }
 
-    componentWillUnmount() {
-        dispatcher.unregister(this.connectionsFiltersCallback);
-    }
+  componentWillUnmount() {
+    dispatcher.unregister(this.connectionsFiltersCallback);
+  }
 
-    render() {
-        return (
-            <ButtonField onClick={this.props.onClick} name="advanced_filters" small active={this.state.active}/>
-        );
-    }
-
+  render() {
+    return <ButtonField onClick={this.props.onClick} name="advanced_filters" small active={this.state.active} />;
+  }
 }
 
 export default withRouter(AdvancedFilters);

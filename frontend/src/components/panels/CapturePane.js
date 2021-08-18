@@ -27,8 +27,8 @@ import InputField from '../fields/InputField';
 import TagField from '../fields/TagField';
 import TextField from '../fields/TextField';
 import LinkPopover from '../objects/LinkPopover';
-import './common.scss';
 import './CapturePane.scss';
+import './common.scss';
 
 class CapturePane extends Component {
   state = {

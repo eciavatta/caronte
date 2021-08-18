@@ -15,84 +15,109 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from "react";
-import {OverlayTrigger, Popover} from "react-bootstrap";
-import validation from "../../../validation";
-import InputField from "../InputField";
-import "./ColorField.scss";
+import PropTypes from 'prop-types';
+import React, {Component} from 'react';
+import {OverlayTrigger, Popover} from 'react-bootstrap';
+import validation from '../../../validation';
+import InputField from '../InputField';
+import './ColorField.scss';
 
 class ColorField extends Component {
+  constructor(props) {
+    super(props);
 
-    constructor(props) {
-        super(props);
+    this.state = {};
 
-        this.state = {};
+    this.colors = [
+      '#e53935',
+      '#d81b60',
+      '#8e24aa',
+      '#5e35b1',
+      '#3949ab',
+      '#1e88e5',
+      '#039be5',
+      '#00acc1',
+      '#00897b',
+      '#43a047',
+      '#7cb342',
+      '#9e9d24',
+      '#f9a825',
+      '#fb8c00',
+      '#f4511e',
+      '#6d4c41',
+    ];
+  }
 
-        this.colors = ["#e53935", "#d81b60", "#8e24aa", "#5e35b1", "#3949ab", "#1e88e5", "#039be5", "#00acc1",
-            "#00897b", "#43a047", "#7cb342", "#9e9d24", "#f9a825", "#fb8c00", "#f4511e", "#6d4c41"];
-    }
-
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        if (prevProps.value !== this.props.value) {
-            this.onChange(this.props.value);
-        }
-    }
-
-    onChange = (value) => {
-        this.setState({invalid: value !== "" && !validation.isValidColor(value)});
-
-        if (typeof this.props.onChange === "function") {
-            this.props.onChange(value);
-        }
+  static get propTypes() {
+    return {
+      error: PropTypes.string,
+      onChange: PropTypes.func,
+      value: PropTypes.string,
     };
+  }
 
-    render() {
-        const colorButtons = this.colors.map((color) =>
-            <span key={"button" + color} className="color-input" style={{"backgroundColor": color}}
-                  onClick={() => {
-                      if (typeof this.props.onChange === "function") {
-                          this.props.onChange(color);
-                      }
-                      document.body.click(); // magic to close popup
-                  }}/>);
+  componentDidUpdate(prevProps) {
+    if (prevProps.value !== this.props.value) {
+      this.onChange(this.props.value);
+    }
+  }
 
-        const popover = (
-            <Popover id="popover-basic">
-                <Popover.Title as="h3">choose a color</Popover.Title>
-                <Popover.Content>
-                    <div className="colors-container">
-                        <div className="colors-row">
-                            {colorButtons.slice(0, 8)}
-                        </div>
-                        <div className="colors-row">
-                            {colorButtons.slice(8, 18)}
-                        </div>
-                    </div>
-                </Popover.Content>
-            </Popover>
-        );
+  onChange = (value) => {
+    this.setState({invalid: value !== '' && !validation.isValidColor(value)});
 
-        let buttonStyles = {};
-        if (this.props.value) {
-            buttonStyles["backgroundColor"] = this.props.value;
-        }
+    if (typeof this.props.onChange === 'function') {
+      this.props.onChange(value);
+    }
+  };
 
-        return (
-            <div className="field color-field">
-                <div className="color-input">
-                    <InputField {...this.props} onChange={this.onChange} invalid={this.state.invalid} name="color"
-                                error={null}/>
-                    <div className="color-picker">
-                        <OverlayTrigger trigger="click" placement="top" overlay={popover} rootClose>
-                            <button type="button" className="picker-button" style={buttonStyles}>pick</button>
-                        </OverlayTrigger>
-                    </div>
-                </div>
-                {this.props.error && <div className="color-error">{this.props.error}</div>}
-            </div>
-        );
+  render() {
+    const colorButtons = this.colors.map((color) => (
+      <span
+        key={'button' + color}
+        className="color-input"
+        style={{backgroundColor: color}}
+        onClick={() => {
+          if (typeof this.props.onChange === 'function') {
+            this.props.onChange(color);
+          }
+          document.body.click(); // magic to close popup
+        }}
+      />
+    ));
+
+    const popover = (
+      <Popover id="popover-basic">
+        <Popover.Title as="h3">choose a color</Popover.Title>
+        <Popover.Content>
+          <div className="colors-container">
+            <div className="colors-row">{colorButtons.slice(0, 8)}</div>
+            <div className="colors-row">{colorButtons.slice(8, 18)}</div>
+          </div>
+        </Popover.Content>
+      </Popover>
+    );
+
+    let buttonStyles = {};
+    if (this.props.value) {
+      buttonStyles['backgroundColor'] = this.props.value;
     }
 
+    return (
+      <div className="field color-field">
+        <div className="color-input">
+          <InputField {...this.props} onChange={this.onChange} invalid={this.state.invalid} name="color" error={null} />
+          <div className="color-picker">
+            <OverlayTrigger trigger="click" placement="top" overlay={popover} rootClose>
+              <button type="button" className="picker-button" style={buttonStyles}>
+                pick
+              </button>
+            </OverlayTrigger>
+          </div>
+        </div>
+        {this.props.error && <div className="color-error">{this.props.error}</div>}
+      </div>
+    );
+  }
 }
 
 export default ColorField;

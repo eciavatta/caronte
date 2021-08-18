@@ -15,40 +15,63 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from "react";
-import TextField from "../fields/TextField";
-import LinkPopover from "./LinkPopover";
+import PropTypes from 'prop-types';
+import React, {Component} from 'react';
+import TextField from '../fields/TextField';
+import LinkPopover from './LinkPopover';
 
 class CopyLinkPopover extends Component {
+  state = {};
 
-    state = {};
+  constructor(props) {
+    super(props);
 
-    constructor(props) {
-        super(props);
+    this.copyTextarea = React.createRef();
+  }
 
-        this.copyTextarea = React.createRef();
-    }
-
-    handleClick = () => {
-        this.copyTextarea.current.select();
-        document.execCommand("copy");
-        this.setState({copiedMessage: true});
-        setTimeout(() => this.setState({copiedMessage: false}), 3000);
+  static get propTypes() {
+    return {
+      text: PropTypes.text,
+      textClassName: PropTypes.string,
+      value: PropTypes.string,
     };
+  }
 
-    render() {
-        const copyPopoverContent = <div style={{"width": "250px"}}>
-            {this.state.copiedMessage ? <span><strong>Copied!</strong></span> :
-                <span>Click to <strong>copy</strong></span>}
-            <TextField readonly rows={2} value={this.props.value} textRef={this.copyTextarea}/>
-        </div>;
+  handleClick = () => {
+    this.copyTextarea.current.select();
+    document.execCommand('copy');
+    this.setState({copiedMessage: true});
+    setTimeout(() => this.setState({copiedMessage: false}), 3000);
+  };
 
-        return (
-            <LinkPopover text={<span className={this.props.textClassName}
-                                     onClick={this.handleClick}>{this.props.text}</span>}
-                         content={copyPopoverContent} placement="right"/>
-        );
-    }
+  render() {
+    const copyPopoverContent = (
+      <div style={{width: '250px'}}>
+        {this.state.copiedMessage ? (
+          <span>
+            <strong>Copied!</strong>
+          </span>
+        ) : (
+          <span>
+            Click to <strong>copy</strong>
+          </span>
+        )}
+        <TextField readonly rows={2} value={this.props.value} textRef={this.copyTextarea} />
+      </div>
+    );
+
+    return (
+      <LinkPopover
+        text={
+          <span className={this.props.textClassName} onClick={this.handleClick}>
+            {this.props.text}
+          </span>
+        }
+        content={copyPopoverContent}
+        placement="right"
+      />
+    );
+  }
 }
 
 export default CopyLinkPopover;

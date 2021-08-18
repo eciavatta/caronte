@@ -15,48 +15,55 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from "react";
-import InputField from "../InputField";
+import PropTypes from 'prop-types';
+import React, {Component} from 'react';
+import InputField from '../InputField';
 
 class NumericField extends Component {
+  constructor(props) {
+    super(props);
 
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            invalid: false
-        };
-    }
-
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        if (prevProps.value !== this.props.value) {
-            this.onChange(this.props.value);
-        }
-    }
-
-    onChange = (value) => {
-        value = value.toString().replace(/[^\d]/gi, "");
-        let intValue = 0;
-        if (value !== "") {
-            intValue = parseInt(value, 10);
-        }
-        const valid =
-            (!this.props.validate || (typeof this.props.validate === "function" && this.props.validate(intValue))) &&
-            (!this.props.min || (typeof this.props.min === "number" && intValue >= this.props.min)) &&
-            (!this.props.max || (typeof this.props.max === "number" && intValue <= this.props.max));
-        this.setState({invalid: !valid});
-        if (typeof this.props.onChange === "function") {
-            this.props.onChange(intValue);
-        }
+    this.state = {
+      invalid: false,
     };
+  }
 
-    render() {
-        return (
-            <InputField {...this.props} onChange={this.onChange} defaultValue={this.props.defaultValue || "0"}
-                        invalid={this.state.invalid}/>
-        );
+  static get propTypes() {
+    return {
+      defaultValue: PropTypes.number,
+      max: PropTypes.number,
+      min: PropTypes.number,
+      onChange: PropTypes.func,
+      validate: PropTypes.func,
+      value: PropTypes.string,
+    };
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.value !== this.props.value) {
+      this.onChange(this.props.value);
     }
+  }
 
+  onChange = (value) => {
+    value = value.toString().replace(/[^\d]/gi, '');
+    let intValue = 0;
+    if (value !== '') {
+      intValue = parseInt(value, 10);
+    }
+    const valid =
+      (!this.props.validate || (typeof this.props.validate === 'function' && this.props.validate(intValue))) &&
+      (!this.props.min || (typeof this.props.min === 'number' && intValue >= this.props.min)) &&
+      (!this.props.max || (typeof this.props.max === 'number' && intValue <= this.props.max));
+    this.setState({invalid: !valid});
+    if (typeof this.props.onChange === 'function') {
+      this.props.onChange(intValue);
+    }
+  };
+
+  render() {
+    return <InputField {...this.props} onChange={this.onChange} defaultValue={this.props.defaultValue || '0'} invalid={this.state.invalid} />;
+  }
 }
 
 export default NumericField;

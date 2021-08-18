@@ -1,4 +1,4 @@
-@import "../colors";
+@import '../colors';
 
 .status-bar {
   height: 25px;
@@ -58,7 +58,7 @@
     }
 
     .record::after {
-      content: "|";
+      content: '|';
       margin: 0 10px;
     }
 
@@ -87,8 +87,6 @@
     margin-right: 5px;
     padding: 3px 10px;
   }
-
-
 
   @keyframes pulsate {
     0% {
