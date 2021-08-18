@@ -119,7 +119,7 @@ func (sh *StreamHandler) Reassembled(reassembly []tcpassembly.Reassembly) {
 		sh.streamLength += n
 
 		if sh.patternStream != nil {
-			err = sh.patternStream.Scan(r.Bytes)
+			err = sh.patternStream.Scan(r.Bytes[skip:])
 			if err != nil {
 				log.WithError(err).Error("failed to scan packet buffer")
 			}
