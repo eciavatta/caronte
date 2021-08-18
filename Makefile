@@ -11,8 +11,11 @@ caronte:
 	cd backend && go mod download
 	cd backend && GIN_MODE=release go build -o ../caronte -ldflags=$(LDFLAGS) -v
 
-run:
+backend-dev:
 	cd backend && go run .
+
+frontend-dev:
+	cd frontend && yarn start
 
 .PHONY: setcap
 setcap: caronte
