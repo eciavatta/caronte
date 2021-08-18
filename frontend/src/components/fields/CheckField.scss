@@ -6,7 +6,6 @@
 
   .field-input {
     width: fit-content;
-    border-radius: 5px;
     background-color: $color-primary-2;
 
     input {
@@ -35,5 +34,9 @@
     .field-input label {
       padding: 7px 15px;
     }
+  }
+
+  &.field-rounded .field-input {
+    border-radius: 5px;
   }
 }

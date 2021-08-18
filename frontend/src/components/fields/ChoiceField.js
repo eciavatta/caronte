@@ -15,71 +15,88 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, {Component} from "react";
-import {randomClassName} from "../../utils";
+import React, { Component } from "react";
+import { randomClassName } from "../../utils";
 import "./ChoiceField.scss";
 import "./common.scss";
-
-const classNames = require("classnames");
+import classNames from "classnames";
+import PropTypes from "prop-types";
 
 class ChoiceField extends Component {
+  constructor(props) {
+    super(props);
 
-    constructor(props) {
-        super(props);
+    this.state = {
+      expanded: false,
+    };
 
-        this.state = {
-            expanded: false
-        };
+    this.id = `field-${this.props.name || "noname"}-${randomClassName()}`;
+  }
 
-        this.id = `field-${this.props.name || "noname"}-${randomClassName()}`;
+  static get propTypes() {
+    return {
+      error: PropTypes.string,
+      inline: PropTypes.bool,
+      keys: PropTypes.array,
+      name: PropTypes.string,
+      onChange: PropTypes.func,
+      onlyName: PropTypes.bool,
+      small: PropTypes.bool,
+      value: PropTypes.string,
+      values: PropTypes.array,
+    };
+  }
+
+  render() {
+    const name = this.props.name || null;
+    const inline = this.props.inline;
+
+    const collapse = () => this.setState({ expanded: false });
+    const expand = () => this.setState({ expanded: true });
+
+    const handler = (key) => {
+      collapse();
+      if (this.props.onChange) {
+        this.props.onChange(key);
+      }
+    };
+
+    const keys = this.props.keys || [];
+    const values = this.props.values || [];
+
+    const options = keys.map((key, i) => (
+      <span className="field-option" key={key} onClick={() => handler(key)}>
+        {values[i]}
+      </span>
+    ));
+
+    let fieldValue = "";
+    if (inline && name) {
+      fieldValue = name;
+    }
+    if (!this.props.onlyName && inline && name) {
+      fieldValue += ": ";
+    }
+    if (!this.props.onlyName) {
+      fieldValue += this.props.value || "select a value";
     }
 
-    render() {
-        const name = this.props.name || null;
-        const inline = this.props.inline;
-
-        const collapse = () => this.setState({expanded: false});
-        const expand = () => this.setState({expanded: true});
-
-        const handler = (key) => {
-            collapse();
-            if (this.props.onChange) {
-                this.props.onChange(key);
-            }
-        };
-
-        const keys = this.props.keys || [];
-        const values = this.props.values || [];
-
-        const options = keys.map((key, i) =>
-            <span className="field-option" key={key} onClick={() => handler(key)}>{values[i]}</span>
-        );
-
-        let fieldValue = "";
-        if (inline && name) {
-            fieldValue = name;
-        }
-        if (!this.props.onlyName && inline && name) {
-            fieldValue += ": ";
-        }
-        if (!this.props.onlyName) {
-            fieldValue += this.props.value || "select a value";
-        }
-
-        return (
-            <div className={classNames("field", "choice-field", {"field-inline": inline},
-                {"field-small": this.props.small})}>
-                {!inline && name && <label className="field-name">{name}:</label>}
-                <div className={classNames("field-select", {"select-expanded": this.state.expanded})}
-                     tabIndex={0} onBlur={collapse} onClick={() => this.state.expanded ? collapse() : expand()}>
-                    <div className="field-value">{fieldValue}</div>
-                    <div className="field-options">
-                        {options}
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    return (
+      <div className={classNames("field", "choice-field", { "field-inline": inline }, { "field-small": this.props.small })}>
+        {!inline && name && <label className="field-name">{name}:</label>}
+        <div
+          className={classNames("field-select", { "select-expanded": this.state.expanded })}
+          tabIndex={0}
+          onBlur={collapse}
+          onClick={() => (this.state.expanded ? collapse() : expand())}
+        >
+          <div className="field-value">{fieldValue}</div>
+          <div className="field-options">{options}</div>
+        </div>
+        {this.props.error && <div className="field-error">error: {this.props.error}</div>}
+      </div>
+    );
+  }
 }
 
 export default ChoiceField;

@@ -1,0 +1,39 @@
+@import "../../colors.scss";
+
+.live-capture-pane {
+  display: flex;
+  flex-direction: column;
+
+  .helper {
+    font-size: 0.9em;
+    text-align: center;
+  }
+
+  .test-ssh-message {
+    flex: 1;
+    font-size: 0.8em;
+
+    .success-message {
+      color: $color-green;
+    }
+
+    .error-message {
+      color: $color-red;
+    }
+  }
+
+  .stop-capture-button {
+    margin-top: 20px;
+    margin-bottom: 30px;
+  }
+
+  .rotation-interval {
+    display: flex;
+
+    .mesurement-unit {
+      padding-top: 12px;
+      padding-left: 10px;
+      font-size: 0.9em;
+    }
+  }
+}
