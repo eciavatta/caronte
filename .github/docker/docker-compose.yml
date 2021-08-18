@@ -8,6 +8,9 @@ services:
     build:
       context: ../../
       dockerfile: .github/docker/Dockerfile-environment
+    ports:
+      - "2222:22"
+      - "8080:8080"
     image: caronte-test-environment
 
   test-backend:
