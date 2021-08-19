@@ -99,7 +99,8 @@ type flowCount [2]int
 
 func NewPcapImporter(storage Storage, serverNet net.IPNet, rulesManager RulesManager,
 	notificationController *NotificationController) *PcapImporter {
-	streamPool := tcpassembly.NewStreamPool(NewBiDirectionalStreamFactory(storage, serverNet, rulesManager))
+	streamPool := tcpassembly.NewStreamPool(
+		NewBiDirectionalStreamFactory(storage, serverNet, rulesManager, notificationController))
 
 	var result []ImportingSession
 	if err := storage.Find(ImportingSessions).All(&result); err != nil {

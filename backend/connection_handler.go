@@ -35,14 +35,16 @@ const initialConnectionsCapacity = 1024
 const initialScannersCapacity = 1024
 
 type BiDirectionalStreamFactory struct {
-	storage        Storage
-	serverNet      net.IPNet
-	connections    map[StreamFlow]ConnectionHandler
-	mConnections   sync.Mutex
-	rulesManager   RulesManager
-	rulesDatabase  RulesDatabase
-	mRulesDatabase sync.Mutex
-	scanners       []Scanner
+	storage                 Storage
+	serverNet               net.IPNet
+	connections             map[StreamFlow]ConnectionHandler
+	mConnections            sync.Mutex
+	rulesManager            RulesManager
+	rulesDatabase           RulesDatabase
+	mRulesDatabase          sync.Mutex
+	scanners                []Scanner
+	connectionStatusChannel chan bool // true if completed, false if pending
+	notificationController  *NotificationController
 }
 
 type StreamFlow [4]gopacket.Endpoint
@@ -50,6 +52,12 @@ type StreamFlow [4]gopacket.Endpoint
 type Scanner struct {
 	scratch *hyperscan.Scratch
 	version RowID
+}
+
+type ConnectionsStatistics struct {
+	PendingConnections   uint `json:"pending_connections"`
+	CompletedConnections uint `json:"completed_connections"`
+	ConnectionsPerMinute uint `json:"connections_per_minute"`
 }
 
 type ConnectionHandler interface {
@@ -67,19 +75,22 @@ type connectionHandlerImpl struct {
 }
 
 func NewBiDirectionalStreamFactory(storage Storage, serverNet net.IPNet,
-	rulesManager RulesManager) *BiDirectionalStreamFactory {
+	rulesManager RulesManager, notificationController *NotificationController) *BiDirectionalStreamFactory {
 
 	factory := &BiDirectionalStreamFactory{
-		storage:        storage,
-		serverNet:      serverNet,
-		connections:    make(map[StreamFlow]ConnectionHandler, initialConnectionsCapacity),
-		mConnections:   sync.Mutex{},
-		rulesManager:   rulesManager,
-		mRulesDatabase: sync.Mutex{},
-		scanners:       make([]Scanner, 0, initialScannersCapacity),
+		storage:                 storage,
+		serverNet:               serverNet,
+		connections:             make(map[StreamFlow]ConnectionHandler, initialConnectionsCapacity),
+		mConnections:            sync.Mutex{},
+		rulesManager:            rulesManager,
+		mRulesDatabase:          sync.Mutex{},
+		scanners:                make([]Scanner, 0, initialScannersCapacity),
+		connectionStatusChannel: make(chan bool),
+		notificationController:  notificationController,
 	}
 
 	go factory.updateRulesDatabaseService()
+	go factory.notificationService()
 	return factory
 }
 
@@ -173,6 +184,8 @@ func (factory *BiDirectionalStreamFactory) New(netFlow, transportFlow gopacket.F
 
 	streamHandler := NewStreamHandler(connection, flow, factory.takeScanner(), !isServer)
 
+	factory.connectionStatusChannel <- false
+
 	return &streamHandler
 }
 
@@ -248,6 +261,7 @@ func (ch *connectionHandlerImpl) Complete(handler *StreamHandler) {
 	}
 
 	ch.UpdateStatistics(connection)
+	ch.factory.connectionStatusChannel <- true
 }
 
 func (ch *connectionHandlerImpl) UpdateStatistics(connection Connection) {
@@ -276,6 +290,38 @@ func (ch *connectionHandlerImpl) UpdateStatistics(connection Connection) {
 		Filter(OrderedDocument{{Key: "_id", Value: time.Unix(rangeStart*60, 0)}}).
 		OneComplex(UnorderedDocument{"$inc": updateDocument}); err != nil {
 		log.WithError(err).WithField("connection", connection).Error("failed to update connection statistics")
+	}
+}
+
+func (factory *BiDirectionalStreamFactory) notificationService() {
+	var stats, lastStats ConnectionsStatistics
+	var connectionsPerMinute uint
+	ticker := time.Tick(3 * time.Second)
+	perMinuteTicker := time.Tick(time.Minute)
+
+	updateStatistics := func() {
+		lastStats = stats
+		factory.notificationController.Notify("connections.statistics", stats)
+	}
+
+	for {
+		select {
+		case completed := <-factory.connectionStatusChannel:
+			if completed {
+				stats.CompletedConnections++
+				stats.PendingConnections -= 2
+				connectionsPerMinute++
+			} else {
+				stats.PendingConnections++
+			}
+		case <-ticker:
+			if lastStats != stats {
+				updateStatistics()
+			}
+		case <-perMinuteTicker:
+			stats.ConnectionsPerMinute = connectionsPerMinute
+			connectionsPerMinute = 0
+		}
 	}
 }
 

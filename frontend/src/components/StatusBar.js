@@ -18,6 +18,7 @@
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
 import {Link, withRouter} from 'react-router-dom';
+import dispatcher from '../dispatcher';
 import backend from '../backend';
 import CheckField from './fields/CheckField';
 import LinkPopover from './objects/LinkPopover';
@@ -26,6 +27,7 @@ import './StatusBar.scss';
 class StatusBar extends Component {
   state = {
     status: {},
+    connectionsStatistics: {},
   };
 
   static get propTypes() {
@@ -36,9 +38,30 @@ class StatusBar extends Component {
 
   componentDidMount() {
     backend.get('/api/status').then((res) => this.setState({status: res.json}));
+    dispatcher.register('notifications', this.handleNotifications);
   }
 
-  componentWillUnmount() {}
+  componentWillUnmount() {
+    dispatcher.unregister(this.handleNotifications);
+  }
+
+  handleNotifications = (payload) => {
+    const status = {...this.state.status};
+
+    if (payload.event.startsWith('capture')) {
+      if (payload.event === 'capture.local') {
+        status.live_capture = 'local';
+      } else if (payload.event === 'capture.remote') {
+        status.live_capture = 'remote';
+      } else if (payload.event === 'capture.stop') {
+        status.live_capture = null;
+      }
+    } else if (payload.event === 'connections.statistics') {
+      this.setState({connectionsStatistics: payload.message});
+    }
+
+    this.setState({status});
+  };
 
   render() {
     return (
@@ -59,13 +82,20 @@ class StatusBar extends Component {
 
         <div className="statistics">
           <div className="record">
-            <LinkPopover text="pps" content="packets per second" />: 333
+            <LinkPopover text="pps" content="packets per second" />: -
           </div>
           <div className="record">
-            <LinkPopover text="cps" content="connections per second" />: 421
+            <LinkPopover text="cpm" content="connections per minute" />: {this.state.connectionsStatistics.connections_per_minute || '-'}
           </div>
           <div className="record">
-            <LinkPopover text="connections" content="total number of connections" />: 231312
+            <LinkPopover text="pending" content="in-memory connections not already closed" />: {this.state.connectionsStatistics.pending_connections || '-'}
+          </div>
+          <div className="record">
+            <LinkPopover text="completed" content="reassembled connections in current session" />:{' '}
+            {this.state.connectionsStatistics.completed_connections || '-'}
+          </div>
+          <div className="record">
+            <LinkPopover text="connections" content="total number of connections" />: -
           </div>
           <div className="record">
             <LinkPopover text="pcaps" content="number of pcaps analyzed" />: {this.state.status.pcaps_analyzed}
