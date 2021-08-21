@@ -8,9 +8,6 @@ services:
     build:
       context: ../../
       dockerfile: .github/docker/Dockerfile-environment
-    ports:
-      - "2222:22"
-      - "8080:8080"
     image: caronte-test-environment
 
   test-backend:
@@ -23,6 +20,9 @@ services:
     environment:
       MONGO_HOST: mongo
       MONGO_PORT: 27017
+      TEST_ENVIRONMENT_HOST: test-environment
+      TEST_ENVIRONMENT_SSH_PORT: 22
+      TEST_ENVIRONMENT_HTTP_PORT: 8080
 
   test-frontend:
     build:
