@@ -18,12 +18,13 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
-	log "github.com/sirupsen/logrus"
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -33,7 +34,13 @@ const (
 	maxMessageSize = 512
 )
 
-type NotificationController struct {
+type NotificationController interface {
+	NotificationHandler(http.ResponseWriter, *http.Request) error
+	Run()
+	Notify(string, interface{})
+}
+
+type notificationControllerImpl struct {
 	upgrader           websocket.Upgrader
 	clients            map[net.Addr]*client
 	broadcast          chan interface{}
@@ -42,8 +49,8 @@ type NotificationController struct {
 	applicationContext *ApplicationContext
 }
 
-func NewNotificationController(applicationContext *ApplicationContext) *NotificationController {
-	return &NotificationController{
+func NewNotificationController(applicationContext *ApplicationContext) NotificationController {
+	return &notificationControllerImpl{
 		upgrader: websocket.Upgrader{
 			ReadBufferSize:  1024,
 			WriteBufferSize: 1024,
@@ -59,10 +66,10 @@ func NewNotificationController(applicationContext *ApplicationContext) *Notifica
 type client struct {
 	conn                   *websocket.Conn
 	send                   chan interface{}
-	notificationController *NotificationController
+	notificationController *notificationControllerImpl
 }
 
-func (wc *NotificationController) NotificationHandler(w http.ResponseWriter, r *http.Request) error {
+func (wc *notificationControllerImpl) NotificationHandler(w http.ResponseWriter, r *http.Request) error {
 	conn, err := wc.upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.WithError(err).Error("failed to set websocket upgrade")
@@ -81,7 +88,7 @@ func (wc *NotificationController) NotificationHandler(w http.ResponseWriter, r *
 	return nil
 }
 
-func (wc *NotificationController) Run() {
+func (wc *notificationControllerImpl) Run() {
 	for {
 		select {
 		case client := <-wc.register:
@@ -118,7 +125,7 @@ func (wc *NotificationController) Run() {
 	}
 }
 
-func (wc *NotificationController) Notify(event string, message interface{}) {
+func (wc *notificationControllerImpl) Notify(event string, message interface{}) {
 	wc.broadcast <- gin.H{"event": event, "message": message}
 }
 

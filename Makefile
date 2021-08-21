@@ -28,7 +28,7 @@ remove_pcaps:
 	rm -rf backend/pcaps/*.pcap backend/pcaps/processing/*.pcap
 
 test:
-	cd backend && go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+	cd backend && go test -v -race -coverprofile=coverage.txt -covermode=atomic # ./...
 
 coverage: test
 	cd backend && go tool cover -html=coverage.txt

@@ -109,6 +109,7 @@ func TestImportNoTcpPackets(t *testing.T) {
 	assert.Zero(t, session.ImportingError)
 	assert.Equal(t, "392c71b41e6f1fc4333923ced430bd723d70b692c949c53e435d0db261386ee6", session.Hash)
 
+	time.Sleep(time.Second) // wait to write session on database
 	checkSessionEquals(t, wrapper, session)
 
 	assert.Error(t, os.Remove(ProcessingPcapsBasePath+fileName))

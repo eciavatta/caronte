@@ -42,12 +42,12 @@ type SystemStats struct {
 }
 
 type ResourcesController struct {
-	notificationController *NotificationController
+	notificationController NotificationController
 	lastCPUPercent         []float64
 	mutex                  sync.Mutex
 }
 
-func NewResourcesController(notificationController *NotificationController) *ResourcesController {
+func NewResourcesController(notificationController NotificationController) *ResourcesController {
 	return &ResourcesController{
 		notificationController: notificationController,
 	}

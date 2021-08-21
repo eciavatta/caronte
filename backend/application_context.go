@@ -45,7 +45,7 @@ type ApplicationContext struct {
 	ConnectionStreamsController ConnectionStreamsController
 	SearchController            *SearchController
 	StatisticsController        StatisticsController
-	NotificationController      *NotificationController
+	NotificationController      NotificationController
 	IsConfigured                bool
 	Version                     string
 }
@@ -99,7 +99,7 @@ func (sm *ApplicationContext) SetAccounts(accounts gin.Accounts) {
 	}
 }
 
-func (sm *ApplicationContext) SetNotificationController(notificationController *NotificationController) {
+func (sm *ApplicationContext) SetNotificationController(notificationController NotificationController) {
 	sm.NotificationController = notificationController
 }
 
