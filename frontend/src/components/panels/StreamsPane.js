@@ -145,7 +145,7 @@ class StreamsPane extends Component {
                 pattern["dot_all"] && (flags += "s");
                 pattern["multi_line"] && (flags += "m");
                 pattern["unicode_property"] && (flags += "u");
-                const regex = new RegExp("(" + pattern.regex + ")", flags);
+                const regex = new RegExp(pattern.regex.replace(/^\//, '(').replace(/\/$/, ')'), flags);
                 streamContent = reactStringReplace(streamContent, regex, (match, i) => (
                     <span key={i} className="matched-occurrence" style={{"backgroundColor": rule.color}}>{match}</span>
                 ));
