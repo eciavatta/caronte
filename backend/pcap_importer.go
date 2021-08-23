@@ -64,6 +64,7 @@ type PcapImporter struct {
 	mLiveCapture            sync.Mutex
 	currentLiveSession      *ImportingSession
 	sessionRotationInterval time.Duration
+	packetsStatusChannel    chan bool // true for processed packets, false for invalid packets
 }
 
 type ImportingSession struct {
@@ -95,6 +96,12 @@ type SSHConfig struct {
 	ServerPublicKey string `json:"server_public_key"`
 }
 
+type PacketsStatistics struct {
+	ProcessedPackets uint64 `json:"processed_packets"`
+	InvalidPackets   uint64 `json:"invalid_packets"`
+	PacketsPerMinute uint64 `json:"packets_per_minute"`
+}
+
 type flowCount [2]int
 
 func NewPcapImporter(storage Storage, serverNet net.IPNet, rulesManager RulesManager,
@@ -111,7 +118,7 @@ func NewPcapImporter(storage Storage, serverNet net.IPNet, rulesManager RulesMan
 		sessions[session.ID] = &session
 	}
 
-	return &PcapImporter{
+	pcapImporter := &PcapImporter{
 		storage:                 storage,
 		streamPool:              streamPool,
 		assemblers:              make([]*tcpassembly.Assembler, 0, initialAssemblerPoolSize),
@@ -122,7 +129,11 @@ func NewPcapImporter(storage Storage, serverNet net.IPNet, rulesManager RulesMan
 		notificationController:  notificationController,
 		mLiveCapture:            sync.Mutex{},
 		sessionRotationInterval: initialSessionRotationInterval,
+		packetsStatusChannel:    make(chan bool),
 	}
+	go pcapImporter.notificationService()
+
+	return pcapImporter
 }
 
 // Import a pcap file to the database. The pcap file must be present at the fileName path. If the pcap is already
@@ -491,10 +502,12 @@ func (pi *PcapImporter) handle(handle *pcap.Handle, initialSession *ImportingSes
 
 			offlineLock()
 			session.ProcessedPackets++
+			pi.packetsStatusChannel <- true
 
 			if packet.NetworkLayer() == nil || packet.TransportLayer() == nil ||
 				packet.TransportLayer().LayerType() != layers.LayerTypeTCP { // invalid packet
 				session.InvalidPackets++
+				pi.packetsStatusChannel <- false
 				offlineUnlock()
 
 				continue
@@ -514,6 +527,7 @@ func (pi *PcapImporter) handle(handle *pcap.Handle, initialSession *ImportingSes
 				index = 1
 			} else {
 				session.InvalidPackets++
+				pi.packetsStatusChannel <- true
 				offlineUnlock()
 
 				continue
@@ -600,6 +614,37 @@ func (pi *PcapImporter) newSession(isOnline bool) (*ImportingSession, context.Co
 	}
 
 	return session, ctx
+}
+
+func (pi *PcapImporter) notificationService() {
+	var stats, lastStats PacketsStatistics
+	var packetsPerMinute uint64
+	ticker := time.Tick(3 * time.Second)
+	perMinuteTicker := time.Tick(time.Minute)
+
+	updateStatistics := func() {
+		lastStats = stats
+		pi.notificationController.Notify("packets.statistics", stats)
+	}
+
+	for {
+		select {
+		case processed := <-pi.packetsStatusChannel:
+			if processed {
+				stats.ProcessedPackets++
+			} else {
+				stats.InvalidPackets++
+			}
+			packetsPerMinute++
+		case <-ticker:
+			if lastStats != stats {
+				updateStatistics()
+			}
+		case <-perMinuteTicker:
+			stats.PacketsPerMinute = packetsPerMinute
+			packetsPerMinute = 0
+		}
+	}
 }
 
 func createNewPcap(handle *pcap.Handle) (*os.File, *pcapgo.Writer) {

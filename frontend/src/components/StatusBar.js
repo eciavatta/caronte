@@ -28,6 +28,7 @@ class StatusBar extends Component {
   state = {
     status: {},
     connectionsStatistics: {},
+    packetsStatistics: {},
   };
 
   static get propTypes() {
@@ -58,6 +59,8 @@ class StatusBar extends Component {
       }
     } else if (payload.event === 'connections.statistics') {
       this.setState({connectionsStatistics: payload.message});
+    } else if (payload.event === 'packets.statistics') {
+      this.setState({packetsStatistics: payload.message});
     }
 
     this.setState({status});
@@ -82,7 +85,7 @@ class StatusBar extends Component {
 
         <div className="statistics">
           <div className="record">
-            <LinkPopover text="pps" content="packets per second" />: -
+            <LinkPopover text="ppm" content="packets per minute" />: - {this.state.packetsStatistics.packets_per_minute || '-'}
           </div>
           <div className="record">
             <LinkPopover text="cpm" content="connections per minute" />: {this.state.connectionsStatistics.connections_per_minute || '-'}
@@ -91,14 +94,14 @@ class StatusBar extends Component {
             <LinkPopover text="pending" content="in-memory connections not already closed" />: {this.state.connectionsStatistics.pending_connections || '-'}
           </div>
           <div className="record">
-            <LinkPopover text="completed" content="reassembled connections in current session" />:{' '}
+            <LinkPopover text="connections" content="reassembled connections in current session" />:{' '}
             {this.state.connectionsStatistics.completed_connections || '-'}
           </div>
           <div className="record">
-            <LinkPopover text="connections" content="total number of connections" />: -
+            <LinkPopover text="packets" content="total number of processed packets" />: {this.state.packetsStatistics.processed_packets || '-'}
           </div>
           <div className="record">
-            <LinkPopover text="pcaps" content="number of pcaps analyzed" />: {this.state.status.pcaps_analyzed}
+            <LinkPopover text="invalid" content="total number of invalid packets" />: {this.state.packetsStatistics.invalid_packets || '-'}
           </div>
         </div>
 
