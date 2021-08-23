@@ -44,7 +44,7 @@ type BiDirectionalStreamFactory struct {
 	mRulesDatabase          sync.Mutex
 	scanners                []Scanner
 	connectionStatusChannel chan bool // true if completed, false if pending
-	notificationController  *NotificationController
+	notificationController  NotificationController
 }
 
 type StreamFlow [4]gopacket.Endpoint
@@ -75,7 +75,7 @@ type connectionHandlerImpl struct {
 }
 
 func NewBiDirectionalStreamFactory(storage Storage, serverNet net.IPNet,
-	rulesManager RulesManager, notificationController *NotificationController) *BiDirectionalStreamFactory {
+	rulesManager RulesManager, notificationController NotificationController) *BiDirectionalStreamFactory {
 
 	factory := &BiDirectionalStreamFactory{
 		storage:                 storage,

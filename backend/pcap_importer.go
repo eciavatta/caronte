@@ -58,7 +58,7 @@ type PcapImporter struct {
 	mAssemblers             sync.Mutex
 	mSessions               sync.Mutex
 	serverNet               net.IPNet
-	notificationController  *NotificationController
+	notificationController  NotificationController
 	liveCaptureHandle       *pcap.Handle
 	liveCaptureType         string
 	mLiveCapture            sync.Mutex
@@ -105,7 +105,7 @@ type PacketsStatistics struct {
 type flowCount [2]int
 
 func NewPcapImporter(storage Storage, serverNet net.IPNet, rulesManager RulesManager,
-	notificationController *NotificationController) *PcapImporter {
+	notificationController NotificationController) *PcapImporter {
 	streamPool := tcpassembly.NewStreamPool(
 		NewBiDirectionalStreamFactory(storage, serverNet, rulesManager, notificationController))
 

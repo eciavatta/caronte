@@ -71,3 +71,36 @@ func (tsw TestStorageWrapper) Destroy(t *testing.T) {
 	tsw.CancelFunc()
 	require.NoError(t, err, "failed to disconnect to database")
 }
+
+func testEnvironmentHost() string {
+	host, ok := os.LookupEnv("TEST_ENVIRONMENT_HOST")
+	if !ok {
+		host = "localhost"
+	}
+
+	return host
+}
+
+func testEnvironmentSshPort() uint16 {
+	env, ok := os.LookupEnv("TEST_ENVIRONMENT_SSH_PORT")
+	if !ok {
+		env = "default"
+	}
+	if port, err := strconv.Atoi(env); err != nil {
+		return 2222
+	} else {
+		return uint16(port)
+	}
+}
+
+func testEnvironmentHttpPort() uint16 {
+	env, ok := os.LookupEnv("TEST_ENVIRONMENT_SSH_PORT")
+	if !ok {
+		env = "default"
+	}
+	if http, err := strconv.Atoi(env); err != nil {
+		return 8080
+	} else {
+		return uint16(http)
+	}
+}

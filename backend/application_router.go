@@ -32,7 +32,7 @@ import (
 )
 
 func CreateApplicationRouter(applicationContext *ApplicationContext,
-	notificationController *NotificationController, resourcesController *ResourcesController) *gin.Engine {
+	notificationController NotificationController, resourcesController *ResourcesController) *gin.Engine {
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())

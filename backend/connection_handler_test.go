@@ -20,16 +20,17 @@ package main
 import (
 	"context"
 	"encoding/binary"
+	"math/rand"
+	"net"
+	"testing"
+	"time"
+
 	"github.com/flier/gohs/hyperscan"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/tcpassembly"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"math/rand"
-	"net"
-	"testing"
-	"time"
 )
 
 func TestTakeReleaseScanners(t *testing.T) {
@@ -42,7 +43,7 @@ func TestTakeReleaseScanners(t *testing.T) {
 	database, err := hyperscan.NewStreamDatabase(hyperscan.NewPattern("/nope/", 0))
 	require.NoError(t, err)
 
-	factory := NewBiDirectionalStreamFactory(wrapper.Storage, *serverNet, &ruleManager)
+	factory := NewBiDirectionalStreamFactory(wrapper.Storage, *serverNet, &ruleManager, nil)
 	version := NewRowID()
 	ruleManager.DatabaseUpdateChannel() <- RulesDatabase{database, 0, version}
 	time.Sleep(10 * time.Millisecond)
@@ -93,6 +94,7 @@ func TestConnectionFactory(t *testing.T) {
 	ruleManager := TestRulesManager{
 		databaseUpdated: make(chan RulesDatabase),
 	}
+	notificationController := NewTestNotificationController()
 
 	clientIP := layers.NewIPEndpoint(net.ParseIP(testSrcIP))
 	serverIP := layers.NewIPEndpoint(net.ParseIP(testDstIP))
@@ -105,7 +107,7 @@ func TestConnectionFactory(t *testing.T) {
 	database, err := hyperscan.NewStreamDatabase(hyperscan.NewPattern("/nope/", 0))
 	require.NoError(t, err)
 
-	factory := NewBiDirectionalStreamFactory(wrapper.Storage, *ParseIPNet(testDstIP), &ruleManager)
+	factory := NewBiDirectionalStreamFactory(wrapper.Storage, *ParseIPNet(testDstIP), &ruleManager, notificationController)
 	version := NewRowID()
 	ruleManager.DatabaseUpdateChannel() <- RulesDatabase{database, 0, version}
 	time.Sleep(10 * time.Millisecond)
@@ -182,10 +184,20 @@ func TestConnectionFactory(t *testing.T) {
 		select {
 		case <-completed:
 			continue
+		case message := <-notificationController.notificationChannel:
+			assert.Equal(t, "connections.statistics", message["event"])
 		case <-timeout:
 			t.Fatal("timeout")
 		}
 	}
+
+	message := <-notificationController.notificationChannel
+	assert.Equal(t, "connections.statistics", message["event"])
+	assert.Equal(t, ConnectionsStatistics{
+		PendingConnections:   0,
+		CompletedConnections: uint(n),
+		ConnectionsPerMinute: 0, // updated after 1 minute, but test end in few seconds
+	}, message["message"])
 
 	assert.Len(t, factory.connections, 0)
 
