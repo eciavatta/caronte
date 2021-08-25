@@ -26,6 +26,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/tcpassembly"
 	"github.com/google/gopacket/tcpassembly/tcpreader"
@@ -35,7 +36,7 @@ import (
 
 func TestImportPcap(t *testing.T) {
 	wrapper := NewTestStorageWrapper(t)
-	pcapImporter := newTestPcapImporter(wrapper, "172.17.0.3")
+	pcapImporter, statsChan := newTestPcapImporter(wrapper, "172.17.0.3")
 
 	pcapImporter.releaseAssembler(pcapImporter.takeAssembler())
 
@@ -61,6 +62,13 @@ func TestImportPcap(t *testing.T) {
 
 	checkSessionEquals(t, wrapper, session)
 
+	assert.Equal(t, "pcap.completed", (<-statsChan)["event"])
+	assert.Equal(t, gin.H{"event": "packets.statistics", "message": PacketsStatistics{
+		ProcessedPackets: 15008,
+		InvalidPackets:   0,
+		PacketsPerMinute: 0,
+	}}, <-statsChan)
+
 	assert.Error(t, os.Remove(ProcessingPcapsBasePath+fileName))
 	assert.NoError(t, os.Remove(PcapsBasePath+session.ID.Hex()+".pcap"))
 
@@ -69,7 +77,7 @@ func TestImportPcap(t *testing.T) {
 
 func TestCancelImportSession(t *testing.T) {
 	wrapper := NewTestStorageWrapper(t)
-	pcapImporter := newTestPcapImporter(wrapper, "172.17.0.3")
+	pcapImporter, statsChan := newTestPcapImporter(wrapper, "172.17.0.3")
 
 	fileName := copyToProcessing(t, "ping_pong_10000.pcap")
 	sessionID, err := pcapImporter.ImportPcap(fileName, false)
@@ -87,6 +95,9 @@ func TestCancelImportSession(t *testing.T) {
 
 	checkSessionEquals(t, wrapper, session)
 
+	assert.Equal(t, "pcap.canceled", (<-statsChan)["event"])
+	time.Sleep(time.Second)
+
 	assert.Error(t, os.Remove(ProcessingPcapsBasePath+fileName))
 	assert.Error(t, os.Remove(PcapsBasePath+sessionID.Hex()+".pcap"))
 
@@ -95,7 +106,7 @@ func TestCancelImportSession(t *testing.T) {
 
 func TestImportNoTcpPackets(t *testing.T) {
 	wrapper := NewTestStorageWrapper(t)
-	pcapImporter := newTestPcapImporter(wrapper, "172.17.0.4")
+	pcapImporter, statsChan := newTestPcapImporter(wrapper, "172.17.0.4")
 
 	fileName := copyToProcessing(t, "icmp.pcap")
 	sessionID, err := pcapImporter.ImportPcap(fileName, false)
@@ -112,6 +123,13 @@ func TestImportNoTcpPackets(t *testing.T) {
 	time.Sleep(time.Second) // wait to write session on database
 	checkSessionEquals(t, wrapper, session)
 
+	assert.Equal(t, "pcap.completed", (<-statsChan)["event"])
+	assert.Equal(t, gin.H{"event": "packets.statistics", "message": PacketsStatistics{
+		ProcessedPackets: 2000,
+		InvalidPackets:   2000,
+		PacketsPerMinute: 0,
+	}}, <-statsChan)
+
 	assert.Error(t, os.Remove(ProcessingPcapsBasePath+fileName))
 	assert.NoError(t, os.Remove(PcapsBasePath+sessionID.Hex()+".pcap"))
 
@@ -119,7 +137,7 @@ func TestImportNoTcpPackets(t *testing.T) {
 }
 
 func TestListInterfaces(t *testing.T) {
-	pcapImporter := newTestPcapImporter(nil, "127.0.0.1")
+	pcapImporter, _ := newTestPcapImporter(nil, "127.0.0.1")
 
 	interfaces, err := pcapImporter.ListInterfaces()
 	require.NoError(t, err)
@@ -128,7 +146,7 @@ func TestListInterfaces(t *testing.T) {
 }
 
 func TestListRemoteInterfaces(t *testing.T) {
-	pcapImporter := newTestPcapImporter(nil, "127.0.0.1")
+	pcapImporter, _ := newTestPcapImporter(nil, "127.0.0.1")
 
 	interfaces, err := pcapImporter.ListRemoteInterfaces(validSSHConfig())
 	require.NoError(t, err)
@@ -137,7 +155,7 @@ func TestListRemoteInterfaces(t *testing.T) {
 }
 
 func TestRemoteSSHConnections(t *testing.T) {
-	pcapImporter := newTestPcapImporter(nil, "127.0.0.1")
+	pcapImporter, _ := newTestPcapImporter(nil, "127.0.0.1")
 
 	_, err := pcapImporter.ListRemoteInterfaces(validSSHConfig())
 	require.NoError(t, err)
@@ -220,7 +238,7 @@ func TestRemoteSSHConnections(t *testing.T) {
 
 func TestRemoteCapture(t *testing.T) {
 	wrapper := NewTestStorageWrapper(t)
-	pcapImporter := newTestPcapImporter(wrapper, "172.0.0.0/8")
+	pcapImporter, _ := newTestPcapImporter(wrapper, "172.0.0.0/8")
 
 	validCaptureOptions := CaptureOptions{
 		Interface:        "eth0",
@@ -264,7 +282,7 @@ func TestRemoteCapture(t *testing.T) {
 
 func TestPcapRotation(t *testing.T) {
 	wrapper := NewTestStorageWrapper(t)
-	pcapImporter := newTestPcapImporter(wrapper, "172.0.0.0/8")
+	pcapImporter, _ := newTestPcapImporter(wrapper, "172.0.0.0/8")
 
 	pcapImporter.SetSessionRotationInterval(3 * time.Second)
 
@@ -298,7 +316,7 @@ func TestPcapRotation(t *testing.T) {
 	wrapper.Destroy(t)
 }
 
-func newTestPcapImporter(wrapper *TestStorageWrapper, serverAddress string) *PcapImporter {
+func newTestPcapImporter(wrapper *TestStorageWrapper, serverAddress string) (*PcapImporter, chan gin.H) {
 	var mongoStorage *MongoStorage
 	if wrapper != nil {
 		mongoStorage = wrapper.Storage
@@ -307,19 +325,24 @@ func newTestPcapImporter(wrapper *TestStorageWrapper, serverAddress string) *Pca
 
 	streamPool := tcpassembly.NewStreamPool(&testStreamFactory{})
 
-	notificationController := NewNotificationController(nil)
-	go notificationController.Run()
+	notificationController := NewTestNotificationController()
 
-	return &PcapImporter{
-		storage:                mongoStorage,
-		streamPool:             streamPool,
-		assemblers:             make([]*tcpassembly.Assembler, 0, initialAssemblerPoolSize),
-		sessions:               make(map[RowID]*ImportingSession),
-		mAssemblers:            sync.Mutex{},
-		mSessions:              sync.Mutex{},
-		serverNet:              *ParseIPNet(serverAddress),
-		notificationController: notificationController,
+	pcapImporter := &PcapImporter{
+		storage:                 mongoStorage,
+		streamPool:              streamPool,
+		assemblers:              make([]*tcpassembly.Assembler, 0, initialAssemblerPoolSize),
+		sessions:                make(map[RowID]*ImportingSession),
+		mAssemblers:             sync.Mutex{},
+		mSessions:               sync.Mutex{},
+		serverNet:               *ParseIPNet(serverAddress),
+		notificationController:  notificationController,
+		mLiveCapture:            sync.Mutex{},
+		sessionRotationInterval: initialSessionRotationInterval,
+		packetsStatusChannel:    make(chan bool),
 	}
+	go pcapImporter.notificationService()
+
+	return pcapImporter, notificationController.notificationChannel
 }
 
 func waitSessionCompletion(t *testing.T, pcapImporter *PcapImporter, sessionID RowID) ImportingSession {
