@@ -25,9 +25,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/eciavatta/caronte/pkg/tcpassembly"
 	"github.com/flier/gohs/hyperscan"
 	"github.com/google/gopacket"
-	"github.com/google/gopacket/tcpassembly"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -36,7 +36,7 @@ const initialScannersCapacity = 1024
 
 type BiDirectionalStreamFactory struct {
 	storage                 Storage
-	serverNet               net.IPNet
+	serverNet               *net.IPNet
 	connections             map[StreamFlow]ConnectionHandler
 	mConnections            sync.Mutex
 	rulesManager            RulesManager
@@ -74,7 +74,7 @@ type connectionHandlerImpl struct {
 	otherStream    *StreamHandler
 }
 
-func NewBiDirectionalStreamFactory(storage Storage, serverNet net.IPNet,
+func NewBiDirectionalStreamFactory(storage Storage, serverNet *net.IPNet,
 	rulesManager RulesManager, notificationController NotificationController) *BiDirectionalStreamFactory {
 
 	factory := &BiDirectionalStreamFactory{
@@ -85,7 +85,7 @@ func NewBiDirectionalStreamFactory(storage Storage, serverNet net.IPNet,
 		rulesManager:            rulesManager,
 		mRulesDatabase:          sync.Mutex{},
 		scanners:                make([]Scanner, 0, initialScannersCapacity),
-		connectionStatusChannel: make(chan bool),
+		connectionStatusChannel: make(chan bool, 4096),
 		notificationController:  notificationController,
 	}
 
@@ -157,13 +157,17 @@ func (factory *BiDirectionalStreamFactory) releaseScanner(scanner Scanner) {
 	factory.scanners = append(factory.scanners, scanner)
 }
 
-func (factory *BiDirectionalStreamFactory) New(netFlow, transportFlow gopacket.Flow) tcpassembly.Stream {
+func (factory *BiDirectionalStreamFactory) New(netFlow, transportFlow gopacket.Flow, isServer bool) tcpassembly.Stream {
 	flow := StreamFlow{netFlow.Src(), netFlow.Dst(), transportFlow.Src(), transportFlow.Dst()}
 	invertedFlow := StreamFlow{netFlow.Dst(), netFlow.Src(), transportFlow.Dst(), transportFlow.Src()}
 
 	factory.mConnections.Lock()
 	connection, isPresent := factory.connections[invertedFlow]
-	isServer := factory.serverNet.Contains(netFlow.Src().Raw())
+
+	if factory.serverNet != nil {
+		isServer = factory.serverNet.Contains(netFlow.Src().Raw())
+	}
+
 	if isPresent {
 		delete(factory.connections, invertedFlow)
 	} else {
@@ -296,8 +300,8 @@ func (ch *connectionHandlerImpl) UpdateStatistics(connection Connection) {
 func (factory *BiDirectionalStreamFactory) notificationService() {
 	var stats, lastStats ConnectionsStatistics
 	var connectionsPerMinute uint
-	ticker := time.Tick(3 * time.Second)
-	perMinuteTicker := time.Tick(time.Minute)
+	ticker := time.NewTicker(3 * time.Second)
+	perMinuteTicker := time.NewTicker(time.Minute)
 
 	updateStatistics := func() {
 		lastStats = stats
@@ -314,11 +318,11 @@ func (factory *BiDirectionalStreamFactory) notificationService() {
 			} else {
 				stats.PendingConnections++
 			}
-		case <-ticker:
+		case <-ticker.C:
 			if lastStats != stats {
 				updateStatistics()
 			}
-		case <-perMinuteTicker:
+		case <-perMinuteTicker.C:
 			stats.ConnectionsPerMinute = connectionsPerMinute
 			connectionsPerMinute = 0
 		}

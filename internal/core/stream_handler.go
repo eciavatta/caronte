@@ -24,9 +24,9 @@ import (
 	"time"
 
 	"github.com/eciavatta/caronte/internal/similarity"
+	"github.com/eciavatta/caronte/pkg/tcpassembly"
 	"github.com/flier/gohs/hyperscan"
 	"github.com/glaslos/tlsh"
-	"github.com/google/gopacket/tcpassembly"
 	log "github.com/sirupsen/logrus"
 )
 

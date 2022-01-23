@@ -25,10 +25,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/eciavatta/caronte/pkg/tcpassembly"
 	"github.com/flier/gohs/hyperscan"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket/tcpassembly"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -43,7 +43,7 @@ func TestTakeReleaseScanners(t *testing.T) {
 	database, err := hyperscan.NewStreamDatabase(hyperscan.NewPattern("/nope/", 0))
 	require.NoError(t, err)
 
-	factory := NewBiDirectionalStreamFactory(wrapper.Storage, *serverNet, &ruleManager, nil)
+	factory := NewBiDirectionalStreamFactory(wrapper.Storage, serverNet, &ruleManager, nil)
 	version := NewRowID()
 	ruleManager.DatabaseUpdateChannel() <- RulesDatabase{database, 0, version}
 	time.Sleep(10 * time.Millisecond)
@@ -107,16 +107,16 @@ func TestConnectionFactory(t *testing.T) {
 	database, err := hyperscan.NewStreamDatabase(hyperscan.NewPattern("/nope/", 0))
 	require.NoError(t, err)
 
-	factory := NewBiDirectionalStreamFactory(wrapper.Storage, *ParseIPNet(testDstIP), &ruleManager, notificationController)
+	factory := NewBiDirectionalStreamFactory(wrapper.Storage, ParseIPNet(testDstIP), &ruleManager, notificationController)
 	version := NewRowID()
 	ruleManager.DatabaseUpdateChannel() <- RulesDatabase{database, 0, version}
 	time.Sleep(10 * time.Millisecond)
 
 	testInteraction := func(netFlow gopacket.Flow, transportFlow gopacket.Flow, otherSeenChan chan time.Time,
-		completed chan bool) {
+		isServer bool, completed chan bool) {
 
 		time.Sleep(time.Duration(rand.Intn(1000)) * time.Millisecond)
-		stream := factory.New(netFlow, transportFlow)
+		stream := factory.New(netFlow, transportFlow, isServer)
 		seen := time.Now()
 		stream.Reassembled([]tcpassembly.Reassembly{{
 			Bytes: []byte{},
@@ -175,8 +175,8 @@ func TestConnectionFactory(t *testing.T) {
 		require.NoError(t, err)
 
 		otherSeenChan := make(chan time.Time)
-		go testInteraction(clientServerNetFlow, clientServerTransportFlow, otherSeenChan, completed)
-		go testInteraction(serverClientNetFlow, serverClientTransportFlow, otherSeenChan, completed)
+		go testInteraction(clientServerNetFlow, clientServerTransportFlow, otherSeenChan, false, completed)
+		go testInteraction(serverClientNetFlow, serverClientTransportFlow, otherSeenChan, true, completed)
 	}
 
 	timeout := time.Tick(30 * time.Second)

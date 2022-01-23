@@ -26,10 +26,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/eciavatta/caronte/pkg/tcpassembly"
+	"github.com/eciavatta/caronte/pkg/tcpassembly/tcpreader"
 	"github.com/gin-gonic/gin"
 	"github.com/google/gopacket"
-	"github.com/google/gopacket/tcpassembly"
-	"github.com/google/gopacket/tcpassembly/tcpreader"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -269,10 +269,10 @@ func TestRemoteCapture(t *testing.T) {
 
 		time.Sleep(2 * time.Second)
 		sessions := pcapImporter.GetSessions()
-		assert.Len(t, sessions, i+1)
+		require.Len(t, sessions, i+1)
 		assert.Zero(t, sessions[i].ImportingError)
 		assert.Less(t, 5, sessions[i].ProcessedPackets)
-		assert.Less(t, 5, sessions[i].InvalidPackets) // todo: why invalid?
+		assert.Less(t, 5, sessions[i].InvalidPackets) // TODO: why invalid?
 
 		assert.NoError(t, os.Remove(PcapsBasePath+sessions[i].ID.Hex()+".pcap"))
 	}
@@ -305,7 +305,7 @@ func TestPcapRotation(t *testing.T) {
 
 		time.Sleep(3 * time.Second)
 		sessions := pcapImporter.GetSessions()
-		assert.Len(t, sessions, i+1)
+		require.Len(t, sessions, i+1)
 		assert.Zero(t, sessions[i].ImportingError)
 		assert.Less(t, 5, sessions[i].ProcessedPackets)
 		assert.Less(t, 5, sessions[i].InvalidPackets) // todo: why invalid?
@@ -334,7 +334,7 @@ func newTestPcapImporter(wrapper *TestStorageWrapper, serverAddress string) (*Pc
 		sessions:                make(map[RowID]*ImportingSession),
 		mAssemblers:             sync.Mutex{},
 		mSessions:               sync.Mutex{},
-		serverNet:               *ParseIPNet(serverAddress),
+		serverNet:               ParseIPNet(serverAddress),
 		notificationController:  notificationController,
 		mLiveCapture:            sync.Mutex{},
 		sessionRotationInterval: initialSessionRotationInterval,
@@ -386,7 +386,7 @@ func copyToProcessing(t *testing.T, fileName string) string {
 type testStreamFactory struct {
 }
 
-func (sf *testStreamFactory) New(_, _ gopacket.Flow) tcpassembly.Stream {
+func (sf *testStreamFactory) New(_, _ gopacket.Flow, isServer bool) tcpassembly.Stream {
 	reader := tcpreader.NewReaderStream()
 	go func() {
 		buffer := bufio.NewReader(&reader)

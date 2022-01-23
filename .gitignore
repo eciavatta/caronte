@@ -57,3 +57,7 @@ logs/
 
 # tmp
 tmp/
+
+# Project stuff
+pcaps/
+caronte

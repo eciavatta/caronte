@@ -34,11 +34,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/eciavatta/caronte/pkg/tcpassembly"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
 	"github.com/google/gopacket/pcapgo"
-	"github.com/google/gopacket/tcpassembly"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
 )
@@ -57,7 +57,7 @@ type PcapImporter struct {
 	sessions                map[RowID]*ImportingSession
 	mAssemblers             sync.Mutex
 	mSessions               sync.Mutex
-	serverNet               net.IPNet
+	serverNet               *net.IPNet
 	notificationController  NotificationController
 	liveCaptureHandle       *pcap.Handle
 	liveCaptureType         string
@@ -104,7 +104,7 @@ type PacketsStatistics struct {
 
 type flowCount [2]int
 
-func NewPcapImporter(storage Storage, serverNet net.IPNet, rulesManager RulesManager,
+func NewPcapImporter(storage Storage, serverNet *net.IPNet, rulesManager RulesManager,
 	notificationController NotificationController) *PcapImporter {
 	streamPool := tcpassembly.NewStreamPool(
 		NewBiDirectionalStreamFactory(storage, serverNet, rulesManager, notificationController))
@@ -437,7 +437,7 @@ func (pi *PcapImporter) handle(handle *pcap.Handle, initialSession *ImportingSes
 	var currentFile *os.File
 	var currentWriter *pcapgo.Writer
 
-	sessionRotationInterval := time.Tick(pi.sessionRotationInterval)
+	sessionRotationInterval := time.NewTicker(pi.sessionRotationInterval)
 	isOnline := false
 	session := initialSession
 	if initialSession == nil {
@@ -517,31 +517,34 @@ func (pi *PcapImporter) handle(handle *pcap.Handle, initialSession *ImportingSes
 			var servicePort uint16
 			var index int
 
-			isDstServer := pi.serverNet.Contains(packet.NetworkLayer().NetworkFlow().Dst().Raw())
-			isSrcServer := pi.serverNet.Contains(packet.NetworkLayer().NetworkFlow().Src().Raw())
-			if isDstServer && !isSrcServer {
-				servicePort = uint16(tcp.DstPort)
-				index = 0
-			} else if isSrcServer && !isDstServer {
-				servicePort = uint16(tcp.SrcPort)
-				index = 1
-			} else {
-				session.InvalidPackets++
-				pi.packetsStatusChannel <- true
-				offlineUnlock()
+			if pi.serverNet != nil {
+				isDstServer := pi.serverNet.Contains(packet.NetworkLayer().NetworkFlow().Dst().Raw())
+				isSrcServer := pi.serverNet.Contains(packet.NetworkLayer().NetworkFlow().Src().Raw())
+				if isDstServer && !isSrcServer {
+					servicePort = uint16(tcp.DstPort)
+					index = 0
+				} else if isSrcServer && !isDstServer {
+					servicePort = uint16(tcp.SrcPort)
+					index = 1
+				} else {
+					session.InvalidPackets++
+					pi.packetsStatusChannel <- true
+					offlineUnlock()
 
-				continue
+					continue
+				}
+				fCount, isPresent := session.PacketsPerService[servicePort]
+				if !isPresent {
+					fCount = flowCount{0, 0}
+				}
+				fCount[index]++
+				session.PacketsPerService[servicePort] = fCount
 			}
-			fCount, isPresent := session.PacketsPerService[servicePort]
-			if !isPresent {
-				fCount = flowCount{0, 0}
-			}
-			fCount[index]++
-			session.PacketsPerService[servicePort] = fCount
+
 			offlineUnlock()
 
 			assembler.AssembleWithTimestamp(packet.NetworkLayer().NetworkFlow(), tcp, packet.Metadata().Timestamp)
-		case <-sessionRotationInterval:
+		case <-sessionRotationInterval.C:
 			rotateSession(false)
 		case <-ctx.Done():
 			flushAllIfNecessary()
@@ -619,8 +622,8 @@ func (pi *PcapImporter) newSession(isOnline bool) (*ImportingSession, context.Co
 func (pi *PcapImporter) notificationService() {
 	var stats, lastStats PacketsStatistics
 	var packetsPerMinute uint64
-	ticker := time.Tick(3 * time.Second)
-	perMinuteTicker := time.Tick(time.Minute)
+	ticker := time.NewTicker(3 * time.Second)
+	perMinuteTicker := time.NewTicker(time.Minute)
 
 	updateStatistics := func() {
 		lastStats = stats
@@ -636,11 +639,11 @@ func (pi *PcapImporter) notificationService() {
 				stats.InvalidPackets++
 			}
 			packetsPerMinute++
-		case <-ticker:
+		case <-ticker.C:
 			if lastStats != stats {
 				updateStatistics()
 			}
-		case <-perMinuteTicker:
+		case <-perMinuteTicker.C:
 			stats.PacketsPerMinute = packetsPerMinute
 			packetsPerMinute = 0
 		}
@@ -724,12 +727,12 @@ func createSSHClient(sshConfig *SSHConfig) (client *ssh.Client, err error) {
 
 func generateBffFilters(captureOptions CaptureOptions) string {
 	bffFilter := "tcp"
-	if captureOptions.IncludedServices != nil {
+	if len(captureOptions.IncludedServices) > 0 {
 		bffFilter += " and port " + strings.Trim(strings.Join(
 			strings.Fields(fmt.Sprint(captureOptions.IncludedServices)), " and port "), "[]")
 	}
 
-	if captureOptions.ExcludedServices != nil {
+	if len(captureOptions.ExcludedServices) > 0 {
 		bffFilter += " and not port " + strings.Trim(strings.Join(
 			strings.Fields(fmt.Sprint(captureOptions.ExcludedServices)), " and not port "), "[]")
 	}

@@ -19,15 +19,16 @@ package core
 
 import (
 	"context"
-	"github.com/flier/gohs/hyperscan"
-	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket/tcpassembly"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"math/rand"
 	"net"
 	"testing"
 	"time"
+
+	"github.com/eciavatta/caronte/pkg/tcpassembly"
+	"github.com/flier/gohs/hyperscan"
+	"github.com/google/gopacket/layers"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const testSrcIP = "10.10.10.100"
