@@ -1,5 +1,5 @@
 # Build backend with go
-FROM golang:1.16 AS BACKEND_BUILDER
+FROM golang:1.17 AS BACKEND_BUILDER
 
 # Install tools and libraries
 RUN apt-get update && \
@@ -11,12 +11,11 @@ RUN apt-get update && \
 
 WORKDIR /caronte
 
-COPY . ./
+COPY . .
 
 RUN export VERSION=$(git describe --tags --abbrev=0) && \
-	cd backend/ && \
     go mod download && \
-    go build -ldflags "-X main.Version=$VERSION" && \
+    go build -ldflags "-X main.Version=$VERSION" -v github.com/eciavatta/caronte/cmd/caronte && \
 	mkdir -p build/pcaps/processing build/shared && \
 	cp -r caronte build/
 
@@ -26,7 +25,7 @@ FROM node:16 as FRONTEND_BUILDER
 
 WORKDIR /caronte-frontend
 
-COPY ./frontend ./
+COPY ./web ./
 
 RUN yarn install && yarn build --production=true
 

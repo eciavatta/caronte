@@ -58,8 +58,8 @@ The first thing to do is to install the dependencies:
 -   hyperscan >= v5 [https://www.hyperscan.io/downloads/](https://www.hyperscan.io/downloads/)
 
 Next you need to compile the project, which is composed of two parts:
--   the backend, which can be compiled with `go mod download && go build`
--   the frontend, which can be compiled with `cd frontend && yarn install && yarn build`
+-   the backend, which can be compiled with `go mod download && go build github.com/eciavatta/caronte/cmd/caronte`
+-   the frontend, which can be compiled with `cd web && yarn install && yarn build`
 
 Before running Caronte starts an instance of MongoDB [https://docs.mongodb.com/manual/administration/install-community/](https://docs.mongodb.com/manual/administration/install-community/) that has no authentication. _Be careful not to expose the MongoDB port on the public interface._
 
@@ -86,16 +86,16 @@ The backend, written in Go language, it is designed as a service. It exposes RES
 Below there are some screenshots showing the main features of the tool.
 
 ### Main window, with connections list and stream content
-![Connection Content](https://raw.githubusercontent.com/eciavatta/caronte/main/frontend/screenshots/main.png)
+![Connection Content](https://raw.githubusercontent.com/eciavatta/caronte/main/web/screenshots/main.png)
 
 ### Main window, with the timeline expanded
-![Connection Content](https://raw.githubusercontent.com/eciavatta/caronte/main/frontend/screenshots/main2.png)
+![Connection Content](https://raw.githubusercontent.com/eciavatta/caronte/main/web/screenshots/main2.png)
 
 ### Rules and services view
-![Connection Content](https://raw.githubusercontent.com/eciavatta/caronte/main/frontend/screenshots/rules_services.png)
+![Connection Content](https://raw.githubusercontent.com/eciavatta/caronte/main/web/screenshots/rules_services.png)
 
 ### Searches and pcaps view
-![Connection Content](https://raw.githubusercontent.com/eciavatta/caronte/main/frontend/screenshots/searches_pcaps.png)
+![Connection Content](https://raw.githubusercontent.com/eciavatta/caronte/main/web/screenshots/searches_pcaps.png)
 
 ## License
 caronte was created by [Emiliano Ciavatta](https://eciavatta.dev) and is licensed under the [GPL-3.0 license](LICENSE).

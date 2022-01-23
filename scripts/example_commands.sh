@@ -26,7 +26,7 @@ if $BACKEND ; then
 fi
 
 if $FRONTEND ; then
-	cd frontend && yarnpkg install && yarnpkg build || exit -2
+	cd web && yarnpkg install && yarnpkg build || exit -2
 	cd -
 fi
 
@@ -36,7 +36,7 @@ if $START; then
 	sleep 2
 fi
 
-# setup 
+# setup
 if $SETUP ; then
 	curl \
 		--header "Content-Type: application/json"  \
@@ -60,4 +60,3 @@ if $IMPORT ; then
 		curl -F "file=@$PCAP" "http://localhost:3333/api/pcap/upload"
 	done
 fi
-

@@ -26,7 +26,9 @@ test:
 	go test -v -race github.com/eciavatta/caronte/...
 
 coverage: test
-	go test -v -coverprofile=coverage.txt github.com/eciavatta/caronte/...
+	go test -v -coverprofile=coverage.txt -covermode=atomic github.com/eciavatta/caronte/...
+
+
 
 build_deps:
 	docker build -t ghcr.io/eciavatta/test-environment:latest -f .github/docker/Dockerfile-environment .

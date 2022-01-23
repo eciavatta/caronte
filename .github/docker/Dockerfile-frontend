@@ -2,6 +2,6 @@ FROM node:16
 
 WORKDIR /caronte-frontend
 
-COPY ./frontend ./
+COPY ./web /caronte-frontend
 
 RUN yarn install && yarn build

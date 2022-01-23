@@ -38,11 +38,11 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 	router.Use(gin.Recovery())
 	router.MaxMultipartMemory = 8 << 30
 
-	router.Use(static.Serve("/", static.LocalFile("./frontend/build", true)))
+	router.Use(static.Serve("/", static.LocalFile("./web/build", true)))
 
 	for _, path := range []string{"/connections/:id", "/pcaps", "/rules", "/services", "/stats", "/searches"} {
 		router.GET(path, func(c *gin.Context) {
-			c.File("./frontend/build/index.html")
+			c.File("./web/build/index.html")
 		})
 	}
 

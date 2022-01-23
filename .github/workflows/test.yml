@@ -14,9 +14,6 @@ jobs:
   test_backend:
     name: Build and test backend
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
     services:
       mongo:
         image: mongo:4.4
@@ -32,11 +29,11 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.16
+          go-version: 1.17
       - name: Install dependencies
         run: sudo apt-get install pkg-config libpcap-dev libhyperscan-dev
       - name: Test backend
-        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic
+        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
       - name: Upload coverage
         run: bash <(curl -s https://codecov.io/bash)
   build_frontend:
@@ -44,13 +41,13 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: frontend
+        working-directory: web
     steps:
       - uses: actions/checkout@v2
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: 14.x
+          node-version: 16.x
       - name: Install dependencies
         run: yarn install
       - name: Build frontend

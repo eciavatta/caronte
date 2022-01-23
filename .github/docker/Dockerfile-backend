@@ -1,4 +1,4 @@
-FROM golang:1.16
+FROM golang:1.17
 
 RUN apt-get update && \
 	DEBIAN_FRONTEND=noninteractive apt-get install -qq \
@@ -9,9 +9,9 @@ RUN apt-get update && \
 
 WORKDIR /caronte
 
-COPY ./backend/ ./
+COPY . /caronte
 
 RUN go mod download && \
-    go build
+    go build github.com/eciavatta/caronte/cmd/caronte
 
 ENTRYPOINT go test -v -race -covermode=atomic ./...
