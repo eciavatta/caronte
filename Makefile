@@ -4,18 +4,12 @@ LDFLAGS := "-X \"main.Version=$(VERSION)\""
 default: build
 
 .PHONY: build
-build: caronte
+build:
+	go mod download
+	go build -ldflags=$(LDFLAGS) -v github.com/eciavatta/caronte/cmd/caronte
 
-.PHONY: caronte
-caronte:
-	cd backend && go mod download
-	cd backend && GIN_MODE=release go build -o ../caronte -ldflags=$(LDFLAGS) -v
-
-backend-dev:
-	cd backend && go run .
-
-frontend-dev:
-	cd frontend && yarn start
+run:
+	go run github.com/eciavatta/caronte/cmd/caronte
 
 .PHONY: setcap
 setcap: caronte
@@ -29,10 +23,10 @@ remove_pcaps:
 
 .PHONY: test
 test:
-	go test -v -race -coverprofile=coverage.txt github.com/eciavatta/caronte/...
+	go test -v -race github.com/eciavatta/caronte/...
 
 coverage: test
-	cd backend && go tool cover -html=coverage.txt
+	go test -v -coverprofile=coverage.txt github.com/eciavatta/caronte/...
 
 build_deps:
 	docker build -t ghcr.io/eciavatta/test-environment:latest -f .github/docker/Dockerfile-environment .
