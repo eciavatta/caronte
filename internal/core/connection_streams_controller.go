@@ -24,7 +24,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/eciavatta/caronte/parsers"
+	"github.com/eciavatta/caronte/internal/parsers"
 	log "github.com/sirupsen/logrus"
 )
 

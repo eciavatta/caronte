@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/eciavatta/caronte/similarity"
+	"github.com/eciavatta/caronte/internal/similarity"
 	log "github.com/sirupsen/logrus"
 )
 

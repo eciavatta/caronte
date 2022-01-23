@@ -27,8 +27,9 @@ clean:
 remove_pcaps:
 	rm -rf backend/pcaps/*.pcap backend/pcaps/processing/*.pcap
 
+.PHONY: test
 test:
-	cd backend && go test -v -race -coverprofile=coverage.txt -coverpkg=./... -covermode=atomic ./...
+	go test -v -race -coverprofile=coverage.txt github.com/eciavatta/caronte/...
 
 coverage: test
 	cd backend && go tool cover -html=coverage.txt

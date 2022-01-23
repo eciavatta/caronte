@@ -122,12 +122,12 @@ func TestPcapImporterApi(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, toolkit.MakeRequest("POST", "/api/pcap/file", nil).Code)
 	assert.Equal(t, http.StatusBadRequest, toolkit.MakeRequest("POST", "/api/pcap/file",
 		gin.H{"file": "invalidPath"}).Code)
-	w := toolkit.MakeRequest("POST", "/api/pcap/file", gin.H{"file": "test_data/ping_pong_10000.pcap"})
+	w := toolkit.MakeRequest("POST", "/api/pcap/file", gin.H{"file": "../../test/data/ping_pong_10000.pcap"})
 	var sessionID struct{ Session string }
 	assert.Equal(t, http.StatusAccepted, w.Code)
 	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &sessionID))
 	assert.Equal(t, http.StatusUnprocessableEntity, toolkit.MakeRequest("POST", "/api/pcap/file",
-		gin.H{"file": "test_data/ping_pong_10000.pcap"}).Code) // duplicate
+		gin.H{"file": "../../test/data/ping_pong_10000.pcap"}).Code) // duplicate
 
 	// Get sessions
 	var sessions []ImportingSession

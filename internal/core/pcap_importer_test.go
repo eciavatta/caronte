@@ -379,7 +379,7 @@ func checkSessionEquals(t *testing.T, wrapper *TestStorageWrapper, session Impor
 
 func copyToProcessing(t *testing.T, fileName string) string {
 	newFile := fmt.Sprintf("test-%v-%s", time.Now().UnixNano(), fileName)
-	require.NoError(t, CopyFile(ProcessingPcapsBasePath+newFile, "test_data/"+fileName))
+	require.NoError(t, CopyFile(ProcessingPcapsBasePath+newFile, "../../test/data/"+fileName))
 	return newFile
 }
 

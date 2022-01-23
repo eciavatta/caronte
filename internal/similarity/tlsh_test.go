@@ -18,10 +18,11 @@
 package similarity
 
 import (
+	"testing"
+
 	"github.com/glaslos/tlsh"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func parseDigest(fileName, expectedHash string, t *testing.T) {
@@ -35,8 +36,8 @@ func parseDigest(fileName, expectedHash string, t *testing.T) {
 }
 
 func TestParseTlshDigest(t *testing.T) {
-	parseDigest("../test_data/icmp.pcap",
+	parseDigest("../../test/data/icmp.pcap",
 		"B524E284C2E5C8EBDDD731FCE5E6D1DB238361953284C134FE364BD9896A17AC9A281C", t)
-	parseDigest("../test_data/ping_pong_10000.pcap",
+	parseDigest("../../test/data/ping_pong_10000.pcap",
 		"D745E1E0AB73862AF5D7AEB5D9D0F1E3179AB1D80F30F410EC095615521A0BD8BDEB21", t)
 }
