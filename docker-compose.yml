@@ -6,12 +6,13 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: caronte
       MONGO_INITDB_ROOT_PASSWORD: you-should-change-this-password
+      MONGO_INITDB_DATABASE: caronte
     network_mode: host
     restart: unless-stopped
     command: mongod --bind_ip 127.0.0.1
 
   caronte:
-    image: ghcr.io/eciavatta/caronte:latest
+    build: .
     environment:
       MONGO_HOST: 127.0.0.1
       MONGO_PORT: 27017

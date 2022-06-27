@@ -1,8 +1,8 @@
 # pcaps
-backend/pcaps/*.pcap
-backend/pcaps/*.pcapng
-backend/pcaps/processing/*.pcap
-backend/pcaps/processing/*.pcapng
+core/pcaps/*.pcap
+core/pcaps/*.pcapng
+core/pcaps/processing/*.pcap
+core/pcaps/processing/*.pcapng
 
 # docker
 Dockerfile

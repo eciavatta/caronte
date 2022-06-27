@@ -19,11 +19,10 @@ RUN export VERSION=$(git describe --tags --abbrev=0) && \
 	mkdir -p build/pcaps/processing build/shared && \
 	cp -r caronte build/
 
+# Build web via yarn
+FROM node:16 as WEB_BUILDER
 
-# Build frontend via yarn
-FROM node:16 as FRONTEND_BUILDER
-
-WORKDIR /caronte-frontend
+WORKDIR /caronte-web
 
 COPY ./web ./
 
@@ -33,9 +32,9 @@ RUN yarn install && yarn build --production=true
 # LAST STAGE
 FROM ubuntu:20.04
 
-COPY --from=BACKEND_BUILDER /caronte/backend/build /opt/caronte
+COPY --from=BACKEND_BUILDER /caronte/build /opt/caronte
 
-COPY --from=FRONTEND_BUILDER /caronte-frontend/build /opt/caronte/frontend/build
+COPY --from=WEB_BUILDER /caronte-web/build /opt/caronte/web/build
 
 RUN apt-get update && \
 	DEBIAN_FRONTEND=noninteractive apt-get install -qq \
@@ -43,12 +42,12 @@ RUN apt-get update && \
 	libhyperscan-dev && \
 	rm -rf /var/lib/apt/lists/*
 
-ENV GIN_MODE release
+ENV GIN_MODE=release
 
-ENV MONGO_HOST 127.0.0.1
+ENV MONGO_HOST=127.0.0.1
 
-ENV MONGO_PORT 27017
+ENV MONGO_PORT=27017
 
 WORKDIR /opt/caronte
 
-ENTRYPOINT ./caronte -mongo-host ${MONGO_HOST} -mongo-port ${MONGO_PORT} -assembly_memuse_log
+ENTRYPOINT sleep 3 && ./caronte -mongo-host ${MONGO_HOST} -mongo-port ${MONGO_PORT} -assembly_memuse_log
