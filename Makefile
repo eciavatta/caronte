@@ -19,7 +19,7 @@ clean:
 	rm -rf caronte
 
 remove_pcaps:
-	rm -rf backend/pcaps/*.pcap backend/pcaps/processing/*.pcap
+	rm -rf pcaps/*.pcap pcaps/processing/*.pcap pcaps/*.pcapng pcaps/processing/*.pcapng
 
 .PHONY: test
 test:
@@ -27,8 +27,6 @@ test:
 
 coverage: test
 	go test -v -coverprofile=coverage.txt -covermode=atomic github.com/eciavatta/caronte/...
-
-
 
 build_deps:
 	docker build -t ghcr.io/eciavatta/test-environment:latest -f .github/docker/Dockerfile-environment .
