@@ -28,6 +28,9 @@ class Notifications extends Component {
     closedNotifications: [],
   };
 
+  pcapTimer = null;
+  pcapTimeout = 120 * 1000;
+
   componentDidMount() {
     dispatcher.register('notifications', this.handleNotifications);
   }
@@ -63,6 +66,12 @@ class Notifications extends Component {
         n.title = 'new pcap analyzed';
         n.description = `${n.message['processed_packets']} packets processed`;
         n.variant = 'blue';
+        this.startPcapCompletedTimer();
+        return this.pushNotification(n);
+      case 'pcap.timeout':
+        n.title = 'pcap timeout';
+        n.description = `no pcap uploaded in ${this.pcapTimeout / 1000}s`;
+        n.variant = 'red';
         return this.pushNotification(n);
       case 'timeline.range.large':
         n.title = 'timeline cropped';
@@ -104,6 +113,13 @@ class Notifications extends Component {
       this.setState({notifications});
     };
   };
+
+  startPcapCompletedTimer = () => {
+    clearTimeout(this.pcapTimer);
+    this.pcapTimer = setTimeout(() => {
+      this.handleNotifications({event: 'pcap.timeout'})
+    }, this.pcapTimeout);
+  }
 
   render() {
     return (
