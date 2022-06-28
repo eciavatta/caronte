@@ -113,8 +113,10 @@ func NewPcapImporter(storage Storage, serverNet *net.IPNet, rulesManager RulesMa
 	if err := storage.Find(ImportingSessions).All(&result); err != nil {
 		log.WithError(err).Panic("failed to retrieve importing sessions")
 	}
+
 	sessions := make(map[RowID]*ImportingSession)
-	for _, session := range result {
+	for i := 0; i < len(result); i++ {
+		session := result[i]
 		sessions[session.ID] = &session
 	}
 
