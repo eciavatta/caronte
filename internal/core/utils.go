@@ -33,6 +33,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type Number interface {
+	int64 | float64
+}
+
 func Sha256Sum(fileName string) (string, error) {
 	f, err := os.Open(fileName)
 	if err != nil {
@@ -170,10 +174,10 @@ func ParseIPNet(address string) *net.IPNet {
 	return network
 }
 
-func Average(array []float64) float64 {
-	var sum float64
+func Average[t Number](array []t) t {
+	var sum t
 	for _, f := range array {
 		sum += f
 	}
-	return sum / float64(len(array))
+	return sum / t(len(array))
 }
