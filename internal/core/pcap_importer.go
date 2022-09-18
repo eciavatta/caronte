@@ -316,7 +316,7 @@ func (pi *PcapImporter) StartRemoteCapture(sshConfig SSHConfig, captureOptions C
 	var handle *pcap.Handle
 
 	go (func() {
-		if err = session.Run(fmt.Sprintf("tcpdump -s 0 -U -n -w - -i %s %s",
+		if err = session.Run(fmt.Sprintf("tcpdump -U -n -w - -i %s %s",
 			captureOptions.Interface, generateBffFilters(captureOptions))); err != nil {
 			// pi.currentLiveSession.cancelFunc() TODO: check this
 			pi.liveCaptureHandle = nil

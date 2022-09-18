@@ -40,7 +40,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 
 	router.Use(static.Serve("/", static.LocalFile("./web/build", true)))
 
-	for _, path := range []string{"/connections/:id", "/pcaps", "/rules", "/services", "/stats", "/searches"} {
+	for _, path := range []string{"/connections/:id", "/pcaps", "/rules", "/services", "/stats", "/searches", "/capture"} {
 		router.GET(path, func(c *gin.Context) {
 			c.File("./web/build/index.html")
 		})
