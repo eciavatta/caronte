@@ -3,7 +3,7 @@ module.exports = {
     browser: true,
     es2021: true,
   },
-  extends: ["eslint:recommended", "plugin:react/recommended"],
+  extends: ["react-app", "prettier"],
   parser: "babel-eslint",
   parserOptions: {
     ecmaFeatures: {
@@ -15,6 +15,8 @@ module.exports = {
   plugins: ["react", "prettier"],
   rules: {
     semi: ["error", "always"],
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
   },
   settings: {
     react: {

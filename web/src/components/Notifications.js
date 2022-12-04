@@ -117,9 +117,9 @@ class Notifications extends Component {
   startPcapCompletedTimer = () => {
     clearTimeout(this.pcapTimer);
     this.pcapTimer = setTimeout(() => {
-      this.handleNotifications({event: 'pcap.timeout'})
+      this.handleNotifications({event: 'pcap.timeout'});
     }, this.pcapTimeout);
-  }
+  };
 
   render() {
     return (
