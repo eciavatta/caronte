@@ -3,8 +3,8 @@ module.exports = {
     browser: true,
     es2021: true,
   },
-  extends: ["react-app", "prettier"],
-  parser: "babel-eslint",
+  extends: ["eslint:recommended", "react-app", "prettier"],
+  parser: "@babel/eslint-parser",
   parserOptions: {
     ecmaFeatures: {
       jsx: true,
