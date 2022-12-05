@@ -15,12 +15,34 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import b2a from 'base64-arraybuffer';
+import {decode} from 'base64-arraybuffer';
 import pako from 'pako';
 import DigestHashBuilder from 'tlsh/lib/digests/digest-hash-builder';
 import log from './log';
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 
 const timeRegex = /^(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$/;
+
+
+export function withRouter(Component) {
+  function ComponentWithRouterProp(props) {
+    let location = useLocation();
+    let navigate = useNavigate();
+    let params = useParams();
+    return (
+      <Component
+        {...props}
+        router={{ location, navigate, params }}
+      />
+    );
+  }
+
+  return ComponentWithRouterProp;
+}
 
 export function createCurlCommand(subCommand, method = null, json = null, data = null) {
   const full = window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : '');
@@ -222,7 +244,7 @@ function calculateSimilarityScore(similarityProps1, similarityProps2, type) {
 
 function inflateBase64(str) {
   try {
-    return pako.inflate(b2a.decode(str));
+    return pako.inflate(decode(str));
   } catch (e) {
     log.error(e);
     return [];

@@ -26,6 +26,7 @@ class LinkPopover extends Component {
     super(props);
 
     this.id = `link-overlay-${randomClassName()}`;
+    this.myRef = React.createRef();
   }
 
   static get propTypes() {
@@ -40,8 +41,8 @@ class LinkPopover extends Component {
   render() {
     const popover = (
       <Popover id={this.id}>
-        {this.props.title && <Popover.Title as="h3">{this.props.title}</Popover.Title>}
-        <Popover.Content>{this.props.content}</Popover.Content>
+        {this.props.title && <Popover.Header as="h3">{this.props.title}</Popover.Header>}
+        <Popover.Body>{this.props.content}</Popover.Body>
       </Popover>
     );
 

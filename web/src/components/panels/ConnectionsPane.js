@@ -19,12 +19,11 @@ import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
 import Table from 'react-bootstrap/Table';
-import {Redirect} from 'react-router';
-import {withRouter} from 'react-router-dom';
+import {Navigate} from 'react-router';
 import backend from '../../backend';
 import dispatcher from '../../dispatcher';
 import log from '../../log';
-import {generateSimilarityProps, updateParams} from '../../utils';
+import {generateSimilarityProps, updateParams, withRouter} from '../../utils';
 import ButtonField from '../fields/ButtonField';
 import Connection from '../objects/Connection';
 import ConnectionMatchedRules from '../objects/ConnectionMatchedRules';
@@ -57,12 +56,12 @@ class ConnectionsPane extends Component {
   }
 
   componentDidMount() {
-    let urlParams = new URLSearchParams(this.props.location.search);
+    let urlParams = new URLSearchParams(this.props.router.location.search);
     this.setState({urlParams});
 
     const additionalParams = {limit: this.queryLimit};
 
-    const match = this.props.location.pathname.match(/^\/connections\/([a-f0-9]{24})$/);
+    const match = this.props.router.location.pathname.match(/^\/connections\/([a-f0-9]{24})$/);
     if (match != null) {
       const id = match[1];
       additionalParams.from = id;
@@ -239,10 +238,10 @@ class ConnectionsPane extends Component {
   render() {
     let redirect;
     if (this.connectionSelectedRedirect) {
-      redirect = <Redirect push to={`/connections/${this.state.selected.id}?${this.state.urlParams}`} />;
+      redirect = <Navigate to={`/connections/${this.state.selected.id}?${this.state.urlParams}`} />;
       this.connectionSelectedRedirect = false;
     } else if (this.queryStringRedirect) {
-      redirect = <Redirect push to={`${this.props.location.pathname}?${this.state.urlParams}`} />;
+      redirect = <Navigate to={`${this.props.router.location.pathname}?${this.state.urlParams}`} />;
       this.queryStringRedirect = false;
     }
 

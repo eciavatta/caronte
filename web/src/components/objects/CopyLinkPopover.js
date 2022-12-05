@@ -31,7 +31,7 @@ class CopyLinkPopover extends Component {
 
   static get propTypes() {
     return {
-      text: PropTypes.text,
+      text: PropTypes.string,
       textClassName: PropTypes.string,
       value: PropTypes.string,
     };

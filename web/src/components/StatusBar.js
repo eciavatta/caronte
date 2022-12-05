@@ -17,7 +17,8 @@
 
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
-import {Link, withRouter} from 'react-router-dom';
+import {Link} from 'react-router-dom';
+import {withRouter} from '../utils';
 import dispatcher from '../dispatcher';
 import backend from '../backend';
 import CheckField from './fields/CheckField';
@@ -69,7 +70,7 @@ class StatusBar extends Component {
   render() {
     return (
       <div className="status-bar">
-        <Link to={'/capture' + this.props.location.search}>
+        <Link to={'/capture' + this.props.router.location.search}>
           <div className="live-capture-button">
             {this.state.status.live_capture === 'local' || this.state.status.live_capture === 'remote' ? (
               <>

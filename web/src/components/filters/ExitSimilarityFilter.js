@@ -17,7 +17,7 @@
 
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
-import {withRouter} from 'react-router-dom';
+import {withRouter} from '../../utils';
 import dispatcher from '../../dispatcher';
 import CheckField from '../fields/CheckField';
 
@@ -32,7 +32,7 @@ class ExitSimilarityFilter extends Component {
   }
 
   componentDidMount() {
-    let params = new URLSearchParams(this.props.location.search);
+    let params = new URLSearchParams(this.props.router.location.search);
     this.setState({
       similarityId: params.get('similar_to_id'),
       clientSimilarityId: params.get('client_similar_to_id'),

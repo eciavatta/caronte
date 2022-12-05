@@ -41,7 +41,7 @@ class Connection extends Component {
       onSelected: PropTypes.func,
       selected: PropTypes.bool,
       selectedSimilarityProps: PropTypes.object,
-      services: PropTypes.array,
+      services: PropTypes.object,
     };
   }
 

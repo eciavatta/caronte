@@ -19,7 +19,7 @@ import PropTypes from 'prop-types';
 import React, {Component} from 'react';
 import {ReflexContainer, ReflexElement, ReflexSplitter} from 'react-reflex';
 import 'react-reflex/styles.css';
-import {Route, Switch} from 'react-router-dom';
+import {Route, Routes} from 'react-router-dom';
 import Filters from '../dialogs/Filters';
 import Header from '../Header';
 import CapturePane from '../panels/CapturePane';
@@ -73,39 +73,23 @@ class MainPage extends Component {
 
         <ReflexElement className="page-content" flex={1}>
           <ReflexContainer orientation="vertical" className="page-content">
-            <ReflexElement className="pane connections-pane">
+            <ReflexElement className="pane connections-pane" flex={0.5}>
               <Connections onSelected={(c) => this.setState({selectedConnection: c})} />
             </ReflexElement>
 
             <ReflexSplitter />
 
-            <ReflexElement className="pane details-pane">
-              <Switch>
-                <Route path="/searches">
-                  <SearchPane />
-                </Route>
-                <Route path="/pcaps">
-                  <PcapsPane />
-                </Route>
-                <Route path="/rules">
-                  <RulesPane />
-                </Route>
-                <Route path="/services">
-                  <ServicesPane />
-                </Route>
-                <Route path="/stats">
-                  <StatsPane />
-                </Route>
-                <Route path="/capture">
-                  <CapturePane />
-                </Route>
-                <Route exact path="/connections/:id">
-                  <StreamsPane connection={this.state.selectedConnection} />
-                </Route>
-                <Route>
-                  <MainPane version={this.props.version} />
-                </Route>
-              </Switch>
+            <ReflexElement className="pane details-pane" flex={0.5}>
+              <Routes>
+                <Route path="/searches" element={<SearchPane />} />
+                <Route path="/pcaps" element={<PcapsPane />} />
+                <Route path="/rules" element={<RulesPane />} />
+                <Route path="/services" element={<ServicesPane />} />
+                <Route path="/stats" element={<StatsPane />} />
+                <Route path="/capture" element={<CapturePane />} />
+                <Route path="/connections/:id" element={<StreamsPane connection={this.state.selectedConnection} />} />
+                <Route path="/" element={<MainPane version={this.props.version} />} />
+              </Routes>
             </ReflexElement>
           </ReflexContainer>
         </ReflexElement>

@@ -17,7 +17,7 @@
 
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
-import {withRouter} from 'react-router-dom';
+import {withRouter} from '../../utils';
 import dispatcher from '../../dispatcher';
 import ButtonField from '../fields/ButtonField';
 import './ConnectionMatchedRules.scss';
@@ -32,7 +32,7 @@ class ConnectionMatchedRules extends Component {
   }
 
   onMatchedRulesSelected = (id) => {
-    const params = new URLSearchParams(this.props.location.search);
+    const params = new URLSearchParams(this.props.router.location.search);
     const rules = params.getAll('matched_rules');
     if (!rules.includes(id)) {
       rules.push(id);

@@ -19,7 +19,7 @@ import classNames from 'classnames';
 import _ from 'lodash';
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
-import {withRouter} from 'react-router-dom';
+import {withRouter} from '../../utils';
 import backend from '../../backend';
 import dispatcher from '../../dispatcher';
 import TagField from '../fields/TagField';
@@ -37,7 +37,7 @@ class RulesConnectionsFilter extends Component {
   }
 
   componentDidMount() {
-    const params = new URLSearchParams(this.props.location.search);
+    const params = new URLSearchParams(this.props.router.location.search);
     let activeRules = params.getAll('matched_rules') || [];
 
     backend.get('/api/rules').then((res) => {

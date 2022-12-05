@@ -19,7 +19,7 @@ import classNames from 'classnames';
 import {TimeRange, TimeSeries} from 'pondjs';
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
-import {withRouter} from 'react-router-dom';
+import {withRouter} from '../utils';
 import {ChartContainer, ChartRow, Charts, LineChart, MultiBrush, Resizable, styler, YAxis} from 'react-timeseries-charts';
 import backend from '../backend';
 import dispatcher from '../dispatcher';
@@ -53,7 +53,7 @@ class Timeline extends Component {
   }
 
   componentDidMount() {
-    const urlParams = new URLSearchParams(this.props.location.search);
+    const urlParams = new URLSearchParams(this.props.router.location.search);
     this.setState({
       servicePortFilter: urlParams.get('service_port') || null,
       matchedRulesFilter: urlParams.getAll('matched_rules') || null,
@@ -224,10 +224,12 @@ class Timeline extends Component {
 
   handleConnectionUpdates = (payload) => {
     if (payload.from >= this.state.start && payload.from < payload.to && payload.to <= this.state.end) {
-      this.setState({
-        selection: new TimeRange(payload.from, payload.to),
-      });
-      this.adjustSelection();
+      this.setState(
+        {
+          selection: new TimeRange(payload.from, payload.to),
+        },
+        this.adjustSelection
+      );
     }
   };
 

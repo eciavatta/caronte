@@ -17,9 +17,8 @@
 
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
-import {withRouter} from 'react-router-dom';
 import dispatcher from '../../dispatcher';
-import {updateParams} from '../../utils';
+import {updateParams, withRouter} from '../../utils';
 import ButtonField from '../fields/ButtonField';
 
 class AdvancedFilters extends Component {
@@ -33,7 +32,7 @@ class AdvancedFilters extends Component {
   }
 
   componentDidMount() {
-    this.urlParams = new URLSearchParams(this.props.location.search);
+    this.urlParams = new URLSearchParams(this.props.router.location.search);
 
     this.connectionsFiltersCallback = (payload) => {
       this.urlParams = updateParams(this.urlParams, payload);

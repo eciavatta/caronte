@@ -18,9 +18,9 @@
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
-import {Link, withRouter} from 'react-router-dom';
+import {Link} from 'react-router-dom';
 import Typed from 'typed.js';
-import {cleanNumber, validatePort} from '../utils';
+import {cleanNumber, validatePort, withRouter} from '../utils';
 import ButtonField from './fields/ButtonField';
 import AdvancedFilters from './filters/AdvancedFilters';
 import BooleanConnectionsFilter from './filters/BooleanConnectionsFilter';
@@ -89,19 +89,19 @@ class Header extends Component {
 
           {this.props.configured && (
             <div className="header-buttons">
-              <Link to={'/searches' + this.props.location.search}>
+              <Link to={'/searches' + this.props.router.location.search}>
                 <ButtonField variant="pink" name="searches" bordered />
               </Link>
-              <Link to={'/pcaps' + this.props.location.search}>
+              <Link to={'/pcaps' + this.props.router.location.search}>
                 <ButtonField variant="purple" name="pcaps" bordered />
               </Link>
-              <Link to={'/rules' + this.props.location.search}>
+              <Link to={'/rules' + this.props.router.location.search}>
                 <ButtonField variant="deep-purple" name="rules" bordered />
               </Link>
-              <Link to={'/services' + this.props.location.search}>
+              <Link to={'/services' + this.props.router.location.search}>
                 <ButtonField variant="indigo" name="services" bordered />
               </Link>
-              <Link to={'/stats' + this.props.location.search}>
+              <Link to={'/stats' + this.props.router.location.search}>
                 <ButtonField variant="blue" name="stats" bordered />
               </Link>
             </div>
