@@ -21,7 +21,7 @@ module.exports = function (app) {
   app.use(createProxyMiddleware('/api', {target: 'http://localhost:3333', changeOrigin: true}));
   app.use(createProxyMiddleware('/setup', {target: 'http://localhost:3333', changeOrigin: true}));
   app.use(
-    createProxyMiddleware('/ws', {
+    createProxyMiddleware('/websocket', {
       target: 'http://localhost:3333',
       ws: true,
     })

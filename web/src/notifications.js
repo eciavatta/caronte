@@ -21,7 +21,9 @@ import log from './log';
 class Notifications {
   constructor() {
     const location = document.location;
-    this.wsUrl = `ws://${location.hostname}${location.port ? ':' + location.port : ''}/ws`;
+    const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
+    const port = location.port ? ':' + location.port : '';
+    this.wsUrl = `${protocol}://${location.hostname}${port}/websocket`;
   }
 
   createWebsocket = () => {

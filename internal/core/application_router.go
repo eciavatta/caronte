@@ -69,7 +69,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 		notificationController.Notify("setup", gin.H{})
 	})
 
-	router.GET("/ws", func(c *gin.Context) {
+	router.GET("/websocket", func(c *gin.Context) {
 		if err := notificationController.NotificationHandler(c.Writer, c.Request); err != nil {
 			serverError(c, err)
 		}
