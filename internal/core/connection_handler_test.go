@@ -116,7 +116,7 @@ func TestConnectionFactory(t *testing.T) {
 		isServer bool, completed chan bool) {
 
 		time.Sleep(time.Duration(rand.Intn(1000)) * time.Millisecond)
-		stream := factory.New(netFlow, transportFlow, isServer)
+		stream := factory.New(netFlow, transportFlow, isServer, layers.LinkTypeEthernet)
 		seen := time.Now()
 		stream.Reassembled([]tcpassembly.Reassembly{{
 			Bytes: []byte{},

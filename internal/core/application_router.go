@@ -336,6 +336,21 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 			}
 		})
 
+		api.GET("/pcap/connections/:id/download", func(c *gin.Context) {
+			connectionID, err := RowIDFromHex(c.Param("id"))
+			if err != nil {
+				badRequest(c, err)
+				return
+			}
+
+			pcapPath := ConnectionPcapsBasePath + connectionID.Hex() + ".pcap"
+			if FileExists(pcapPath) {
+				c.FileAttachment(pcapPath, connectionID.Hex()+".pcap")
+			} else {
+				notFound(c, gin.H{"connection": connectionID})
+			}
+		})
+
 		api.GET("/connections", func(c *gin.Context) {
 			var filter ConnectionsFilter
 			if err := c.ShouldBindQuery(&filter); err != nil {

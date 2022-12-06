@@ -35,13 +35,10 @@ type readSequence struct {
 	want []readReturn
 }
 type testReaderFactory struct {
-	lossErrors bool
-	readSize   int
 	ReaderStream
-	output chan []byte
 }
 
-func (t *testReaderFactory) New(a, b gopacket.Flow, isServer bool) tcpassembly.Stream {
+func (t *testReaderFactory) New(a, b gopacket.Flow, isServer bool, linkType layers.LinkType) tcpassembly.Stream {
 	return &t.ReaderStream
 }
 

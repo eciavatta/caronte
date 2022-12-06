@@ -30,6 +30,7 @@ import (
 	"github.com/eciavatta/caronte/pkg/tcpassembly/tcpreader"
 	"github.com/gin-gonic/gin"
 	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -386,7 +387,7 @@ func copyToProcessing(t *testing.T, fileName string) string {
 type testStreamFactory struct {
 }
 
-func (sf *testStreamFactory) New(_, _ gopacket.Flow, isServer bool) tcpassembly.Stream {
+func (sf *testStreamFactory) New(_, _ gopacket.Flow, isServer bool, linkType layers.LinkType) tcpassembly.Stream {
 	reader := tcpreader.NewReaderStream()
 	go func() {
 		buffer := bufio.NewReader(&reader)

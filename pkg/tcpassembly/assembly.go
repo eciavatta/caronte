@@ -43,9 +43,11 @@ type Sequence int64
 
 // Difference defines an ordering for comparing TCP sequences that's safe for
 // roll-overs.  It returns:
-//    > 0 : if t comes after s
-//    < 0 : if t comes before s
-//      0 : if t == s
+//
+//	> 0 : if t comes after s
+//	< 0 : if t comes before s
+//	  0 : if t == s
+//
 // The number returned is the sequence difference, so 4.Difference(8) will
 // return 4.
 //
@@ -94,7 +96,6 @@ const pageBytes = 1900
 type page struct {
 	Reassembly
 	seq        Sequence
-	index      int
 	prev, next *page
 	buf        [pageBytes]byte
 }
@@ -165,9 +166,9 @@ func (c *pageCache) replace(p *page) {
 // it to create a new Stream for every TCP stream.
 //
 // assembly will, in order:
-//    1) Create the stream via StreamFactory.New
-//    2) Call Reassembled 0 or more times, passing in reassembled TCP data in order
-//    3) Call ReassemblyComplete one time, after which the stream is dereferenced by assembly.
+//  1. Create the stream via StreamFactory.New
+//  2. Call Reassembled 0 or more times, passing in reassembled TCP data in order
+//  3. Call ReassemblyComplete one time, after which the stream is dereferenced by assembly.
 type Stream interface {
 	// Reassembled is called zero or more times.  assembly guarantees
 	// that the set of all Reassembly objects passed in during all
@@ -182,13 +183,15 @@ type Stream interface {
 	// was seen, or because the stream has timed out without any new
 	// packet data (due to a call to FlushOlderThan).
 	ReassemblyComplete()
+	// Added by @eciavatta to save stream packets
+	Packet(gopacket.Packet)
 }
 
 // StreamFactory is used by assembly to create a new stream for each
 // new TCP session.
 type StreamFactory interface {
 	// New should return a new stream for the given TCP key.
-	New(netFlow, tcpFlow gopacket.Flow, isServer bool) Stream
+	New(netFlow, tcpFlow gopacket.Flow, isServer bool, linkType layers.LinkType) Stream
 }
 
 func (p *StreamPool) connections() []*connection {
@@ -420,7 +423,7 @@ type AssemblerOptions struct {
 // applications written in Go.  The Assembler uses the following methods to be
 // as fast as possible, to keep packet processing speedy:
 //
-// Avoids Lock Contention
+// # Avoids Lock Contention
 //
 // Assemblers locks connections, but each connection has an individual lock, and
 // rarely will two Assemblers be looking at the same connection.  Assemblers
@@ -440,7 +443,7 @@ type AssemblerOptions struct {
 // avoiding all lock contention.  Only when different Assemblers could receive
 // packets for the same Stream should a StreamPool be shared between them.
 //
-// Avoids Memory Copying
+// # Avoids Memory Copying
 //
 // In the common case, handling of a single TCP packet should result in zero
 // memory allocations.  The Assembler will look up the connection, figure out
@@ -448,7 +451,7 @@ type AssemblerOptions struct {
 // the appropriate connection's handling code.  Only if a packet arrives out of
 // order is its contents copied and stored in memory for later.
 //
-// Avoids Memory Allocation
+// # Avoids Memory Allocation
 //
 // Assemblers try very hard to not use memory allocation unless absolutely
 // necessary.  Packet data for sequential packets is passed directly to streams
@@ -493,14 +496,14 @@ func (p *StreamPool) newConnection(k key, s Stream, ts time.Time) (c *connection
 // getConnection returns a connection.  If end is true and a connection
 // does not already exist, returns nil.  This allows us to check for a
 // connection without actually creating one if it doesn't already exist.
-func (p *StreamPool) getConnection(k key, end bool, ts time.Time, isServer bool) *connection {
+func (p *StreamPool) getConnection(k key, end bool, ts time.Time, isServer bool, linkType layers.LinkType) *connection {
 	p.mu.RLock()
 	conn := p.conns[k]
 	p.mu.RUnlock()
 	if end || conn != nil {
 		return conn
 	}
-	s := p.factory.New(k[0], k[1], isServer)
+	s := p.factory.New(k[0], k[1], isServer, linkType)
 	p.mu.Lock()
 	conn = p.newConnection(k, s, ts)
 	if conn2 := p.conns[k]; conn2 != nil {
@@ -515,7 +518,7 @@ func (p *StreamPool) getConnection(k key, end bool, ts time.Time, isServer bool)
 // Assemble calls AssembleWithTimestamp with the current timestamp, useful for
 // packets being read directly off the wire.
 func (a *Assembler) Assemble(netFlow gopacket.Flow, t *layers.TCP) {
-	a.AssembleWithTimestamp(netFlow, t, time.Now())
+	a.AssembleWithTimestamp(netFlow, t, time.Now(), nil, 0)
 }
 
 // AssembleWithTimestamp reassembles the given TCP packet into its appropriate
@@ -528,10 +531,10 @@ func (a *Assembler) Assemble(netFlow gopacket.Flow, t *layers.TCP) {
 //
 // Each Assemble call results in, in order:
 //
-//    zero or one calls to StreamFactory.New, creating a stream
-//    zero or one calls to Reassembled on a single stream
-//    zero or one calls to ReassemblyComplete on the same stream
-func (a *Assembler) AssembleWithTimestamp(netFlow gopacket.Flow, t *layers.TCP, timestamp time.Time) {
+//	zero or one calls to StreamFactory.New, creating a stream
+//	zero or one calls to Reassembled on a single stream
+//	zero or one calls to ReassemblyComplete on the same stream
+func (a *Assembler) AssembleWithTimestamp(netFlow gopacket.Flow, t *layers.TCP, timestamp time.Time, packet gopacket.Packet, linkType layers.LinkType) {
 	// Ignore empty TCP packets
 	if !t.SYN && !t.FIN && !t.RST && len(t.LayerPayload()) == 0 {
 		if *debugLog {
@@ -543,12 +546,20 @@ func (a *Assembler) AssembleWithTimestamp(netFlow gopacket.Flow, t *layers.TCP, 
 	a.ret = a.ret[:0]
 	key := key{netFlow, t.TransportFlow()}
 	var conn *connection
+
+	// @eciavatta
+	if packet != nil {
+		defer func() {
+			conn.stream.Packet(packet)
+		}()
+	}
+
 	// This for loop handles a race condition where a connection will close, lock
 	// the connection pool, and remove itself, but before it locked the connection
 	// pool it's returned to another Assemble statement.  This should loop 0-1
 	// times for the VAST majority of cases.
 	for {
-		conn = a.connPool.getConnection(key, !t.SYN && len(t.LayerPayload()) == 0, timestamp, t.SYN && t.ACK)
+		conn = a.connPool.getConnection(key, !t.SYN && len(t.LayerPayload()) == 0, timestamp, t.SYN && t.ACK, linkType)
 		if conn == nil {
 			if *debugLog {
 				log.Printf("%v got empty packet on otherwise empty connection", key)

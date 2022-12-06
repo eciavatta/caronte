@@ -16,28 +16,28 @@
 // sniffing HTTP traffic.  Using ReaderStream, this is relatively easy to set
 // up:
 //
-//  // Create our StreamFactory
-//  type httpStreamFactory struct {}
-//  func (f *httpStreamFactory) New(a, b gopacket.Flow) tcpassembly.Stream {
-//  	r := tcpreader.NewReaderStream()
-//  	go printRequests(&r, a, b)
-//  	return &r
-//  }
-//  func printRequests(r io.Reader, a, b gopacket.Flow) {
-//  	// Convert to bufio, since that's what ReadRequest wants.
-//  	buf := bufio.NewReader(r)
-//  	for {
-//  		if req, err := http.ReadRequest(buf); err == io.EOF {
-//  			return
-//  		} else if err != nil {
-//  			log.Println("Error parsing HTTP requests:", err)
-//  		} else {
-//  			fmt.Println(a, b)
-//  			fmt.Println("HTTP REQUEST:", req)
-//  			fmt.Println("Body contains", tcpreader.DiscardBytesToEOF(req.Body), "bytes")
-//  		}
-//  	}
-//  }
+//	// Create our StreamFactory
+//	type httpStreamFactory struct {}
+//	func (f *httpStreamFactory) New(a, b gopacket.Flow) tcpassembly.Stream {
+//		r := tcpreader.NewReaderStream()
+//		go printRequests(&r, a, b)
+//		return &r
+//	}
+//	func printRequests(r io.Reader, a, b gopacket.Flow) {
+//		// Convert to bufio, since that's what ReadRequest wants.
+//		buf := bufio.NewReader(r)
+//		for {
+//			if req, err := http.ReadRequest(buf); err == io.EOF {
+//				return
+//			} else if err != nil {
+//				log.Println("Error parsing HTTP requests:", err)
+//			} else {
+//				fmt.Println(a, b)
+//				fmt.Println("HTTP REQUEST:", req)
+//				fmt.Println("Body contains", tcpreader.DiscardBytesToEOF(req.Body), "bytes")
+//			}
+//		}
+//	}
 //
 // Using just this code, we're able to reference a powerful, built-in library
 // for HTTP request parsing to do all the dirty-work of parsing requests from
@@ -50,6 +50,7 @@ import (
 	"io"
 
 	"github.com/eciavatta/caronte/pkg/tcpassembly"
+	"github.com/google/gopacket"
 )
 
 var discardBuffer = make([]byte, 4096)
@@ -90,20 +91,20 @@ func DiscardBytesToEOF(r io.Reader) (discarded int) {
 // a common pattern to do this by starting a goroutine in the factory's New
 // method:
 //
-//  type myStreamHandler struct {
-//  	r ReaderStream
-//  }
-//  func (m *myStreamHandler) run() {
-//  	// Do something here that reads all of the ReaderStream, or your assembly
-//  	// will block.
-//  	fmt.Println(tcpreader.DiscardBytesToEOF(&m.r))
-//  }
-//  func (f *myStreamFactory) New(a, b gopacket.Flow) tcpassembly.Stream {
-//  	s := &myStreamHandler{}
-//  	go s.run()
-//  	// Return the ReaderStream as the stream that assembly should populate.
-//  	return &s.r
-//  }
+//	type myStreamHandler struct {
+//		r ReaderStream
+//	}
+//	func (m *myStreamHandler) run() {
+//		// Do something here that reads all of the ReaderStream, or your assembly
+//		// will block.
+//		fmt.Println(tcpreader.DiscardBytesToEOF(&m.r))
+//	}
+//	func (f *myStreamFactory) New(a, b gopacket.Flow) tcpassembly.Stream {
+//		s := &myStreamHandler{}
+//		go s.run()
+//		// Return the ReaderStream as the stream that assembly should populate.
+//		return &s.r
+//	}
 type ReaderStream struct {
 	ReaderStreamOptions
 	reassembled  chan []tcpassembly.Reassembly
@@ -149,6 +150,10 @@ func (r *ReaderStream) ReassemblyComplete() {
 	close(r.done)
 }
 
+// ReassemblyComplete implements tcpassembly.Stream's Packet function.
+func (r *ReaderStream) Packet(packet gopacket.Packet) {
+}
+
 // stripEmpty strips empty reassembly slices off the front of its current set of
 // slices.
 func (r *ReaderStream) stripEmpty() {
@@ -158,9 +163,9 @@ func (r *ReaderStream) stripEmpty() {
 	}
 }
 
-// DataLost is returned by the ReaderStream's Read function when it encounters
+// ErrDataLost is returned by the ReaderStream's Read function when it encounters
 // a Reassembly with Skip != 0.
-var DataLost = errors.New("lost data")
+var ErrDataLost = errors.New("lost data")
 
 // Read implements io.Reader's Read function.
 // Given a byte slice, it will either copy a non-zero number of bytes into
@@ -188,7 +193,7 @@ func (r *ReaderStream) Read(p []byte) (int, error) {
 		current := &r.current[0]
 		if r.LossErrors && !r.lossReported && current.Skip != 0 {
 			r.lossReported = true
-			return 0, DataLost
+			return 0, ErrDataLost
 		}
 		length := copy(p, current.Bytes)
 		current.Bytes = current.Bytes[length:]

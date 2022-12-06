@@ -89,6 +89,8 @@ class Connection extends Component {
       </div>
     );
 
+    const connectionUrl = document.location.origin + '/connections/' + conn.id;
+
     const distanceScores = this.props.selectedSimilarityProps && calculateSimilarityScores(this.props.selectedSimilarityProps, generateSimilarityProps(conn));
 
     return (
@@ -197,7 +199,7 @@ class Connection extends Component {
             content={commentPopoverContent}
             placement="right"
           />
-          <CopyLinkPopover text="#" value={conn.id} textClassName={classNames('connection-icon', {'icon-enabled': conn.hidden})} />
+          <CopyLinkPopover text="#" value={connectionUrl} textClassName={classNames('connection-icon', {'icon-enabled': conn.hidden})} />
           {this.state.showCommentDialog && (
             <CommentDialog onSave={(comment) => this.handleAction('comment', comment)} initialComment={conn.comment} connectionId={conn.id} />
           )}
@@ -222,6 +224,9 @@ class Connection extends Component {
               </>
             }
           />
+          <span className={classNames('connection-icon')}>
+            <a href={'/api/pcap/connections/' + conn.id + '/download'}>+</a>
+          </span>
         </td>
       </tr>
     );

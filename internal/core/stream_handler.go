@@ -27,12 +27,15 @@ import (
 	"github.com/eciavatta/caronte/pkg/tcpassembly"
 	"github.com/flier/gohs/hyperscan"
 	"github.com/glaslos/tlsh"
+	"github.com/google/gopacket"
 	log "github.com/sirupsen/logrus"
 )
 
 const MaxDocumentSize = 1024 * 1024
 const InitialBlockCount = 1024
 const InitialPatternSliceSize = 8
+const InitialPacketsCount = 16
+const MaxPacketsCount = 1024
 
 // IMPORTANT:  If you use a StreamHandler, you MUST read ALL BYTES from it,
 // quickly.  Not reading available bytes will block TCP stream reassembly.  It's
@@ -56,6 +59,7 @@ type StreamHandler struct {
 	isClient          bool
 	tlshHash          string
 	byteHistogramHash []byte
+	packets           []gopacket.Packet
 }
 
 // NewReaderStream returns a new StreamHandler object.
@@ -71,6 +75,7 @@ func NewStreamHandler(connection ConnectionHandler, streamFlow StreamFlow, scann
 		patternMatches: make(map[uint][]PatternSlice, connection.PatternsDatabaseSize()),
 		scanner:        scanner,
 		isClient:       isClient,
+		packets:        make([]gopacket.Packet, InitialPacketsCount),
 	}
 
 	stream, err := connection.PatternsDatabase().Open(0, scanner.scratch, handler.onMatch, nil)
@@ -149,6 +154,15 @@ func (sh *StreamHandler) ReassemblyComplete() {
 	sh.byteHistogramHash = similarity.ByteHistogramDigest(sh.buffer.Bytes()).Digest()
 
 	sh.connection.Complete(sh)
+}
+
+// ReassemblyComplete implements tcpassembly.Stream's Packet function.
+func (sh *StreamHandler) Packet(packet gopacket.Packet) {
+	if len(sh.packets) >= MaxPacketsCount {
+		return
+	}
+
+	sh.packets = append(sh.packets, packet)
 }
 
 func (sh *StreamHandler) resetCurrentDocument() {

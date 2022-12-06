@@ -23,7 +23,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"path"
@@ -45,6 +44,7 @@ import (
 
 const PcapsBasePath = "pcaps/"
 const ProcessingPcapsBasePath = PcapsBasePath + "processing/"
+const ConnectionPcapsBasePath = PcapsBasePath + "connections/"
 const initialAssemblerPoolSize = 16
 const initialSessionRotationInterval = 2 * time.Minute
 const snapshotLen = 1024
@@ -545,7 +545,7 @@ func (pi *PcapImporter) handle(handle *pcap.Handle, initialSession *ImportingSes
 
 			offlineUnlock()
 
-			assembler.AssembleWithTimestamp(packet.NetworkLayer().NetworkFlow(), tcp, packet.Metadata().Timestamp)
+			assembler.AssembleWithTimestamp(packet.NetworkLayer().NetworkFlow(), tcp, packet.Metadata().Timestamp, packet, handle.LinkType())
 		case <-sessionRotationInterval.C:
 			rotateSession(false)
 		case <-ctx.Done():
@@ -653,7 +653,7 @@ func (pi *PcapImporter) notificationService() {
 }
 
 func createNewPcap(handle *pcap.Handle) (*os.File, *pcapgo.Writer) {
-	currentFile, err := ioutil.TempFile(ProcessingPcapsBasePath, "live-*.pcap")
+	currentFile, err := os.CreateTemp(ProcessingPcapsBasePath, "live-*.pcap")
 	if err != nil {
 		log.WithError(err).Panic("failed to create a pcap temp file")
 	}

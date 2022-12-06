@@ -22,12 +22,16 @@ import (
 	"fmt"
 	"hash/fnv"
 	"net"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
 	"github.com/eciavatta/caronte/pkg/tcpassembly"
 	"github.com/flier/gohs/hyperscan"
 	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
+	"github.com/google/gopacket/pcapgo"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -72,6 +76,7 @@ type connectionHandlerImpl struct {
 	connectionFlow StreamFlow
 	mComplete      sync.Mutex
 	otherStream    *StreamHandler
+	linkType       layers.LinkType
 }
 
 func NewBiDirectionalStreamFactory(storage Storage, serverNet *net.IPNet,
@@ -157,7 +162,7 @@ func (factory *BiDirectionalStreamFactory) releaseScanner(scanner Scanner) {
 	factory.scanners = append(factory.scanners, scanner)
 }
 
-func (factory *BiDirectionalStreamFactory) New(netFlow, transportFlow gopacket.Flow, isServer bool) tcpassembly.Stream {
+func (factory *BiDirectionalStreamFactory) New(netFlow, transportFlow gopacket.Flow, isServer bool, linkType layers.LinkType) tcpassembly.Stream {
 	flow := StreamFlow{netFlow.Src(), netFlow.Dst(), transportFlow.Src(), transportFlow.Dst()}
 	invertedFlow := StreamFlow{netFlow.Dst(), netFlow.Src(), transportFlow.Dst(), transportFlow.Src()}
 
@@ -184,6 +189,7 @@ func (factory *BiDirectionalStreamFactory) New(netFlow, transportFlow gopacket.F
 		}
 		factory.connections[flow] = connection
 	}
+	connection.(*connectionHandlerImpl).linkType = linkType // Ok I could have done better, I admit it
 	factory.mConnections.Unlock()
 
 	streamHandler := NewStreamHandler(connection, flow, factory.takeScanner(), !isServer)
@@ -264,8 +270,57 @@ func (ch *connectionHandlerImpl) Complete(handler *StreamHandler) {
 		}
 	}
 
+	ch.SaveConnectionPcap(connectionID.Hex(), client, server)
 	ch.UpdateStatistics(connection)
 	ch.factory.connectionStatusChannel <- true
+}
+
+func (ch *connectionHandlerImpl) SaveConnectionPcap(connectionID string, clientStream *StreamHandler, serverStream *StreamHandler) {
+	c, s := 0, 0
+	lc, ls := len(clientStream.packets), len(serverStream.packets)
+
+	if lc == 0 && ls == 0 {
+		return
+	}
+
+	f, err := os.Create(filepath.Join(ConnectionPcapsBasePath, fmt.Sprintf("%s.pcap", connectionID)))
+	if err != nil {
+		log.WithError(err).WithField("connectionID", connectionID).Error("failed to create connection pcap")
+		return
+	}
+	defer f.Close()
+
+	w := pcapgo.NewWriter(f)
+	if err := w.WriteFileHeader(65536, ch.linkType); err != nil {
+		log.WithError(err).WithField("connectionID", connectionID).Error("failed to write connection pcap header")
+		return
+	}
+
+	writePacket := func(packet gopacket.Packet) error {
+		return w.WritePacket(packet.Metadata().CaptureInfo, packet.Data())
+	}
+
+	for {
+		if c < lc {
+			if s < ls && serverStream.packets[s].Metadata().Timestamp.Before(clientStream.packets[c].Metadata().Timestamp) {
+				err = writePacket(serverStream.packets[s])
+				s++
+			} else {
+				err = writePacket(clientStream.packets[c])
+				c++
+			}
+		} else if s < ls {
+			err = writePacket(serverStream.packets[s])
+			s++
+		} else {
+			return
+		}
+
+		if err != nil {
+			log.WithError(err).WithField("connectionID", connectionID).Error("failed to write connection pcap packet")
+			return
+		}
+	}
 }
 
 func (ch *connectionHandlerImpl) UpdateStatistics(connection Connection) {
