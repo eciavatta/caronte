@@ -100,7 +100,7 @@ class StreamsPane extends Component {
 
     let m = connectionMessage.metadata;
     switch (m.type) {
-      case 'http-request':
+      case 'http-request': {
         let url = (
           <i>
             <u>
@@ -121,7 +121,8 @@ class StreamsPane extends Component {
             {unrollMap(m.trailers)}
           </span>
         );
-      case 'http-response':
+      }
+      case 'http-response': {
         const contentType = getHeaderValue(m, 'Content-Type');
         let body = m.body;
         if (contentType && contentType.includes('application/json')) {
@@ -145,6 +146,7 @@ class StreamsPane extends Component {
             {unrollMap(m.trailers)}
           </span>
         );
+      }
       default:
         return this.highlightRules(connectionMessage.content, isClient);
     }
@@ -182,7 +184,7 @@ class StreamsPane extends Component {
 
     const m = connectionMessage.metadata;
     switch (m.type) {
-      case 'http-request':
+      case 'http-request': {
         if (!connectionMessage.metadata['reproducers']) {
           return;
         }
@@ -198,7 +200,8 @@ class StreamsPane extends Component {
             }}
           />
         ));
-      case 'http-response':
+      }
+      case 'http-response': {
         const contentType = getHeaderValue(m, 'Content-Type');
 
         if (contentType && contentType.includes('text/html')) {
@@ -221,6 +224,7 @@ class StreamsPane extends Component {
           );
         }
         break;
+      }
       default:
         return null;
     }
