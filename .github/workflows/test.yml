@@ -54,28 +54,3 @@ jobs:
         run: npx prettier --ignore-unknown --check 'src/**'
       - name: Build frontend
         run: yarn build
-  build-push-develop-image:
-    runs-on: ubuntu-latest
-    needs: [test-backend, test-frontend]
-    if: ${{ github.ref == 'refs/heads/develop' }}
-    permissions:
-      contents: read
-      packages: write
-    env:
-      REGISTRY: ghcr.io
-      IMAGE_NAME: eciavatta/caronte
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Log in to the Container registry
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push Docker develop image
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          push: true
-          tags: ${{ env.IMAGE_NAME }}:develop
