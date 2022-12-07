@@ -19,26 +19,16 @@ import {decode} from 'base64-arraybuffer';
 import pako from 'pako';
 import DigestHashBuilder from 'tlsh/lib/digests/digest-hash-builder';
 import log from './log';
-import {
-  useLocation,
-  useNavigate,
-  useParams,
-} from "react-router-dom";
+import {useLocation, useNavigate, useParams} from 'react-router-dom';
 
 const timeRegex = /^(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$/;
-
 
 export function withRouter(Component) {
   function ComponentWithRouterProp(props) {
     let location = useLocation();
     let navigate = useNavigate();
     let params = useParams();
-    return (
-      <Component
-        {...props}
-        router={{ location, navigate, params }}
-      />
-    );
+    return <Component {...props} router={{location, navigate, params}} />;
   }
 
   return ComponentWithRouterProp;
