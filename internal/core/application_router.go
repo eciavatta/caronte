@@ -152,7 +152,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 			flushAllValue, isPresent := c.GetPostForm("flush_all")
 			flushAll := isPresent && strings.ToLower(flushAllValue) == "true"
 			fileName := fmt.Sprintf("%v-%s", time.Now().UnixNano(), fileHeader.Filename)
-			if err := c.SaveUploadedFile(fileHeader, ProcessingPcapsBasePath+fileName); err != nil {
+			if err := c.SaveUploadedFile(fileHeader, filepath.Join(ProcessingPcapsBasePath, fileName)); err != nil {
 				log.WithError(err).Panic("failed to save uploaded file")
 			}
 
@@ -182,7 +182,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 			}
 
 			fileName := fmt.Sprintf("%v-%s", time.Now().UnixNano(), filepath.Base(request.File))
-			if err := CopyFile(ProcessingPcapsBasePath+fileName, request.File); err != nil {
+			if err := CopyFile(filepath.Join(ProcessingPcapsBasePath, fileName), request.File); err != nil {
 				log.WithError(err).Panic("failed to copy pcap file")
 			}
 			if sessionID, err := applicationContext.PcapImporter.ImportPcap(fileName, request.FlushAll); err != nil {
@@ -309,10 +309,13 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 				return
 			}
 			if _, isPresent := applicationContext.PcapImporter.GetSession(sessionID); isPresent {
-				if FileExists(PcapsBasePath + sessionID.Hex() + ".pcap") {
-					c.FileAttachment(PcapsBasePath+sessionID.Hex()+".pcap", sessionID.Hex()+".pcap")
-				} else if FileExists(PcapsBasePath + sessionID.Hex() + ".pcapng") {
-					c.FileAttachment(PcapsBasePath+sessionID.Hex()+".pcapng", sessionID.Hex()+".pcapng")
+				pcapPath := filepath.Join(PcapsBasePath, sessionID.Hex()+".pcap")
+				pcapngPath := filepath.Join(PcapsBasePath, sessionID.Hex()+".pcapng")
+
+				if FileExists(pcapPath) {
+					c.FileAttachment(pcapPath, sessionID.Hex()+".pcap")
+				} else if FileExists(pcapngPath) {
+					c.FileAttachment(pcapngPath, sessionID.Hex()+".pcapng")
 				} else {
 					log.WithField("sessionID", sessionID).Panic("pcap file not exists")
 				}

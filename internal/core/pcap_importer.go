@@ -42,13 +42,25 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-const PcapsBasePath = "pcaps/"
-const ProcessingPcapsBasePath = PcapsBasePath + "processing/"
-const ConnectionPcapsBasePath = PcapsBasePath + "connections/"
 const initialAssemblerPoolSize = 16
 const initialSessionRotationInterval = 2 * time.Minute
 const snapshotLen = 1024
 const remoteCapturePipeName = "remote-pipe.pcap"
+
+var PcapsBasePath string
+var ProcessingPcapsBasePath string
+var ConnectionPcapsBasePath string
+
+func init() {
+	exe, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+
+	PcapsBasePath = filepath.Join(filepath.Dir(exe), "pcaps")
+	ProcessingPcapsBasePath = filepath.Join(PcapsBasePath, "processing")
+	ConnectionPcapsBasePath = filepath.Join(PcapsBasePath, "connections")
+}
 
 type PcapImporter struct {
 	storage                 Storage
@@ -104,10 +116,16 @@ type PacketsStatistics struct {
 
 type flowCount [2]int
 
-func NewPcapImporter(storage Storage, serverNet *net.IPNet, rulesManager RulesManager,
-	notificationController NotificationController) *PcapImporter {
-	streamPool := tcpassembly.NewStreamPool(
-		NewBiDirectionalStreamFactory(storage, serverNet, rulesManager, notificationController))
+func NewPcapImporter(storage Storage, serverNet *net.IPNet, rulesManager RulesManager, notificationController NotificationController) *PcapImporter {
+	streamPool := tcpassembly.NewStreamPool(NewBiDirectionalStreamFactory(storage, serverNet, rulesManager, notificationController))
+
+	if err := os.MkdirAll(ProcessingPcapsBasePath, 0755); err != nil {
+		log.WithError(err).Panic("failed to create processing pcaps folder")
+	}
+
+	if err := os.MkdirAll(ConnectionPcapsBasePath, 0755); err != nil {
+		log.WithError(err).Panic("failed to create connections pcaps folder")
+	}
 
 	var result []ImportingSession
 	if err := storage.Find(ImportingSessions).All(&result); err != nil {
@@ -151,7 +169,9 @@ func (pi *PcapImporter) ImportPcap(fileName string, flushAll bool) (RowID, error
 		return EmptyRowID(), errors.New("invalid file extension")
 	}
 
-	hash, err := Sha256Sum(ProcessingPcapsBasePath + fileName)
+	processingPath := filepath.Join(ProcessingPcapsBasePath, fileName)
+
+	hash, err := Sha256Sum(processingPath)
 	if err != nil {
 		deleteProcessingFile(fileName)
 		log.WithError(err).Panic("failed to calculate pcap sha256")
@@ -171,7 +191,7 @@ func (pi *PcapImporter) ImportPcap(fileName string, flushAll bool) (RowID, error
 		return EmptyRowID(), errors.New("pcap already processed")
 	}
 
-	handle, err := pcap.OpenOffline(ProcessingPcapsBasePath + fileName)
+	handle, err := pcap.OpenOffline(processingPath)
 	if err != nil {
 		pi.mSessions.Unlock()
 		deleteProcessingFile(fileName)
@@ -180,7 +200,7 @@ func (pi *PcapImporter) ImportPcap(fileName string, flushAll bool) (RowID, error
 
 	session, ctx := pi.newSession(false)
 	session.Hash = hash
-	session.Size = FileSize(ProcessingPcapsBasePath + fileName)
+	session.Size = FileSize(processingPath)
 
 	pi.sessions[session.ID] = session
 	pi.mSessions.Unlock()
@@ -266,14 +286,14 @@ func (pi *PcapImporter) StartRemoteCapture(sshConfig SSHConfig, captureOptions C
 	}
 
 	// check if tcpdump is present
-	session, err := client.NewSession()
+	checkSession, err := client.NewSession()
 	if err != nil {
 		return err
 	}
-	if err = session.Run("tcpdump --version"); err != nil {
+	if err = checkSession.Run("tcpdump --version"); err != nil {
 		return err
 	}
-	if err = session.Close(); err != nil && err != io.EOF {
+	if err = checkSession.Close(); err != nil && err != io.EOF {
 		log.WithError(err).Panic("failed to close ssh session")
 	}
 
@@ -292,7 +312,7 @@ func (pi *PcapImporter) StartRemoteCapture(sshConfig SSHConfig, captureOptions C
 		}
 	}
 
-	pipeName := ProcessingPcapsBasePath + remoteCapturePipeName
+	pipeName := filepath.Join(ProcessingPcapsBasePath, remoteCapturePipeName)
 	if FileExists(pipeName) {
 		deleteProcessingFile(remoteCapturePipeName)
 	}
@@ -306,43 +326,51 @@ func (pi *PcapImporter) StartRemoteCapture(sshConfig SSHConfig, captureOptions C
 		log.WithError(err).Panic("failed to open named pipe")
 	}
 
-	session, err = client.NewSession()
+	dumpSession, err := client.NewSession()
 	if err != nil {
 		return err
 	}
-	session.Stdout = bufio.NewWriter(namedPipe)
+
+	dumpSession.Stdout = bufio.NewWriter(namedPipe)
 	captureOptions.ExcludedServices = append(captureOptions.ExcludedServices, sshConfig.Port)
 
-	var handle *pcap.Handle
+	if err := dumpSession.Start(fmt.Sprintf("tcpdump -U -n -w - -i %s %s", captureOptions.Interface, generateBffFilters(captureOptions))); err != nil {
+		return fmt.Errorf("failed to start tcpdump on remote host: %s", err)
+	}
 
-	go (func() {
-		if err = session.Run(fmt.Sprintf("tcpdump -U -n -w - -i %s %s",
-			captureOptions.Interface, generateBffFilters(captureOptions))); err != nil {
-			// pi.currentLiveSession.cancelFunc() TODO: check this
-			pi.liveCaptureHandle = nil
-			log.WithError(err).Error("failed to start tcpdump on remote host")
-		} else if err = session.Close(); err != nil && err != io.EOF {
-			log.WithError(err).Panic("failed to close ssh session")
-		}
-	})()
-
-	handle, err = pcap.OpenOfflineFile(namedPipe)
+	handle, err := pcap.OpenOfflineFile(namedPipe)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to open local named pipe: %s", err)
 	}
 
 	pi.liveCaptureHandle = handle
 	pi.liveCaptureType = "remote"
+
 	go pi.handle(handle, nil, true, nil, func(canceled bool) {
-		if err := session.Close(); err != nil {
-			log.WithError(err).Warn("failed to close ssh session")
+		if killSession, err := client.NewSession(); err == nil {
+			if err := killSession.Run("kill -9 $(pidof tcpdump)"); err != nil {
+				log.WithError(err).Error("failed to kill tcpdump on remote host")
+			}
+
+			if err := killSession.Close(); err != nil && err != io.EOF {
+				log.WithError(err).Error("failed to close kill ssh session")
+			}
+
+			if err := dumpSession.Close(); err != nil && err != io.EOF {
+				log.WithError(err).Error("failed to close dump ssh session")
+			}
+		} else {
+			log.WithError(err).Error("failed to start kill ssh session")
 		}
+
 		if err := namedPipe.Close(); err != nil {
 			log.WithError(err).Panic("failed to close named pipe")
 		}
 
 		deleteProcessingFile(remoteCapturePipeName)
-		// handle.Close() hangs subroutine
+
+		// TODO: deadlock here
+		// handle.Close()
 	})
 
 	return nil
@@ -429,10 +457,10 @@ func (pi *PcapImporter) SetSessionRotationInterval(interval time.Duration) {
 	pi.mLiveCapture.Unlock()
 }
 
-func (pi *PcapImporter) handle(handle *pcap.Handle, initialSession *ImportingSession,
-	flushAll bool, ctx context.Context, onComplete func(canceled bool)) {
+func (pi *PcapImporter) handle(handle *pcap.Handle, initialSession *ImportingSession, flushAll bool, ctx context.Context, onComplete func(canceled bool)) {
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 	packetSource.NoCopy = true
+	packetSource.Lazy = true
 	assembler := pi.takeAssembler()
 	packets := packetSource.Packets()
 
@@ -535,6 +563,7 @@ func (pi *PcapImporter) handle(handle *pcap.Handle, initialSession *ImportingSes
 
 					continue
 				}
+
 				fCount, isPresent := session.PacketsPerService[servicePort]
 				if !isPresent {
 					fCount = flowCount{0, 0}
@@ -544,7 +573,6 @@ func (pi *PcapImporter) handle(handle *pcap.Handle, initialSession *ImportingSes
 			}
 
 			offlineUnlock()
-
 			assembler.AssembleWithTimestamp(packet.NetworkLayer().NetworkFlow(), tcp, packet.Metadata().Timestamp, packet, handle.LinkType())
 		case <-sessionRotationInterval.C:
 			rotateSession(false)
@@ -718,7 +746,7 @@ func createSSHClient(sshConfig *SSHConfig) (client *ssh.Client, err error) {
 		User:            sshConfig.User,
 		HostKeyCallback: hostKeyCallback,
 		Auth:            []ssh.AuthMethod{authMethod},
-		Timeout:         3 * time.Second,
+		Timeout:         30 * time.Second,
 	})
 	if err != nil {
 		return nil, err
@@ -743,14 +771,16 @@ func generateBffFilters(captureOptions CaptureOptions) string {
 }
 
 func deleteProcessingFile(fileName string) {
-	if err := os.Remove(ProcessingPcapsBasePath + fileName); err != nil {
+	if err := os.Remove(filepath.Join(ProcessingPcapsBasePath, fileName)); err != nil {
 		log.WithError(err).Error("failed to delete processing file")
 	}
 }
 
 func moveProcessingFile(session *ImportingSession, fileName string) {
-	if err := os.Rename(ProcessingPcapsBasePath+fileName,
-		PcapsBasePath+session.ID.Hex()+path.Ext(fileName)); err != nil {
+	if err := os.Rename(
+		filepath.Join(ProcessingPcapsBasePath, fileName),
+		filepath.Join(PcapsBasePath, session.ID.Hex()+path.Ext(fileName)),
+	); err != nil {
 		log.WithError(err).Error("failed to move processed file")
 	}
 }

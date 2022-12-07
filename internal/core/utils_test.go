@@ -20,7 +20,9 @@ package core
 import (
 	"context"
 	"os"
+	"os/exec"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -32,6 +34,19 @@ type TestStorageWrapper struct {
 	Storage    *MongoStorage
 	Context    context.Context
 	CancelFunc context.CancelFunc
+}
+
+func TestMain(m *testing.M) {
+	if err := os.MkdirAll(ProcessingPcapsBasePath, 0755); err != nil {
+		panic(err)
+	}
+
+	if err := os.MkdirAll(ConnectionPcapsBasePath, 0755); err != nil {
+		panic(err)
+	}
+
+	code := m.Run()
+	os.Exit(code)
 }
 
 func NewTestStorageWrapper(t *testing.T) *TestStorageWrapper {
@@ -103,4 +118,13 @@ func testEnvironmentHttpPort() uint16 {
 	} else {
 		return uint16(http)
 	}
+}
+
+func testContainerAddress(t *testing.T) string {
+	cmd := exec.Command("docker", "inspect", "caronte-test-environment", "-f", "{{.NetworkSettings.IPAddress}}")
+	output, err := cmd.Output()
+
+	require.NoError(t, err)
+
+	return strings.TrimSpace(string(output))
 }

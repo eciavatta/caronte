@@ -29,7 +29,7 @@ type TestNotificationController struct {
 
 func NewTestNotificationController() *TestNotificationController {
 	return &TestNotificationController{
-		notificationChannel: make(chan gin.H),
+		notificationChannel: make(chan gin.H, 1024),
 	}
 }
 

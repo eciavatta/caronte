@@ -28,10 +28,11 @@ import (
 )
 
 const (
-	writeWait      = 10 * time.Second
-	pongWait       = 60 * time.Second
-	pingPeriod     = (pongWait * 9) / 10
-	maxMessageSize = 512
+	writeWait          = 10 * time.Second
+	pongWait           = 60 * time.Second
+	pingPeriod         = (pongWait * 9) / 10
+	maxMessageSize     = 512
+	broadcastQueueSize = 1024
 )
 
 type NotificationController interface {
@@ -56,7 +57,7 @@ func NewNotificationController(applicationContext *ApplicationContext) Notificat
 			WriteBufferSize: 1024,
 		},
 		clients:            make(map[net.Addr]*client),
-		broadcast:          make(chan interface{}),
+		broadcast:          make(chan interface{}, broadcastQueueSize),
 		register:           make(chan *client),
 		unregister:         make(chan *client),
 		applicationContext: applicationContext,

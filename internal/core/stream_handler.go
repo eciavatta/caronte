@@ -75,7 +75,7 @@ func NewStreamHandler(connection ConnectionHandler, streamFlow StreamFlow, scann
 		patternMatches: make(map[uint][]PatternSlice, connection.PatternsDatabaseSize()),
 		scanner:        scanner,
 		isClient:       isClient,
-		packets:        make([]gopacket.Packet, InitialPacketsCount),
+		packets:        make([]gopacket.Packet, 0, InitialPacketsCount),
 	}
 
 	stream, err := connection.PatternsDatabase().Open(0, scanner.scratch, handler.onMatch, nil)

@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"sync"
 	"testing"
 	"time"
@@ -49,7 +50,7 @@ func TestImportPcap(t *testing.T) {
 	duplicateSessionID, err := pcapImporter.ImportPcap(duplicatePcapFileName, false)
 	require.Error(t, err)
 	assert.Equal(t, EmptyRowID(), duplicateSessionID)
-	assert.Error(t, os.Remove(ProcessingPcapsBasePath+duplicatePcapFileName))
+	assert.Error(t, os.Remove(filepath.Join(ProcessingPcapsBasePath, duplicatePcapFileName)))
 
 	_, isPresent := pcapImporter.GetSession(EmptyRowID())
 	assert.False(t, isPresent)
@@ -70,8 +71,8 @@ func TestImportPcap(t *testing.T) {
 		PacketsPerMinute: 0,
 	}}, <-statsChan)
 
-	assert.Error(t, os.Remove(ProcessingPcapsBasePath+fileName))
-	assert.NoError(t, os.Remove(PcapsBasePath+session.ID.Hex()+".pcap"))
+	assert.Error(t, os.Remove(filepath.Join(ProcessingPcapsBasePath, fileName)))
+	assert.NoError(t, os.Remove(filepath.Join(PcapsBasePath, session.ID.Hex()+".pcap")))
 
 	wrapper.Destroy(t)
 }
@@ -99,8 +100,8 @@ func TestCancelImportSession(t *testing.T) {
 	assert.Equal(t, "pcap.canceled", (<-statsChan)["event"])
 	time.Sleep(time.Second)
 
-	assert.Error(t, os.Remove(ProcessingPcapsBasePath+fileName))
-	assert.Error(t, os.Remove(PcapsBasePath+sessionID.Hex()+".pcap"))
+	assert.Error(t, os.Remove(filepath.Join(ProcessingPcapsBasePath, fileName)))
+	assert.Error(t, os.Remove(filepath.Join(PcapsBasePath, sessionID.Hex()+".pcap")))
 
 	wrapper.Destroy(t)
 }
@@ -131,8 +132,8 @@ func TestImportNoTcpPackets(t *testing.T) {
 		PacketsPerMinute: 0,
 	}}, <-statsChan)
 
-	assert.Error(t, os.Remove(ProcessingPcapsBasePath+fileName))
-	assert.NoError(t, os.Remove(PcapsBasePath+sessionID.Hex()+".pcap"))
+	assert.Error(t, os.Remove(filepath.Join(ProcessingPcapsBasePath, fileName)))
+	assert.NoError(t, os.Remove(filepath.Join(PcapsBasePath, sessionID.Hex()+".pcap")))
 
 	wrapper.Destroy(t)
 }
@@ -239,7 +240,7 @@ func TestRemoteSSHConnections(t *testing.T) {
 
 func TestRemoteCapture(t *testing.T) {
 	wrapper := NewTestStorageWrapper(t)
-	pcapImporter, _ := newTestPcapImporter(wrapper, "172.0.0.0/8")
+	pcapImporter, _ := newTestPcapImporter(wrapper, testContainerAddress(t))
 
 	validCaptureOptions := CaptureOptions{
 		Interface:        "eth0",
@@ -255,16 +256,18 @@ func TestRemoteCapture(t *testing.T) {
 	require.Error(t, err)
 
 	for i := 0; i < 3; i++ {
+		t.Logf("Starting capture of round %d..\n", i)
 		require.NoError(t, pcapImporter.StartRemoteCapture(validSSHConfig(), validCaptureOptions))
 		// one session per time
 		require.Error(t, pcapImporter.StartRemoteCapture(validSSHConfig(), validCaptureOptions))
 
-		time.Sleep(1 * time.Second)
+		time.Sleep(3 * time.Second)
 		resp, err := http.Get(fmt.Sprintf("http://%s:%v/numbers", testEnvironmentHost(), testEnvironmentHttpPort()))
 		assert.NoError(t, err)
 		assert.Equal(t, resp.StatusCode, http.StatusOK)
 
-		time.Sleep(2 * time.Second)
+		time.Sleep(3 * time.Second)
+		t.Logf("Stopping capture of round %d..\n", i)
 		require.NoError(t, pcapImporter.StopCapture())
 		require.Error(t, pcapImporter.StopCapture())
 
@@ -272,10 +275,11 @@ func TestRemoteCapture(t *testing.T) {
 		sessions := pcapImporter.GetSessions()
 		require.Len(t, sessions, i+1)
 		assert.Zero(t, sessions[i].ImportingError)
-		assert.Less(t, 5, sessions[i].ProcessedPackets)
-		assert.Less(t, 5, sessions[i].InvalidPackets) // TODO: why invalid?
+		assert.Equal(t, 11, sessions[i].ProcessedPackets)
+		assert.Equal(t, 0, sessions[i].InvalidPackets)
+		assert.Equal(t, map[uint16]flowCount{8080: [2]int{6, 5}}, sessions[i].PacketsPerService)
 
-		assert.NoError(t, os.Remove(PcapsBasePath+sessions[i].ID.Hex()+".pcap"))
+		assert.NoError(t, os.Remove(filepath.Join(PcapsBasePath, sessions[i].ID.Hex()+".pcap")))
 	}
 
 	wrapper.Destroy(t)
@@ -283,10 +287,11 @@ func TestRemoteCapture(t *testing.T) {
 
 func TestPcapRotation(t *testing.T) {
 	wrapper := NewTestStorageWrapper(t)
-	pcapImporter, _ := newTestPcapImporter(wrapper, "172.0.0.0/8")
+	pcapImporter, _ := newTestPcapImporter(wrapper, testContainerAddress(t))
 
 	pcapImporter.SetSessionRotationInterval(3 * time.Second)
 
+	t.Log("Starting capture..")
 	require.NoError(t, pcapImporter.StartRemoteCapture(validSSHConfig(), CaptureOptions{
 		Interface:        "eth0",
 		IncludedServices: []uint16{testEnvironmentHttpPort()},
@@ -301,6 +306,7 @@ func TestPcapRotation(t *testing.T) {
 
 		if i == 4 {
 			time.Sleep(1 * time.Second)
+			t.Log("Stopping capture..")
 			require.NoError(t, pcapImporter.StopCapture())
 		}
 
@@ -308,10 +314,11 @@ func TestPcapRotation(t *testing.T) {
 		sessions := pcapImporter.GetSessions()
 		require.Len(t, sessions, i+1)
 		assert.Zero(t, sessions[i].ImportingError)
-		assert.Less(t, 5, sessions[i].ProcessedPackets)
-		assert.Less(t, 5, sessions[i].InvalidPackets) // todo: why invalid?
+		assert.Equal(t, 11, sessions[i].ProcessedPackets)
+		assert.Equal(t, 0, sessions[i].InvalidPackets)
+		assert.Equal(t, map[uint16]flowCount{8080: [2]int{6, 5}}, sessions[i].PacketsPerService)
 
-		assert.NoError(t, os.Remove(PcapsBasePath+sessions[i].ID.Hex()+".pcap"))
+		assert.NoError(t, os.Remove(filepath.Join(PcapsBasePath, sessions[i].ID.Hex()+".pcap")))
 	}
 
 	wrapper.Destroy(t)
@@ -380,7 +387,7 @@ func checkSessionEquals(t *testing.T, wrapper *TestStorageWrapper, session Impor
 
 func copyToProcessing(t *testing.T, fileName string) string {
 	newFile := fmt.Sprintf("test-%v-%s", time.Now().UnixNano(), fileName)
-	require.NoError(t, CopyFile(ProcessingPcapsBasePath+newFile, "../../test/data/"+fileName))
+	require.NoError(t, CopyFile(filepath.Join(ProcessingPcapsBasePath, newFile), filepath.Join("../../test/data", fileName)))
 	return newFile
 }
 

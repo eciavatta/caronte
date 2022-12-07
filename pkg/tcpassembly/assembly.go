@@ -536,19 +536,19 @@ func (a *Assembler) Assemble(netFlow gopacket.Flow, t *layers.TCP) {
 //	zero or one calls to ReassemblyComplete on the same stream
 func (a *Assembler) AssembleWithTimestamp(netFlow gopacket.Flow, t *layers.TCP, timestamp time.Time, packet gopacket.Packet, linkType layers.LinkType) {
 	// Ignore empty TCP packets
-	if !t.SYN && !t.FIN && !t.RST && len(t.LayerPayload()) == 0 {
-		if *debugLog {
-			log.Println("ignoring useless packet")
-		}
-		return
-	}
+	// if !t.SYN && !t.FIN && !t.RST && len(t.LayerPayload()) == 0 {
+	// 	if *debugLog {
+	// 		log.Println("ignoring useless packet")
+	// 	}
+	// 	return
+	// }
 
 	a.ret = a.ret[:0]
 	key := key{netFlow, t.TransportFlow()}
 	var conn *connection
 
 	// @eciavatta
-	if packet != nil {
+	if packet != nil && conn != nil {
 		defer func() {
 			conn.stream.Packet(packet)
 		}()
