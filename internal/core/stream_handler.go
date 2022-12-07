@@ -176,7 +176,7 @@ func (sh *StreamHandler) resetCurrentDocument() {
 	}
 }
 
-func (sh *StreamHandler) onMatch(id uint, from uint64, to uint64, _ uint, _ interface{}) error {
+func (sh *StreamHandler) onMatch(id uint, from uint64, to uint64, _ uint, _ any) error {
 	patternSlices, isPresent := sh.patternMatches[id]
 	if isPresent {
 		if len(patternSlices) > 0 {

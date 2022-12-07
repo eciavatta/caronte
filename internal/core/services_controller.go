@@ -59,7 +59,7 @@ func NewServicesController(storage Storage) *ServicesController {
 func (sc *ServicesController) SetService(c context.Context, service Service) error {
 	sc.mutex.Lock()
 	defer sc.mutex.Unlock()
-	var upsert interface{}
+	var upsert any
 	updated, err := sc.storage.Update(Services).Context(c).Filter(OrderedDocument{{Key: "_id", Value: service.Port}}).
 		Upsert(&upsert).One(service)
 	if err != nil {

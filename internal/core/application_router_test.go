@@ -34,7 +34,7 @@ import (
 func TestSetupApplication(t *testing.T) {
 	toolkit := NewRouterTestToolkit(t, false)
 
-	settings := make(map[string]interface{})
+	settings := make(map[string]any)
 	assert.Equal(t, http.StatusServiceUnavailable, toolkit.MakeRequest("GET", "/api/rules", nil).Code)
 	assert.Equal(t, http.StatusBadRequest, toolkit.MakeRequest("POST", "/setup", settings).Code)
 	settings["config"] = Config{ServerAddress: "1.2.3.4", FlagRegex: "FLAG{test}", AuthRequired: true}
@@ -192,7 +192,7 @@ func NewRouterTestToolkit(t *testing.T, withSetup bool) *RouterTestToolkit {
 	return &toolkit
 }
 
-func (rtt *RouterTestToolkit) MakeRequest(method string, url string, body interface{}) *httptest.ResponseRecorder {
+func (rtt *RouterTestToolkit) MakeRequest(method string, url string, body any) *httptest.ResponseRecorder {
 	var r io.Reader
 
 	if body != nil {

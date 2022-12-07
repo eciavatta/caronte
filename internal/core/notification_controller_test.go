@@ -40,6 +40,6 @@ func (wc *TestNotificationController) NotificationHandler(w http.ResponseWriter,
 func (wc *TestNotificationController) Run() {
 }
 
-func (wc *TestNotificationController) Notify(event string, message interface{}) {
+func (wc *TestNotificationController) Notify(event string, message any) {
 	wc.notificationChannel <- gin.H{"event": event, "message": message}
 }

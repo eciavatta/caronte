@@ -21,11 +21,12 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
-	"moul.io/http2curl"
 	"net/http"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
+	"moul.io/http2curl"
 )
 
 type HTTPRequestMetadata struct {
@@ -132,7 +133,7 @@ func requestsCode(request *http.Request, body string) string {
 
 func fetchRequest(request *http.Request, body string) string {
 	headers := JoinArrayMap(request.Header)
-	data := make(map[string]interface{})
+	data := make(map[string]any)
 	data["headers"] = headers
 	if referrer := request.Header.Get("referrer"); referrer != "" {
 		data["Referrer"] = referrer
@@ -152,7 +153,7 @@ func fetchRequest(request *http.Request, body string) string {
 	return "invalid-request"
 }
 
-func toJSON(obj interface{}) string {
+func toJSON(obj any) string {
 	if buffer, err := json.MarshalIndent(obj, "", "\t"); err == nil {
 		return string(buffer)
 	} else {

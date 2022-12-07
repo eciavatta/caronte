@@ -580,7 +580,7 @@ func AuthRequiredMiddleware(applicationContext *ApplicationContext) gin.HandlerF
 	}
 }
 
-func success(c *gin.Context, obj interface{}) {
+func success(c *gin.Context, obj any) {
 	c.JSON(http.StatusOK, obj)
 }
 
@@ -609,7 +609,7 @@ func unprocessableEntity(c *gin.Context, err error) {
 	c.JSON(http.StatusUnprocessableEntity, UnorderedDocument{"result": "error", "error": err.Error()})
 }
 
-func notFound(c *gin.Context, obj interface{}) {
+func notFound(c *gin.Context, obj any) {
 	c.JSON(http.StatusNotFound, obj)
 }
 

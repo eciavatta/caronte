@@ -124,8 +124,8 @@ func NewMongoStorage(uri string, port int, database, username, password string) 
 type InsertOperation interface {
 	Context(ctx context.Context) InsertOperation
 	StopOnFail(stop bool) InsertOperation
-	One(document interface{}) (interface{}, error)
-	Many(documents []interface{}) ([]interface{}, error)
+	One(document any) (any, error)
+	Many(documents []any) ([]any, error)
 }
 
 type MongoInsertOperation struct {
@@ -145,7 +145,7 @@ func (fo MongoInsertOperation) StopOnFail(stop bool) InsertOperation {
 	return fo
 }
 
-func (fo MongoInsertOperation) One(document interface{}) (interface{}, error) {
+func (fo MongoInsertOperation) One(document any) (any, error) {
 	if fo.err != nil {
 		return nil, fo.err
 	}
@@ -158,7 +158,7 @@ func (fo MongoInsertOperation) One(document interface{}) (interface{}, error) {
 	return result.InsertedID, nil
 }
 
-func (fo MongoInsertOperation) Many(documents []interface{}) ([]interface{}, error) {
+func (fo MongoInsertOperation) Many(documents []any) ([]any, error) {
 	if fo.err != nil {
 		return nil, fo.err
 	}
@@ -188,10 +188,10 @@ func (storage *MongoStorage) Insert(collectionName string) InsertOperation {
 type UpdateOperation interface {
 	Context(ctx context.Context) UpdateOperation
 	Filter(filter OrderedDocument) UpdateOperation
-	Upsert(upsertResults *interface{}) UpdateOperation
-	One(update interface{}) (bool, error)
-	OneComplex(update interface{}) (bool, error)
-	Many(update interface{}) (int64, error)
+	Upsert(upsertResults *any) UpdateOperation
+	One(update any) (bool, error)
+	OneComplex(update any) (bool, error)
+	Many(update any) (int64, error)
 }
 
 type MongoUpdateOperation struct {
@@ -200,7 +200,7 @@ type MongoUpdateOperation struct {
 	update       OrderedDocument
 	ctx          context.Context
 	opt          *options.UpdateOptions
-	upsertResult *interface{}
+	upsertResult *any
 	err          error
 }
 
@@ -216,13 +216,13 @@ func (fo MongoUpdateOperation) Filter(filter OrderedDocument) UpdateOperation {
 	return fo
 }
 
-func (fo MongoUpdateOperation) Upsert(upsertResults *interface{}) UpdateOperation {
+func (fo MongoUpdateOperation) Upsert(upsertResults *any) UpdateOperation {
 	fo.upsertResult = upsertResults
 	fo.opt.SetUpsert(true)
 	return fo
 }
 
-func (fo MongoUpdateOperation) One(update interface{}) (bool, error) {
+func (fo MongoUpdateOperation) One(update any) (bool, error) {
 	if fo.err != nil {
 		return false, fo.err
 	}
@@ -241,7 +241,7 @@ func (fo MongoUpdateOperation) One(update interface{}) (bool, error) {
 	return result.ModifiedCount == 1, nil
 }
 
-func (fo MongoUpdateOperation) OneComplex(update interface{}) (bool, error) {
+func (fo MongoUpdateOperation) OneComplex(update any) (bool, error) {
 	if fo.err != nil {
 		return false, fo.err
 	}
@@ -257,7 +257,7 @@ func (fo MongoUpdateOperation) OneComplex(update interface{}) (bool, error) {
 	return result.ModifiedCount == 1, nil
 }
 
-func (fo MongoUpdateOperation) Many(update interface{}) (int64, error) {
+func (fo MongoUpdateOperation) Many(update any) (int64, error) {
 	if fo.err != nil {
 		return 0, fo.err
 	}
@@ -300,9 +300,9 @@ type FindOperation interface {
 	Limit(n int64) FindOperation
 	Skip(n int64) FindOperation
 	MaxTime(duration time.Duration) FindOperation
-	First(result interface{}) error
-	All(results interface{}) error
-	Traverse(constructor func() interface{}, f func(interface{}) bool) error
+	First(result any) error
+	All(results any) error
+	Traverse(constructor func() any, f func(any) bool) error
 }
 
 type MongoFindOperation struct {
@@ -365,7 +365,7 @@ func (fo MongoFindOperation) Sort(field string, ascending bool) FindOperation {
 	return fo
 }
 
-func (fo MongoFindOperation) First(result interface{}) error {
+func (fo MongoFindOperation) First(result any) error {
 	if fo.err != nil {
 		return fo.err
 	}
@@ -382,7 +382,7 @@ func (fo MongoFindOperation) First(result interface{}) error {
 	return nil
 }
 
-func (fo MongoFindOperation) All(results interface{}) error {
+func (fo MongoFindOperation) All(results any) error {
 	if fo.err != nil {
 		return fo.err
 	}
@@ -397,7 +397,7 @@ func (fo MongoFindOperation) All(results interface{}) error {
 	return nil
 }
 
-func (fo MongoFindOperation) Traverse(constructor func() interface{}, f func(interface{}) bool) error {
+func (fo MongoFindOperation) Traverse(constructor func() any, f func(any) bool) error {
 	if fo.err != nil {
 		return fo.err
 	}

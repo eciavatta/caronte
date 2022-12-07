@@ -53,7 +53,7 @@ func NewResourcesController(notificationController NotificationController) *Reso
 	}
 }
 
-func (csc *ResourcesController) GetProcessStats(c context.Context) interface{} {
+func (csc *ResourcesController) GetProcessStats(c context.Context) any {
 	return nil
 }
 

@@ -48,7 +48,7 @@ func TestOperationOnInvalidCollection(t *testing.T) {
 	assert.Nil(t, insertedID)
 	assert.Error(t, err)
 
-	insertedIDs, err := insertOp.Many([]interface{}{simpleDoc})
+	insertedIDs, err := insertOp.Many([]any{simpleDoc})
 	assert.Nil(t, insertedIDs)
 	assert.Error(t, err)
 
@@ -62,12 +62,12 @@ func TestOperationOnInvalidCollection(t *testing.T) {
 	assert.Error(t, err)
 
 	findOp := wrapper.Storage.Find("invalid_collection").Context(wrapper.Context)
-	var result interface{}
+	var result any
 	err = findOp.First(&result)
 	assert.Nil(t, result)
 	assert.Error(t, err)
 
-	var results interface{}
+	var results any
 	err = findOp.All(&result)
 	assert.Nil(t, results)
 	assert.Error(t, err)
@@ -112,7 +112,7 @@ func TestSimpleInsertManyAndFindMany(t *testing.T) {
 	wrapper.AddCollection(collectionName)
 
 	insertOp := wrapper.Storage.Insert(collectionName).Context(wrapper.Context)
-	simpleDocs := []interface{}{
+	simpleDocs := []any{
 		UnorderedDocument{"key": "a"},
 		UnorderedDocument{"_id": "idb", "key": "b"},
 		UnorderedDocument{"key": "c"},
@@ -154,7 +154,7 @@ func TestSimpleInsertManyAndFindTraverse(t *testing.T) {
 	wrapper.AddCollection(collectionName)
 
 	insertOp := wrapper.Storage.Insert(collectionName).Context(wrapper.Context)
-	simpleDocs := []interface{}{
+	simpleDocs := []any{
 		UnorderedDocument{"key": "a"},
 		UnorderedDocument{"_id": "idb", "key": "b"},
 		UnorderedDocument{"key": "c"},
@@ -167,11 +167,11 @@ func TestSimpleInsertManyAndFindTraverse(t *testing.T) {
 	results := make([]UnorderedDocument, 0)
 	findOp := wrapper.Storage.Find(collectionName).Context(wrapper.Context)
 
-	f := func(elem interface{}) bool {
+	f := func(elem any) bool {
 		results = append(results, elem.(UnorderedDocument))
 		return true
 	}
-	err = findOp.Sort("key", true).Traverse(func() interface{} { return UnorderedDocument{} }, f)
+	err = findOp.Sort("key", true).Traverse(func() any { return UnorderedDocument{} }, f)
 	assert.Nil(t, err)
 	assert.Len(t, results, 3)
 	assert.Equal(t, "a", results[0]["key"])
@@ -187,7 +187,7 @@ func TestSimpleUpdateOneUpdateMany(t *testing.T) {
 	wrapper.AddCollection(collectionName)
 
 	insertOp := wrapper.Storage.Insert(collectionName).Context(wrapper.Context)
-	simpleDocs := []interface{}{
+	simpleDocs := []any{
 		UnorderedDocument{"_id": "ida", "key": "a"},
 		UnorderedDocument{"key": "b"},
 		UnorderedDocument{"key": "c"},
@@ -206,7 +206,7 @@ func TestSimpleUpdateOneUpdateMany(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, int64(2), updated)
 
-	var upsertID interface{}
+	var upsertID any
 	isUpdated, err = updateOp.Upsert(&upsertID).Filter(OrderedDocument{{Key: "key", Value: "d"}}).
 		One(OrderedDocument{{Key: "key", Value: "d"}})
 	assert.Nil(t, err)
@@ -235,7 +235,7 @@ func TestComplexInsertManyFindMany(t *testing.T) {
 	oid1, err := primitive.ObjectIDFromHex("ffffffffffffffffffffffff")
 	assert.Nil(t, err)
 
-	docs := []interface{}{
+	docs := []any{
 		a{
 			A: "test0",
 			B: 0,

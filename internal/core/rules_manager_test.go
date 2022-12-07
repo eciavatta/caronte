@@ -149,7 +149,7 @@ func TestLoadAndUpdateRules(t *testing.T) {
 	wrapper.AddCollection(Rules)
 
 	expectedIds := []RowID{NewRowID(), NewRowID(), NewRowID(), NewRowID()}
-	rules := []interface{}{
+	rules := []any{
 		Rule{ID: expectedIds[0], Name: "rule1", Color: "#fff", Patterns: []Pattern{
 			{Regex: "/pattern1/", Flags: RegexFlags{Caseless: true}, Direction: DirectionToClient, internalID: 0},
 		}},

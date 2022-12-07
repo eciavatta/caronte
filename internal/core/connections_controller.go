@@ -200,12 +200,12 @@ func (cc ConnectionsController) GetConnections(c context.Context, filter Connect
 
 			if similarTo == SimilarToBoth || similarTo == SimilarToClient { // filter documents with similar client size
 				query = query.Filter(OrderedDocument{{Key: "$expr", Value: UnorderedDocument{
-					"$gt": []interface{}{
+					"$gt": []any{
 						UnorderedDocument{"$divide": []UnorderedDocument{
-							{"$min": []interface{}{
+							{"$min": []any{
 								"$client_bytes", similarToConn.ClientBytes + 1, // avoid division by zero
 							}},
-							{"$max": []interface{}{
+							{"$max": []any{
 								"$client_bytes", similarToConn.ClientBytes + 1,
 							}},
 						}},
@@ -216,12 +216,12 @@ func (cc ConnectionsController) GetConnections(c context.Context, filter Connect
 
 			if similarTo == SimilarToBoth || similarTo == SimilarToServer { // filter documents with similar server size
 				query = query.Filter(OrderedDocument{{Key: "$expr", Value: UnorderedDocument{
-					"$gt": []interface{}{
+					"$gt": []any{
 						UnorderedDocument{"$divide": []UnorderedDocument{
-							{"$min": []interface{}{
+							{"$min": []any{
 								"$server_bytes", similarToConn.ServerBytes + 1, // avoid division by zero
 							}},
-							{"$max": []interface{}{
+							{"$max": []any{
 								"$server_bytes", similarToConn.ServerBytes + 1,
 							}},
 						}},
@@ -230,7 +230,7 @@ func (cc ConnectionsController) GetConnections(c context.Context, filter Connect
 				}}})
 			}
 
-			err = query.Traverse(func() interface{} { return &Connection{} },
+			err = query.Traverse(func() any { return &Connection{} },
 				cc.buildSimilarityFunc(similarToConn, &connections, similarTo))
 		}
 	} else {
@@ -280,7 +280,7 @@ func (cc ConnectionsController) SetComment(c context.Context, id RowID, comment 
 	return cc.setProperty(c, id, "comment", comment)
 }
 
-func (cc ConnectionsController) setProperty(c context.Context, id RowID, propertyName string, propertyValue interface{}) bool {
+func (cc ConnectionsController) setProperty(c context.Context, id RowID, propertyName string, propertyValue any) bool {
 	updated, err := cc.storage.Update(Connections).Context(c).Filter(byID(id)).
 		One(UnorderedDocument{propertyName: propertyValue})
 	if err != nil {
@@ -290,13 +290,13 @@ func (cc ConnectionsController) setProperty(c context.Context, id RowID, propert
 }
 
 func (cc ConnectionsController) buildSimilarityFunc(similarToConn Connection,
-	results *[]Connection, similarTo int) func(interface{}) bool {
+	results *[]Connection, similarTo int) func(any) bool {
 	connClientComparable := similarToConn.ClientStreamComparable()
 	connServerComparable := similarToConn.ServerStreamComparable()
 
 	// duplicated code for optimization
 	if similarTo == SimilarToClient {
-		return func(row interface{}) bool {
+		return func(row any) bool {
 			conn := row.(*Connection)
 			if connClientComparable.IsSimilarTo(conn.ClientStreamComparable()) {
 				*results = append(*results, *conn)
@@ -305,7 +305,7 @@ func (cc ConnectionsController) buildSimilarityFunc(similarToConn Connection,
 			return false
 		}
 	} else if similarTo == SimilarToServer {
-		return func(row interface{}) bool {
+		return func(row any) bool {
 			conn := row.(*Connection)
 			if connServerComparable.IsSimilarTo(conn.ServerStreamComparable()) {
 				*results = append(*results, *conn)
@@ -314,7 +314,7 @@ func (cc ConnectionsController) buildSimilarityFunc(similarToConn Connection,
 			return false
 		}
 	} else {
-		return func(row interface{}) bool {
+		return func(row any) bool {
 			conn := row.(*Connection)
 			if connClientComparable.IsSimilarTo(conn.ClientStreamComparable()) &&
 				connServerComparable.IsSimilarTo(conn.ServerStreamComparable()) {

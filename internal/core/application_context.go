@@ -83,7 +83,7 @@ func CreateApplicationContext(storage Storage, version string) (*ApplicationCont
 func (sm *ApplicationContext) SetConfig(config Config) {
 	sm.Config = config
 	sm.Configure()
-	var upsertResults interface{}
+	var upsertResults any
 	if _, err := sm.Storage.Update(Settings).Upsert(&upsertResults).
 		Filter(OrderedDocument{{Key: "_id", Value: "config"}}).One(UnorderedDocument{"config": config}); err != nil {
 		log.WithError(err).WithField("config", config).Error("failed to update config")
@@ -92,7 +92,7 @@ func (sm *ApplicationContext) SetConfig(config Config) {
 
 func (sm *ApplicationContext) SetAccounts(accounts gin.Accounts) {
 	sm.Accounts = accounts
-	var upsertResults interface{}
+	var upsertResults any
 	if _, err := sm.Storage.Update(Settings).Upsert(&upsertResults).
 		Filter(OrderedDocument{{Key: "_id", Value: "accounts"}}).One(UnorderedDocument{"accounts": accounts}); err != nil {
 		log.WithError(err).Error("failed to update accounts")

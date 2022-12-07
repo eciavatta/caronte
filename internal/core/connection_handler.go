@@ -344,7 +344,7 @@ func (ch *connectionHandlerImpl) UpdateStatistics(connection Connection) {
 		updateDocument[fmt.Sprintf("matched_rules.%s", ruleID.Hex())] = 1
 	}
 
-	var results interface{}
+	var results any
 	if _, err := ch.Storage().Update(Statistics).Upsert(&results).
 		Filter(OrderedDocument{{Key: "_id", Value: time.Unix(rangeStart*60, 0)}}).
 		OneComplex(UnorderedDocument{"$inc": updateDocument}); err != nil {

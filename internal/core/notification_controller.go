@@ -38,13 +38,13 @@ const (
 type NotificationController interface {
 	NotificationHandler(http.ResponseWriter, *http.Request) error
 	Run()
-	Notify(string, interface{})
+	Notify(string, any)
 }
 
 type notificationControllerImpl struct {
 	upgrader           websocket.Upgrader
 	clients            map[net.Addr]*client
-	broadcast          chan interface{}
+	broadcast          chan any
 	register           chan *client
 	unregister         chan *client
 	applicationContext *ApplicationContext
@@ -57,7 +57,7 @@ func NewNotificationController(applicationContext *ApplicationContext) Notificat
 			WriteBufferSize: 1024,
 		},
 		clients:            make(map[net.Addr]*client),
-		broadcast:          make(chan interface{}, broadcastQueueSize),
+		broadcast:          make(chan any, broadcastQueueSize),
 		register:           make(chan *client),
 		unregister:         make(chan *client),
 		applicationContext: applicationContext,
@@ -66,7 +66,7 @@ func NewNotificationController(applicationContext *ApplicationContext) Notificat
 
 type client struct {
 	conn                   *websocket.Conn
-	send                   chan interface{}
+	send                   chan any
 	notificationController *notificationControllerImpl
 }
 
@@ -79,7 +79,7 @@ func (wc *notificationControllerImpl) NotificationHandler(w http.ResponseWriter,
 
 	client := &client{
 		conn:                   conn,
-		send:                   make(chan interface{}),
+		send:                   make(chan any),
 		notificationController: wc,
 	}
 	wc.register <- client
@@ -126,7 +126,7 @@ func (wc *notificationControllerImpl) Run() {
 	}
 }
 
-func (wc *notificationControllerImpl) Notify(event string, message interface{}) {
+func (wc *notificationControllerImpl) Notify(event string, message any) {
 	wc.broadcast <- gin.H{"event": event, "message": message}
 }
 
