@@ -19,8 +19,10 @@ package core
 
 import (
 	"context"
+	"fmt"
+	"io"
+	"net/http"
 	"os"
-	"os/exec"
 	"strconv"
 	"strings"
 	"testing"
@@ -121,10 +123,12 @@ func testEnvironmentHttpPort() uint16 {
 }
 
 func testContainerAddress(t *testing.T) string {
-	cmd := exec.Command("docker", "inspect", "caronte-test-environment", "-f", "{{.NetworkSettings.IPAddress}}")
-	output, err := cmd.Output()
+	resp, err := http.Get(fmt.Sprintf("http://%s:%v/ip", testEnvironmentHost(), testEnvironmentHttpPort()))
+	require.NoError(t, err)
+	require.Equal(t, resp.StatusCode, http.StatusOK)
 
+	output, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 
-	return strings.TrimSpace(string(output))
+	return strings.Trim(string(output), "\" ")
 }

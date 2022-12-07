@@ -4,8 +4,11 @@ Usage:
     ./http-test-server.py [port]
 """
 from http.server import BaseHTTPRequestHandler, HTTPServer
-import logging
+import fcntl
 import json
+import logging
+import socket
+import struct
 import sys
 
 class ServerHandler(BaseHTTPRequestHandler):
@@ -18,8 +21,18 @@ class ServerHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         if (self.path.startswith('/numbers')):
             return self.response(list(range(100)))
+        elif (self.path.startswith('/ip')):
+            return self.response(get_ip_address('eth0'))
 
         self.response({"error": "not found"}, status_code=404)
+
+def get_ip_address(ifname):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    return socket.inet_ntoa(fcntl.ioctl(
+        s.fileno(),
+        0x8915,  # SIOCGIFADDR
+        struct.pack('256s', ifname[:15].encode())
+    )[20:24])
 
 def run(server_class=HTTPServer, handler_class=ServerHandler, port=8080):
     logging.basicConfig(level=logging.INFO)
