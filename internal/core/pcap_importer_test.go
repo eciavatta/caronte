@@ -175,63 +175,63 @@ func TestRemoteSSHConnections(t *testing.T) {
 	require.Error(t, err)
 
 	_, err = pcapImporter.ListRemoteInterfaces(SSHConfig{
-		Host:     testEnvironmentHost(),
+		Host:     testHost,
 		Password: "invalid",
 	})
 	require.Error(t, err)
 
 	_, err = pcapImporter.ListRemoteInterfaces(SSHConfig{
-		Host: testEnvironmentHost(),
-		Port: testEnvironmentSshPort(),
+		Host: testHost,
+		Port: testSshPort,
 	})
 	require.Error(t, err)
 
 	_, err = pcapImporter.ListRemoteInterfaces(SSHConfig{
-		Host:     testEnvironmentHost(),
-		Port:     testEnvironmentSshPort(),
+		Host:     testHost,
+		Port:     testSshPort,
 		User:     "invalid",
 		Password: "test",
 	})
 	require.Error(t, err)
 
 	_, err = pcapImporter.ListRemoteInterfaces(SSHConfig{
-		Host:     testEnvironmentHost(),
-		Port:     testEnvironmentSshPort(),
+		Host:     testHost,
+		Port:     testSshPort,
 		Password: "invalid",
 	})
 	require.Error(t, err)
 
 	_, err = pcapImporter.ListRemoteInterfaces(SSHConfig{
-		Host:       testEnvironmentHost(),
-		Port:       testEnvironmentSshPort(),
+		Host:       testHost,
+		Port:       testSshPort,
 		PrivateKey: "invalid",
 	})
 	require.Error(t, err)
 
 	_, err = pcapImporter.ListRemoteInterfaces(SSHConfig{
-		Host:       testEnvironmentHost(),
-		Port:       testEnvironmentSshPort(),
+		Host:       testHost,
+		Port:       testSshPort,
 		PrivateKey: "-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAACmFlczI1Ni1jdHIAAAAGYmNyeXB0AAAAGAAAABAmwQugAw\nGA4R4hFZj7qrsIAAAAZAAAAAEAAAAzAAAAC3NzaC1lZDI1NTE5AAAAIHg+iDsYjtx9Y7iD\nCzHX0xoHWaTDA6fVs2CVXnDI7DWFAAAAsBwIgJfamwWHbdYIyMjAfogJO6Nt1BbxrAlFyW\nHObm8k7OfIc8iAdlIeUDtV9RvWtTVF6URIXZfxGxzpzXnVIBBwZkqR9zI8dB6RP7rR0t3D\nD3P1yFtXz2ei1ssa1ueoGV/0pojClroc+WKZJZD4qCGYDJ/vagy2ZSoOGJxgRoFGFRtuUx\n/FWilPP8urJQcnu4eDYqaZAfp+YS8QnlbBfnYfFSCSPiGWarxmYbdw0kwr\n-----END OPENSSH PRIVATE KEY-----\n",
 	})
 	require.Error(t, err, "key require passphrase")
 
 	_, err = pcapImporter.ListRemoteInterfaces(SSHConfig{
-		Host:       testEnvironmentHost(),
-		Port:       testEnvironmentSshPort(),
+		Host:       testHost,
+		Port:       testSshPort,
 		PrivateKey: "invalid",
 	})
 	require.Error(t, err)
 
 	_, err = pcapImporter.ListRemoteInterfaces(SSHConfig{
-		Host:       testEnvironmentHost(),
-		Port:       testEnvironmentSshPort(),
+		Host:       testHost,
+		Port:       testSshPort,
 		PrivateKey: "-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW\nQyNTUxOQAAACDpvMt45cHBpPQ6+MbQSPbqX/M2PvpeIDjXU3TxYMGUiQAAAJgOkOvQDpDr\n0AAAAAtzc2gtZWQyNTUxOQAAACDpvMt45cHBpPQ6+MbQSPbqX/M2PvpeIDjXU3TxYMGUiQ\nAAAEBBk7B4xNF0kG6w+sw7kuTsQyvc3wrey+q4SjcYZzNpb+m8y3jlwcGk9Dr4xtBI9upf\n8zY++l4gONdTdPFgwZSJAAAAFWNhcm9udGVAZWNpYXZhdHRhLmRldg==\n-----END OPENSSH PRIVATE KEY-----\n",
 	})
 	require.NoError(t, err)
 
 	_, err = pcapImporter.ListRemoteInterfaces(SSHConfig{
-		Host:       testEnvironmentHost(),
-		Port:       testEnvironmentSshPort(),
+		Host:       testHost,
+		Port:       testSshPort,
 		PrivateKey: "-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAACmFlczI1Ni1jdHIAAAAGYmNyeXB0AAAAGAAAABAmwQugAw\nGA4R4hFZj7qrsIAAAAZAAAAAEAAAAzAAAAC3NzaC1lZDI1NTE5AAAAIHg+iDsYjtx9Y7iD\nCzHX0xoHWaTDA6fVs2CVXnDI7DWFAAAAsBwIgJfamwWHbdYIyMjAfogJO6Nt1BbxrAlFyW\nHObm8k7OfIc8iAdlIeUDtV9RvWtTVF6URIXZfxGxzpzXnVIBBwZkqR9zI8dB6RP7rR0t3D\nD3P1yFtXz2ei1ssa1ueoGV/0pojClroc+WKZJZD4qCGYDJ/vagy2ZSoOGJxgRoFGFRtuUx\n/FWilPP8urJQcnu4eDYqaZAfp+YS8QnlbBfnYfFSCSPiGWarxmYbdw0kwr\n-----END OPENSSH PRIVATE KEY-----\n",
 		Passphrase: "test",
 	})
@@ -244,7 +244,7 @@ func TestRemoteCapture(t *testing.T) {
 
 	validCaptureOptions := CaptureOptions{
 		Interface:        "eth0",
-		IncludedServices: []uint16{testEnvironmentHttpPort()},
+		IncludedServices: []uint16{testHttpPort},
 	}
 
 	err := pcapImporter.StartRemoteCapture(invalidSSHConfig(), validCaptureOptions)
@@ -262,7 +262,7 @@ func TestRemoteCapture(t *testing.T) {
 		require.Error(t, pcapImporter.StartRemoteCapture(validSSHConfig(), validCaptureOptions))
 
 		time.Sleep(3 * time.Second)
-		resp, err := http.Get(fmt.Sprintf("http://%s:%v/numbers", testEnvironmentHost(), testEnvironmentHttpPort()))
+		resp, err := http.Get(fmt.Sprintf("http://%s:%v/numbers", testHost, testHttpPort))
 		assert.NoError(t, err)
 		assert.Equal(t, resp.StatusCode, http.StatusOK)
 
@@ -294,13 +294,13 @@ func TestPcapRotation(t *testing.T) {
 	t.Log("Starting capture..")
 	require.NoError(t, pcapImporter.StartRemoteCapture(validSSHConfig(), CaptureOptions{
 		Interface:        "eth0",
-		IncludedServices: []uint16{testEnvironmentHttpPort()},
+		IncludedServices: []uint16{testHttpPort},
 	}))
 
 	time.Sleep(time.Second)
 
 	for i := 0; i < 5; i++ {
-		resp, err := http.Get(fmt.Sprintf("http://%s:%v/numbers", testEnvironmentHost(), testEnvironmentHttpPort()))
+		resp, err := http.Get(fmt.Sprintf("http://%s:%v/numbers", testHost, testHttpPort))
 		assert.NoError(t, err)
 		assert.Equal(t, resp.StatusCode, http.StatusOK)
 
@@ -405,8 +405,8 @@ func (sf *testStreamFactory) New(_, _ gopacket.Flow, isServer bool, linkType lay
 
 func validSSHConfig() SSHConfig {
 	return SSHConfig{
-		Host:     testEnvironmentHost(),
-		Port:     testEnvironmentSshPort(),
+		Host:     testHost,
+		Port:     testSshPort,
 		User:     "root",
 		Password: "test",
 	}
@@ -414,8 +414,8 @@ func validSSHConfig() SSHConfig {
 
 func invalidSSHConfig() SSHConfig {
 	return SSHConfig{
-		Host:     testEnvironmentHost(),
-		Port:     testEnvironmentSshPort(),
+		Host:     testHost,
+		Port:     testSshPort,
 		User:     "root",
 		Password: "wrong",
 	}
