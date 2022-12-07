@@ -24,6 +24,8 @@ remove_pcaps:
 .PHONY: test
 test:
 	go test -v -race github.com/eciavatta/caronte/...
+	cd web && npx eslint --ignore-pattern '*.svg' --ignore-pattern '*.scss' 'src/**'
+	cd web && npx prettier --ignore-unknown --check 'src/**'
 
 coverage: test
 	go test -v -coverprofile=coverage.txt -covermode=atomic github.com/eciavatta/caronte/...

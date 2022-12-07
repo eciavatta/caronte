@@ -25,11 +25,11 @@ jobs:
           - "2222:22"
           - "8080:8080"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
-          go-version: 1.17
+          go-version: 1.19
       - name: Install dependencies
         run: sudo apt-get install pkg-config libpcap-dev libhyperscan-dev
       - name: Test backend
@@ -43,13 +43,17 @@ jobs:
       run:
         working-directory: web
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: 16.x
       - name: Install dependencies
         run: yarn install
+      - name: Run ESLint
+        run: npx eslint --ignore-pattern '*.svg' --ignore-pattern '*.scss' 'src/**'
+      - name: Run Prettier
+        run: npx prettier --ignore-unknown --check 'src/**'
       - name: Build frontend
         run: yarn build
   test_docker:
@@ -58,7 +62,7 @@ jobs:
     env:
       COMPOSE_FILE: .github/docker/docker-compose.yml
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Pull mongo image
         run: docker-compose pull mongo
       - name: Build environment image
