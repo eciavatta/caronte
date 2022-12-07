@@ -547,13 +547,6 @@ func (a *Assembler) AssembleWithTimestamp(netFlow gopacket.Flow, t *layers.TCP, 
 	key := key{netFlow, t.TransportFlow()}
 	var conn *connection
 
-	// @eciavatta
-	if packet != nil && conn != nil {
-		defer func() {
-			conn.stream.Packet(packet)
-		}()
-	}
-
 	// This for loop handles a race condition where a connection will close, lock
 	// the connection pool, and remove itself, but before it locked the connection
 	// pool it's returned to another Assemble statement.  This should loop 0-1
@@ -572,9 +565,16 @@ func (a *Assembler) AssembleWithTimestamp(netFlow gopacket.Flow, t *layers.TCP, 
 		}
 		conn.mu.Unlock()
 	}
+
+	// @eciavatta
+	if packet != nil {
+		conn.stream.Packet(packet)
+	}
+
 	if conn.lastSeen.Before(timestamp) {
 		conn.lastSeen = timestamp
 	}
+
 	seq, bytes := Sequence(t.Seq), t.Payload
 	if conn.nextSeq == invalidSequence {
 		if t.SYN {

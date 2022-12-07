@@ -113,7 +113,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 			}
 			rule, found := applicationContext.RulesManager.GetRule(id)
 			if !found {
-				notFound(c, UnorderedDocument{"id": id})
+				notFound(c, UnorderedDocument{"error": "not found", "id": id})
 			} else {
 				success(c, rule)
 			}
@@ -136,7 +136,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 			if err != nil {
 				badRequest(c, err)
 			} else if !isPresent {
-				notFound(c, UnorderedDocument{"id": id})
+				notFound(c, UnorderedDocument{"error": "not found", "id": id})
 			} else {
 				success(c, rule)
 				notificationController.Notify("rules.edit", rule)
@@ -298,7 +298,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 			if session, isPresent := applicationContext.PcapImporter.GetSession(sessionID); isPresent {
 				success(c, session)
 			} else {
-				notFound(c, gin.H{"session": sessionID})
+				notFound(c, gin.H{"error": "not found", "session": sessionID})
 			}
 		})
 
@@ -314,14 +314,14 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 
 				if FileExists(pcapPath) {
 					c.FileAttachment(pcapPath, sessionID.Hex()+".pcap")
+					return
 				} else if FileExists(pcapngPath) {
 					c.FileAttachment(pcapngPath, sessionID.Hex()+".pcapng")
-				} else {
-					log.WithField("sessionID", sessionID).Panic("pcap file not exists")
+					return
 				}
-			} else {
-				notFound(c, gin.H{"session": sessionID})
 			}
+
+			notFound(c, gin.H{"error": "not found", "session": sessionID})
 		})
 
 		api.DELETE("/pcap/sessions/:id", func(c *gin.Context) {
@@ -346,11 +346,11 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 				return
 			}
 
-			pcapPath := ConnectionPcapsBasePath + connectionID.Hex() + ".pcap"
+			pcapPath := filepath.Join(ConnectionPcapsBasePath, connectionID.Hex()+".pcap")
 			if FileExists(pcapPath) {
 				c.FileAttachment(pcapPath, connectionID.Hex()+".pcap")
 			} else {
-				notFound(c, gin.H{"connection": connectionID})
+				notFound(c, gin.H{"error": "not found", "connection": connectionID})
 			}
 		})
 
@@ -370,7 +370,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 				if connection, isPresent := applicationContext.ConnectionsController.GetConnection(c, id); isPresent {
 					success(c, connection)
 				} else {
-					notFound(c, gin.H{"connection": id})
+					notFound(c, gin.H{"error": "not found", "connection": id})
 				}
 			}
 		})
@@ -411,7 +411,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 				success(c, response)
 				notificationController.Notify("connections.action", response)
 			} else {
-				notFound(c, gin.H{"connection": id})
+				notFound(c, gin.H{"error": "not found", "connection": id})
 			}
 		})
 
@@ -467,7 +467,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 			}
 
 			if messages, found := applicationContext.ConnectionStreamsController.GetConnectionMessages(c, id, format); !found {
-				notFound(c, gin.H{"connection": id})
+				notFound(c, gin.H{"error": "not found", "connection": id})
 			} else {
 				success(c, messages)
 			}
@@ -486,7 +486,7 @@ func CreateApplicationRouter(applicationContext *ApplicationContext,
 			}
 
 			if blob, found := applicationContext.ConnectionStreamsController.DownloadConnectionMessages(c, id, format); !found {
-				notFound(c, gin.H{"connection": id})
+				notFound(c, gin.H{"error": "not found", "connection": id})
 			} else {
 				c.String(http.StatusOK, blob)
 			}
