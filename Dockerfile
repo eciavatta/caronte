@@ -1,5 +1,5 @@
 # Build backend with go
-FROM golang:1.17 AS BACKEND_BUILDER
+FROM golang:1.19 AS BACKEND_BUILDER
 
 # Install tools and libraries
 RUN apt-get update && \
@@ -16,7 +16,7 @@ COPY . .
 RUN export VERSION=$(git describe --tags --abbrev=0) && \
     go mod download && \
     go build -ldflags "-X main.Version=$VERSION" -v github.com/eciavatta/caronte/cmd/caronte && \
-	mkdir -p build/pcaps/processing build/shared && \
+	mkdir -p build/pcaps/processing build/pcaps/connections build/shared && \
 	cp -r caronte build/
 
 # Build web via yarn
